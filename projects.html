@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus PM - Projects</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+            color: #1e293b; /* slate-800 */
+        }
+        .sidebar {
+            transition: width 0.3s ease-in-out;
+        }
+        .sidebar-collapsed {
+            width: 5rem; /* 80px */
+        }
+        .sidebar-expanded {
+            width: 16rem; /* 256px */
+        }
+        #sidebar.sidebar-collapsed nav a, #sidebar.sidebar-collapsed #user-profile-container {
+            justify-content: center;
+        }
+        .bento-box {
+            background-color: #ffffff; /* white */
+            border-radius: 0.75rem; /* rounded-xl */
+            padding: 1.5rem;
+            border: 1px solid #e2e8f0; /* slate-200 */
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        }
+        .view-toggle button.active {
+            background-color: #4f46e5; /* indigo-600 */
+            color: white;
+        }
+        .modal-overlay {
+            background-color: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(4px);
+        }
+        .kanban-task.dragging {
+            opacity: 0.5;
+            transform: rotate(2deg);
+        }
+        .kanban-column.drag-over {
+            background-color: #eef2ff; /* indigo-50 */
+            border: 2px dashed #a5b4fc; /* indigo-300 */
+        }
+        .kanban-task.completed p {
+            text-decoration: line-through;
+            color: #64748b; /* slate-500 */
+        }
+        .kanban-task.completed {
+            background-color: #f8fafc; /* slate-50 */
+        }
+        textarea {
+            resize: none;
+        }
+        #ai-response-container {
+            transition: all 0.5s ease-in-out;
+            max-height: 0;
+            overflow: hidden;
+        }
+        #ai-response-container.expanded {
+            max-height: 50vh;
+        }
+        #ai-response-container.minimized {
+            max-height: 4rem;
+        }
+        #ai-response-container.minimized #message-list {
+            display: none;
+        }
+        .activity-tabs button.active {
+            border-bottom-color: #4f46e5; /* indigo-600 */
+            color: #4f46e5;
+            font-weight: 600;
+        }
+        /* Hide scrollbar for elements that need it */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        #message-list::-webkit-scrollbar, .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        #message-list::-webkit-scrollbar-track, .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+        #message-list::-webkit-scrollbar-thumb, .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        #message-list::-webkit-scrollbar-thumb:hover, .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #report-content-printable, #report-content-printable * {
+                visibility: visible;
+            }
+            #getReportModal {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                overflow: visible;
+                background: none;
+            }
+             #getReportModal > div {
+                height: 100%;
+                max-height: none;
+                display: block;
+                box-shadow: none;
+                border: none;
+            }
+            .modal-overlay {
+                background-color: transparent !important;
+            }
+             .non-printable {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+
+    <aside id="sidebar" class="sidebar sidebar-collapsed bg-white border-r border-slate-200 flex flex-col h-full">
+        <div class="flex items-center justify-center p-4 h-16 border-b border-slate-200">
+            <h1 id="logo-text" class="text-2xl font-bold text-slate-800 transition-opacity duration-300">N<span class="text-blue-600">P</span></h1>
+        </div>
+
+        <nav class="flex-1 px-4 py-4 space-y-2">
+            <a href="index.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600">
+                <i data-lucide="home" class="h-6 w-6"></i>
+                <span class="ml-4 nav-text hidden">Home</span>
+            </a>
+            <a href="projects.html" class="flex items-center p-3 rounded-lg bg-blue-100 text-blue-700 font-semibold">
+                <i data-lucide="folder-kanban" class="h-6 w-6"></i>
+                <span class="ml-4 nav-text hidden">Projects</span>
+            </a>
+            <a href="goals.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600">
+                <i data-lucide="target" class="h-6 w-6"></i>
+                <span class="ml-4 nav-text hidden">Goals</span>
+            </a>
+            <a href="intelligence.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600">
+                <i data-lucide="bar-chart-big" class="h-6 w-6"></i>
+                <span class="ml-4 nav-text hidden">Intelligence</span>
+            </a>
+             <a href="chat-history.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600">
+                <i data-lucide="message-square" class="h-6 w-6"></i>
+                <span class="ml-4 nav-text hidden">Chat History</span>
+            </a>
+            <a href="activity.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600">
+                <i data-lucide="activity" class="h-6 w-6"></i>
+                <span class="ml-4 nav-text hidden">Activity</span>
+            </a>
+            <a href="settings.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600">
+                <i data-lucide="settings" class="h-6 w-6"></i>
+                <span class="ml-4 nav-text hidden">Settings</span>
+            </a>
+        </nav>
+
+        <div class="p-4 border-t border-slate-200">
+             <div id="user-profile-container" class="flex items-center">
+                <img src="https://i.pravatar.cc/40?u=nexus-user" alt="User Avatar" class="rounded-full h-10 w-10">
+                <div class="ml-3 overflow-hidden nav-text hidden">
+                    <p class="font-semibold text-slate-800 text-sm truncate">Alex Hartman</p>
+                    <p class="text-xs text-slate-500 truncate">Product Manager</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <main class="flex-1 bg-slate-50 flex flex-col">
+        <div id="main-content" class="flex-1 overflow-y-auto overflow-x-hidden p-8">
+            <div id="all-projects-view">
+                <header class="mb-8">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h1 class="text-3xl font-bold text-slate-900">Projects</h1>
+                            <p class="text-slate-500 mt-1">Manage all your team's initiatives from here.</p>
+                        </div>
+                        <button id="new-project-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg flex items-center space-x-2">
+                            <i data-lucide="plus" class="h-5 w-5"></i>
+                            <span>New Project</span>
+                        </button>
+                    </div>
+                </header>
+                
+                <div class="flex justify-between items-center mb-6">
+                    <div class="flex items-center space-x-4">
+                        <div class="relative"><i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400"></i><input type="text" placeholder="Search projects..." class="pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"></div>
+                        <select class="border border-slate-300 rounded-lg py-2 px-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"><option>Status: All</option><option>On Track</option><option>At Risk</option><option>Off Track</option></select>
+                    </div>
+                    <div class="flex items-center p-1 bg-slate-200 rounded-lg view-toggle">
+                        <button data-view="grid" class="p-2 rounded-md active"><i data-lucide="layout-grid" class="h-5 w-5"></i></button>
+                        <button data-view="list" class="p-2 rounded-md"><i data-lucide="list" class="h-5 w-5"></i></button>
+                    </div>
+                </div>
+
+                <div id="grid-view" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    <div class="project-card bento-box flex flex-col cursor-pointer hover:shadow-lg transition-shadow">
+                        <div class="flex justify-between items-start mb-4"><h3 class="text-lg font-semibold text-slate-800">Phoenix Project</h3><span class="text-xs font-semibold bg-green-100 text-green-700 px-2 py-1 rounded-full">On Track</span></div>
+                        <p class="text-sm text-slate-500 mb-4 flex-grow">Refactoring our legacy backend services into a modern microservices architecture.</p>
+                        <div class="mb-4"><div class="flex justify-between text-xs text-slate-500 mb-1"><span>Progress</span><span>75%</span></div><div class="w-full bg-slate-200 rounded-full h-2"><div class="bg-green-500 h-2 rounded-full" style="width: 75%"></div></div></div>
+                        <div class="flex justify-between items-center border-t border-slate-200 pt-4"><div class="flex -space-x-2"><img class="inline-block h-8 w-8 rounded-full ring-2 ring-white" src="https://i.pravatar.cc/32?u=laura" alt="Laura"><img class="inline-block h-8 w-8 rounded-full ring-2 ring-white" src="https://i.pravatar.cc/32?u=samantha" alt="Samantha"></div><span class="text-sm font-medium text-slate-600">Due: Dec 15</span></div>
+                    </div>
+                    <div class="project-card bento-box flex flex-col cursor-pointer hover:shadow-lg transition-shadow">
+                        <div class="flex justify-between items-start mb-4"><h3 class="text-lg font-semibold text-slate-800">Orion App</h3><span class="text-xs font-semibold bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full">At Risk</span></div>
+                        <p class="text-sm text-slate-500 mb-4 flex-grow">Developing the new flagship mobile application for customer engagement.</p>
+                        <div class="mb-4"><div class="flex justify-between text-xs text-slate-500 mb-1"><span>Progress</span><span>45%</span></div><div class="w-full bg-slate-200 rounded-full h-2"><div class="bg-yellow-500 h-2 rounded-full" style="width: 45%"></div></div></div>
+                        <div class="flex justify-between items-center border-t border-slate-200 pt-4"><div class="flex -space-x-2"><img class="inline-block h-8 w-8 rounded-full ring-2 ring-white" src="https://i.pravatar.cc/32?u=david" alt="David"><img class="inline-block h-8 w-8 rounded-full ring-2 ring-white" src="https://i.pravatar.cc/32?u=laura" alt="Laura"></div><span class="text-sm font-medium text-slate-600">Due: Sep 08</span></div>
+                    </div>
+                    <div class="project-card bento-box flex flex-col cursor-pointer hover:shadow-lg transition-shadow">
+                        <div class="flex justify-between items-start mb-4"><h3 class="text-lg font-semibold text-slate-800">Vega Initiative</h3><span class="text-xs font-semibold bg-red-100 text-red-700 px-2 py-1 rounded-full">Off Track</span></div>
+                        <p class="text-sm text-slate-500 mb-4 flex-grow">Exploring market viability for a new AI-powered analytics tool.</p>
+                        <div class="mb-4"><div class="flex justify-between text-xs text-slate-500 mb-1"><span>Progress</span><span>20%</span></div><div class="w-full bg-slate-200 rounded-full h-2"><div class="bg-red-500 h-2 rounded-full" style="width: 20%"></div></div></div>
+                        <div class="flex justify-between items-center border-t border-slate-200 pt-4"><div class="flex -space-x-2"><img class="inline-block h-8 w-8 rounded-full ring-2 ring-white" src="https://i.pravatar.cc/32?u=samantha" alt="Samantha"></div><span class="text-sm font-medium text-slate-600">Due: Oct 31</span></div>
+                    </div>
+                </div>
+                
+                <div id="list-view" class="hidden">
+                    <div class="bento-box">
+                        <table class="w-full text-sm text-left">
+                            <thead class="text-xs text-slate-500 uppercase bg-slate-50"><tr><th scope="col" class="px-6 py-3">Project Name</th><th scope="col" class="px-6 py-3">Status</th><th scope="col" class="px-6 py-3">Progress</th><th scope="col" class="px-6 py-3">Team</th><th scope="col" class="px-6 py-3">Due Date</th></tr></thead>
+                            <tbody>
+                                <tr class="project-row bg-white border-b hover:bg-slate-50 cursor-pointer"><th scope="row" class="px-6 py-4 font-semibold text-slate-900 whitespace-nowrap">Phoenix Project</th><td class="px-6 py-4"><span class="text-xs font-semibold bg-green-100 text-green-700 px-2 py-1 rounded-full">On Track</span></td><td class="px-6 py-4"><div class="w-full bg-slate-200 rounded-full h-2"><div class="bg-green-500 h-2 rounded-full" style="width: 75%"></div></div></td><td class="px-6 py-4"><div class="flex -space-x-2"><img class="inline-block h-8 w-8 rounded-full ring-2 ring-white" src="https://i.pravatar.cc/32?u=laura" alt="Laura"><img class="inline-block h-8 w-8 rounded-full ring-2 ring-white" src="https://i.pravatar.cc/32?u=samantha" alt="Samantha"></div></td><td class="px-6 py-4">Dec 15, 2024</td></tr>
+                                <tr class="project-row bg-white border-b hover:bg-slate-50 cursor-pointer"><th scope="row" class="px-6 py-4 font-semibold text-slate-900 whitespace-nowrap">Orion App</th><td class="px-6 py-4"><span class="text-xs font-semibold bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full">At Risk</span></td><td class="px-6 py-4"><div class="w-full bg-slate-200 rounded-full h-2"><div class="bg-yellow-500 h-2 rounded-full" style="width: 45%"></div></div></td><td class="px-6 py-4"><div class="flex -space-x-2"><img class="inline-block h-8 w-8 rounded-full ring-2 ring-white" src="https://i.pravatar.cc/32?u=david" alt="David"><img class="inline-block h-8 w-8 rounded-full ring-2 ring-white" src="https://i.pravatar.cc/32?u=laura" alt="Laura"></div></td><td class="px-6 py-4">Sep 08, 2024</td></tr>
+                                <tr class="project-row bg-white hover:bg-slate-50 cursor-pointer"><th scope="row" class="px-6 py-4 font-semibold text-slate-900 whitespace-nowrap">Vega Initiative</th><td class="px-6 py-4"><span class="text-xs font-semibold bg-red-100 text-red-700 px-2 py-1 rounded-full">Off Track</span></td><td class="px-6 py-4"><div class="w-full bg-slate-200 rounded-full h-2"><div class="bg-red-500 h-2 rounded-full" style="width: 20%"></div></div></td><td class="px-6 py-4"><div class="flex -space-x-2"><img class="inline-block h-8 w-8 rounded-full ring-2 ring-white" src="https://i.pravatar.cc/32?u=samantha" alt="Samantha"></div></td><td class="px-6 py-4">Oct 31, 2024</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="project-detail-view" class="hidden">
+                <header class="mb-8">
+                    <button id="back-to-projects-btn" class="text-sm font-semibold text-blue-600 hover:text-blue-500 flex items-center mb-4"><i data-lucide="arrow-left" class="h-4 w-4 mr-2"></i>Back to All Projects</button>
+                    <div class="flex justify-between items-center">
+                        <div><h1 class="text-3xl font-bold text-slate-900">Phoenix Project</h1><p class="text-slate-500 mt-1">Refactoring our legacy backend services into a modern microservices architecture.</p></div>
+                        <div class="flex items-center space-x-2">
+                           <button id="run-analysis-btn" class="bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-semibold py-2 px-4 rounded-lg flex items-center space-x-2">
+                                <i data-lucide="brain-circuit" class="h-5 w-5"></i>
+                                <span>Run Analysis</span>
+                            </button>
+                             <button id="get-report-btn" class="bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-semibold py-2 px-4 rounded-lg flex items-center space-x-2">
+                                <i data-lucide="file-down" class="h-5 w-5"></i>
+                                <span>Get Report</span>
+                            </button>
+                            <span class="text-base font-semibold bg-green-100 text-green-700 px-3 py-1.5 rounded-full">On Track</span>
+                        </div>
+                    </div>
+                </header>
+
+                <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                    <div class="lg:col-span-4 bento-box">
+                         <div class="flex justify-between items-center">
+                            <div class="flex items-center space-x-2"><h3 class="text-xl font-semibold text-slate-900">AI Project Summary</h3><i data-lucide="info" class="h-4 w-4 text-slate-400 cursor-pointer" title="This summary is generated by Nexus AI based on the latest project data."></i></div>
+                            <button class="text-blue-600 hover:text-blue-500 p-1 rounded-md hover:bg-blue-100"><i data-lucide="refresh-cw" class="h-4 w-4"></i></button>
+                         </div>
+                         <p class="text-sm text-slate-600 mt-2">The <strong>Phoenix Project</strong> is currently <strong>on track</strong> with 75% of tasks completed. However, it is facing an <strong>elevated budget risk</strong>, trending 15% over due to software costs. A potential <strong>resource risk</strong> is emerging with Laura's high workload. Proactive resource management is recommended.</p>
+                    </div>
+
+                    <div class="lg:col-span-4 bento-box">
+                        <div class="flex justify-between items-center mb-4">
+                            <div class="flex items-center space-x-2"><h3 class="text-xl font-semibold text-slate-900">Task Board</h3><i data-lucide="info" class="h-4 w-4 text-slate-400 cursor-pointer" title="Drag and drop tasks to change their status."></i></div>
+                            <button id="add-task-btn" class="bg-blue-100 text-blue-700 hover:bg-blue-200 text-sm font-semibold py-2 px-3 rounded-lg flex items-center space-x-2">
+                                <i data-lucide="plus" class="h-4 w-4"></i>
+                                <span>New Task</span>
+                            </button>
+                        </div>
+                        <div id="kanban-board" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div class="kanban-column bg-slate-100 p-3 rounded-lg"><div class="flex justify-between items-center mb-3"><h4 class="font-semibold text-slate-700">To Do</h4><span class="task-count text-sm font-bold text-slate-500">2</span></div><div class="task-list space-y-3 min-h-[100px]"><div id="task-1" draggable="true" class="kanban-task bg-white p-3 rounded-md shadow group"><div class="flex justify-between items-start"><p class="font-medium text-sm flex-1 mr-2">Design new API endpoints</p><div class="relative"><button class="task-actions-btn opacity-0 group-hover:opacity-100 transition-opacity"><i data-lucide="more-horizontal" class="h-5 w-5 text-slate-500"></i></button><div class="task-menu hidden absolute right-0 mt-2 w-32 bg-white rounded-md shadow-lg z-10"><a href="#" class="task-complete block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100">Complete</a><a href="#" class="task-edit block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100">Edit</a><a href="#" class="task-delete block px-4 py-2 text-sm text-red-600 hover:bg-red-50">Delete</a></div></div></div><div class="flex justify-between items-center mt-2"><span class="text-xs text-red-600 font-semibold">High</span><img class="h-6 w-6 rounded-full" src="https://i.pravatar.cc/32?u=samantha" alt="Samantha"></div></div><div id="task-2" draggable="true" class="kanban-task bg-white p-3 rounded-md shadow group"><div class="flex justify-between items-start"><p class="font-medium text-sm flex-1 mr-2">Write user documentation</p><div class="relative"><button class="task-actions-btn opacity-0 group-hover:opacity-100 transition-opacity"><i data-lucide="more-horizontal" class="h-5 w-5 text-slate-500"></i></button><div class="task-menu hidden absolute right-0 mt-2 w-32 bg-white rounded-md shadow-lg z-10"><a href="#" class="task-complete block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100">Complete</a><a href="#" class="task-edit block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100">Edit</a><a href="#" class="task-delete block px-4 py-2 text-sm text-red-600 hover:bg-red-50">Delete</a></div></div></div><div class="flex justify-between items-center mt-2"><span class="text-xs text-yellow-600 font-semibold">Medium</span><img class="h-6 w-6 rounded-full" src="https://i.pravatar.cc/32?u=david" alt="David"></div></div></div></div>
+                            <div class="kanban-column bg-slate-100 p-3 rounded-lg"><div class="flex justify-between items-center mb-3"><h4 class="font-semibold text-slate-700">In Progress</h4><span class="task-count text-sm font-bold text-slate-500">1</span></div><div class="task-list space-y-3 min-h-[100px]"><div id="task-3" draggable="true" class="kanban-task bg-white p-3 rounded-md shadow group"><div class="flex justify-between items-start"><p class="font-medium text-sm flex-1 mr-2">Refactor payment gateway</p><div class="relative"><button class="task-actions-btn opacity-0 group-hover:opacity-100 transition-opacity"><i data-lucide="more-horizontal" class="h-5 w-5 text-slate-500"></i></button><div class="task-menu hidden absolute right-0 mt-2 w-32 bg-white rounded-md shadow-lg z-10"><a href="#" class="task-complete block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100">Complete</a><a href="#" class="task-edit block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100">Edit</a><a href="#" class="task-delete block px-4 py-2 text-sm text-red-600 hover:bg-red-50">Delete</a></div></div></div><div class="flex justify-between items-center mt-2"><span class="text-xs text-red-600 font-semibold">High</span><img class="h-6 w-6 rounded-full" src="https://i.pravatar.cc/32?u=laura" alt="Laura"></div></div></div></div>
+                            <div class="kanban-column bg-slate-100 p-3 rounded-lg"><div class="flex justify-between items-center mb-3"><h4 class="font-semibold text-slate-700">Done</h4><span class="task-count text-sm font-bold text-slate-500">1</span></div><div class="task-list space-y-3 min-h-[100px]"><div id="task-4" draggable="true" class="kanban-task bg-white p-3 rounded-md shadow group completed"><div class="flex justify-between items-start"><p class="font-medium text-sm flex-1 mr-2">Setup staging database</p><div class="relative"><button class="task-actions-btn opacity-0 group-hover:opacity-100 transition-opacity"><i data-lucide="more-horizontal" class="h-5 w-5 text-slate-500"></i></button><div class="task-menu hidden absolute right-0 mt-2 w-32 bg-white rounded-md shadow-lg z-10"><a href="#" class="task-complete block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100">Undo</a><a href="#" class="task-edit block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100">Edit</a><a href="#" class="task-delete block px-4 py-2 text-sm text-red-600 hover:bg-red-50">Delete</a></div></div></div><div class="flex justify-between items-center mt-2"><span class="text-xs text-green-600 font-semibold">Low</span><img class="h-6 w-6 rounded-full" src="https://i.pravatar.cc/32?u=david" alt="David"></div></div></div></div>
+                        </div>
+                    </div>
+                    <div class="lg:col-span-2 bento-box"><div class="flex items-center space-x-2 mb-4"><h3 class="text-xl font-semibold text-slate-900">Task Burn-down</h3><i data-lucide="info" class="h-4 w-4 text-slate-400 cursor-pointer" title="Tracks the completion of work for a sprint. The blue line shows actual tasks remaining, while the dotted line shows the ideal pace."></i></div><div><canvas id="burndown-chart"></canvas></div></div>
+                    <div class="lg:col-span-2 bento-box"><div class="flex items-center space-x-2 mb-4"><h3 class="text-xl font-semibold text-slate-900">Budget Analysis</h3><i data-lucide="info" class="h-4 w-4 text-slate-400 cursor-pointer" title="AI-powered risk assessment based on current project data and historical trends."></i></div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div><canvas id="budget-chart" class="max-h-48"></canvas></div>
+                            <div class="space-y-3">
+                                <div><div class="flex justify-between text-xs text-slate-500"><span>Personnel</span><span>$25k / $25k</span></div><div class="w-full bg-slate-200 rounded-full h-2 mt-1"><div class="bg-blue-500 h-2 rounded-full" style="width: 100%"></div></div></div>
+                                <div><div class="flex justify-between text-xs text-slate-500"><span>Software</span><span>$12.5k / $15k</span></div><div class="w-full bg-slate-200 rounded-full h-2 mt-1"><div class="bg-indigo-400 h-2 rounded-full" style="width: 83%"></div></div></div>
+                                <div><div class="flex justify-between text-xs text-slate-500"><span>Contingency</span><span>$5k / $10k</span></div><div class="w-full bg-slate-200 rounded-full h-2 mt-1"><div class="bg-red-500 h-2 rounded-full" style="width: 50%"></div></div></div>
+                            </div>
+                        </div>
+                        <div class="bg-red-50 p-3 rounded-lg mt-4"><h4 class="font-semibold text-red-800 text-sm mb-1 flex items-center"><i data-lucide="alert-triangle" class="h-4 w-4 mr-2"></i>AI Budget Alert</h4><p class="text-xs text-red-700">Contingency funds are 50% depleted at 75% project completion. There is a <strong>high probability (82%)</strong> of exceeding the total budget if a new high-priority task is added.</p></div>
+                    </div>
+                     <div class="lg:col-span-2 bento-box"><div class="flex items-center space-x-2 mb-4"><h3 class="text-xl font-semibold text-slate-900">Team Health & Workload</h3><i data-lucide="info" class="h-4 w-4 text-slate-400 cursor-pointer" title="Current task load and on-time completion rates for assigned team members."></i></div>
+                        <div class="space-y-3">
+                            <div><div class="flex justify-between text-sm items-center mb-1"><p>Laura</p><span class="font-semibold text-red-600">110%</span></div><div class="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden"><div class="bg-red-500 h-2.5 rounded-full" style="width: 100%"></div></div></div>
+                            <div><div class="flex justify-between text-sm items-center mb-1"><p>Samantha</p><span class="font-semibold text-green-600">85%</span></div><div class="w-full bg-slate-200 rounded-full h-2.5"><div class="bg-green-500 h-2.5 rounded-full" style="width: 85%"></div></div></div>
+                             <div><div class="flex justify-between text-sm items-center mb-1"><p>David</p><span class="font-semibold text-green-600">40%</span></div><div class="w-full bg-slate-200 rounded-full h-2.5"><div class="bg-green-500 h-2.5 rounded-full" style="width: 40%"></div></div></div>
+                        </div>
+                     </div>
+                     <div class="lg:col-span-2 bento-box"><div class="flex items-center space-x-2 mb-4"><h3 class="text-xl font-semibold text-slate-900">Communication Hub</h3><i data-lucide="info" class="h-4 w-4 text-slate-400 cursor-pointer" title="Recent project mentions from integrated communication channels."></i></div>
+                        <div class="space-y-3">
+                           <div class="flex items-start"><div class="mt-1 mr-3"><i data-lucide="slack" class="w-4 h-4 text-slate-500"></i></div><div><p class="text-sm text-slate-600"><b>Laura</b> in #phoenix-project</p><p class="text-xs text-slate-800 p-2 bg-slate-100 rounded-md mt-1">"Just pushed the latest schema updates. Can someone review?"</p></div></div>
+                           <div class="flex items-start"><div class="mt-1 mr-3"><i data-lucide="mail" class="w-4 h-4 text-slate-500"></i></div><div><p class="text-sm text-slate-600"><b>Eleanor Vance</b> (Stakeholder)</p><p class="text-xs text-slate-800 p-2 bg-slate-100 rounded-md mt-1">"Hi Alex, a few points of feedback on the latest designs..."</p></div></div>
+                        </div>
+                     </div>
+                    <div class="lg:col-span-4 bento-box"><div class="flex items-center space-x-2 mb-4"><h3 class="text-xl font-semibold text-slate-900">Blockers & AI Resolutions</h3><i data-lucide="info" class="h-4 w-4 text-slate-400 cursor-pointer" title="AI-identified blockers and suggested actions to resolve them."></i></div>
+                        <div class="space-y-3">
+                            <div class="bg-slate-50 p-3 rounded-lg flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <img src="https://i.pravatar.cc/32?u=laura" alt="Laura" class="h-8 w-8 rounded-full mr-3">
+                                    <div class="text-sm">
+                                        <p class="font-semibold">Resource Overload</p>
+                                        <p class="text-xs text-slate-600">Laura is at 110% capacity, blocking the 'Payment Gateway' task.</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-xs font-semibold text-red-600 mb-1">High Impact</p>
+                                    <button data-blocker-id="resource-overload" class="take-action-btn bg-blue-100 text-blue-700 hover:bg-blue-200 text-xs font-semibold py-1 px-3 rounded-full flex items-center space-x-1.5 transition-colors">
+                                        <i data-lucide="zap" class="h-3.5 w-3.5"></i>
+                                        <span>Take Action</span>
+                                    </button>
+                                </div>
+                            </div>
+                             <div class="bg-slate-50 p-3 rounded-lg flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <img src="https://i.pravatar.cc/32?u=samantha" alt="Samantha" class="h-8 w-8 rounded-full mr-3">
+                                    <div class="text-sm">
+                                        <p class="font-semibold">Dependency Delay</p>
+                                        <p class="text-xs text-slate-600">API design is blocked by unreviewed schema updates.</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-xs font-semibold text-yellow-600 mb-1">Medium Impact</p>
+                                    <button data-blocker-id="dependency-delay" class="take-action-btn bg-blue-100 text-blue-700 hover:bg-blue-200 text-xs font-semibold py-1 px-3 rounded-full flex items-center space-x-1.5 transition-colors">
+                                        <i data-lucide="zap" class="h-3.5 w-3.5"></i>
+                                        <span>Take Action</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="activity-log-container" class="lg:col-span-4 bento-box">
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center space-x-2">
+                                <i data-lucide="history" class="h-6 w-6 text-slate-500"></i>
+                                <h3 class="text-xl font-semibold text-slate-900">Project Activity Log</h3>
+                            </div>
+                            <button id="toggle-activity-log" class="p-1 rounded-full hover:bg-slate-100">
+                                <i data-lucide="chevron-up" class="h-5 w-5 text-slate-500"></i>
+                            </button>
+                        </div>
+                    
+                        <div id="activity-log-content" class="mt-4 transition-all duration-300">
+                            <div class="border-b border-slate-200 activity-tabs flex space-x-6">
+                                <button data-tab="reports" class="py-2 border-b-2 border-transparent text-sm text-slate-500 hover:text-slate-800 transition-colors">Reports</button>
+                                <button data-tab="decisions" class="py-2 border-b-2 border-transparent text-sm text-slate-500 hover:text-slate-800 transition-colors active">Decisions</button>
+                                <button data-tab="files" class="py-2 border-b-2 border-transparent text-sm text-slate-500 hover:text-slate-800 transition-colors">Files</button>
+                            </div>
+                    
+                            <div class="mt-4">
+                                <div id="reports-panel" class="hidden">
+                                    <p class="text-center text-slate-500 p-4">Loading reports...</p>
+                                </div>
+                                <div id="decisions-panel">
+                                     <p class="text-center text-slate-500 p-4">Loading decisions...</p>
+                                </div>
+                                <div id="files-panel" class="hidden">
+                                     <p class="text-center text-slate-500 p-4">Loading files...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="progress-watchers-container" class="lg:col-span-4 bento-box hidden">
+                         <div class="flex justify-between items-center mb-4">
+                            <div class="flex items-center space-x-2"><h3 class="text-xl font-semibold text-slate-900">Progress Watchers</h3><i data-lucide="info" class="h-4 w-4 text-slate-400 cursor-pointer" title="AI-generated performance summaries for team members. Add a watcher via the AI prompt bar."></i></div>
+                            <button id="add-watcher-btn" class="bg-blue-100 text-blue-700 hover:bg-blue-200 text-sm font-semibold py-2 px-3 rounded-lg flex items-center space-x-2">
+                                <i data-lucide="plus" class="h-4 w-4"></i>
+                                <span>Add Watcher</span>
+                            </button>
+                        </div>
+                        <div id="progress-watchers-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+         <div id="ai-response-container" class="bg-white border-t border-slate-200 no-scrollbar flex flex-col max-w-full">
+            <div id="ai-response-header" class="px-6 py-4 max-w-4xl w-full mx-auto"></div>
+            <div id="message-list" class="flex-1 overflow-y-auto px-6 space-y-6 max-w-4xl w-full mx-auto pb-6"></div>
+        </div>
+
+        <div class="p-4 bg-white border-t border-slate-200 shadow-[0_-2px_5px_rgba(0,0,0,0.05)]">
+            <div class="max-w-4xl mx-auto">
+                 <form id="prompt-form" class="relative">
+                    <textarea id="prompt-textarea" rows="1" placeholder="Ask Nexus AI about your projects..." class="w-full py-3 pl-5 pr-14 text-sm text-slate-800 bg-slate-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 border border-transparent focus:border-blue-500 transition-all duration-200 max-h-40 overflow-y-auto no-scrollbar"></textarea>
+                    <button type="submit" class="absolute bottom-3.5 right-0 flex items-center justify-center w-14 text-slate-500 hover:text-blue-600"><i data-lucide="send" class="h-5 w-5"></i></button>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <div id="newProjectModal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4 hidden"><div class="bg-white rounded-lg shadow-xl w-full max-w-lg"><div class="p-6 border-b"><h3 class="text-lg font-semibold text-slate-900">Create New Project</h3></div><div class="p-6 space-y-4"><div><label class="text-sm font-medium text-slate-700">Project Name</label><input type="text" class="mt-1 w-full border border-slate-300 rounded-md p-2" placeholder="e.g., Phoenix Project"></div><div><label class="text-sm font-medium text-slate-700">Description</label><textarea class="mt-1 w-full border border-slate-300 rounded-md p-2" rows="3" placeholder="A brief description of the project's goals."></textarea></div><div><label class="text-sm font-medium text-slate-700">Due Date</label><input type="date" class="mt-1 w-full border border-slate-300 rounded-md p-2"></div></div><div class="bg-slate-50 px-6 py-4 rounded-b-lg flex justify-end space-x-3"><button id="cancel-new-project" class="px-4 py-2 text-sm font-medium bg-white hover:bg-slate-50 border border-slate-300 rounded-md text-slate-700">Cancel</button><button class="px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 rounded-md text-white">Create Project</button></div></div></div>
+    <div id="newTaskModal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4 hidden"><div class="bg-white rounded-lg shadow-xl w-full max-w-lg"><form id="new-task-form"><div class="p-6 border-b"><h3 class="text-lg font-semibold text-slate-900">Add New Task</h3></div><div class="p-6 space-y-4"><div><label class="text-sm font-medium text-slate-700">Task Title</label><input type="text" id="task-title" required class="mt-1 w-full border border-slate-300 rounded-md p-2" placeholder="e.g., Design new API endpoints"></div><div class="grid grid-cols-2 gap-4"><div><label class="text-sm font-medium text-slate-700">Status</label><select id="task-status" class="mt-1 w-full border border-slate-300 rounded-md p-2"><option value="To Do">To Do</option><option value="In Progress">In Progress</option><option value="Done">Done</option></select></div><div><label class="text-sm font-medium text-slate-700">Priority</label><select id="task-priority" class="mt-1 w-full border border-slate-300 rounded-md p-2"><option value="Low">Low</option><option value="Medium">Medium</option><option value="High">High</option></select></div></div><div><label class="text-sm font-medium text-slate-700">Assignee</label><select id="task-assignee" class="mt-1 w-full border border-slate-300 rounded-md p-2"><option value="samantha">Samantha</option><option value="david">David</option><option value="laura">Laura</option></select></div></div><div class="bg-slate-50 px-6 py-4 rounded-b-lg flex justify-end space-x-3"><button type="button" id="cancel-new-task" class="px-4 py-2 text-sm font-medium bg-white hover:bg-slate-50 border border-slate-300 rounded-md text-slate-700">Cancel</button><button type="submit" class="px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 rounded-md text-white">Add Task</button></div></form></div></div>
+    <div id="addWatcherModal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4 hidden"><div class="bg-white rounded-lg shadow-xl w-full max-w-md"><form id="add-watcher-form"><div class="p-6 border-b"><h3 class="text-lg font-semibold text-slate-900">Add Progress Watcher</h3></div><div class="p-6 space-y-4"><div><label class="text-sm font-medium text-slate-700">Select Team Member</label><select id="watcher-name" class="mt-1 w-full border border-slate-300 rounded-md p-2"><option value="Samantha">Samantha</option><option value="David">David</option><option value="Laura">Laura</option></select></div></div><div class="bg-slate-50 px-6 py-4 rounded-b-lg flex justify-end space-x-3"><button type="button" id="cancel-add-watcher" class="px-4 py-2 text-sm font-medium bg-white hover:bg-slate-50 border border-slate-300 rounded-md text-slate-700">Cancel</button><button type="submit" class="px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 rounded-md text-white">Add Watcher</button></div></form></div></div>
+    <div id="watcherDetailModal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4 hidden"><div class="bg-white rounded-lg shadow-xl w-full max-w-2xl"><div class="p-6 border-b flex justify-between items-start"><div class="flex items-center"><img id="watcher-modal-avatar" src="" class="h-12 w-12 rounded-full mr-4"><h3 id="watcher-modal-name" class="text-lg font-semibold text-slate-900"></h3></div><button id="close-watcher-detail" class="p-1 rounded-full hover:bg-slate-100"><i data-lucide="x" class="h-5 w-5 text-slate-500"></i></button></div><div class="p-6"><div class="grid grid-cols-3 gap-4 text-center mb-6"><div class="bg-slate-50 p-3 rounded-lg"><p class="text-xs text-slate-500">On-Time Completion</p><p id="watcher-modal-completion" class="text-2xl font-bold text-green-600"></p></div><div class="bg-slate-50 p-3 rounded-lg"><p class="text-xs text-slate-500">Current Workload</p><p id="watcher-modal-workload" class="text-2xl font-bold text-slate-700"></p></div><div class="bg-slate-50 p-3 rounded-lg"><p class="text-xs text-slate-500">Active Blockers</p><p id="watcher-modal-blockers" class="text-2xl font-bold text-yellow-600"></p></div></div><div class="mb-4"><h4 class="font-semibold text-slate-800 mb-2">Performance (Last 3 Sprints)</h4><canvas id="watcher-performance-chart"></canvas></div><div class="bg-blue-50 p-3 rounded-lg"><h4 class="font-semibold text-blue-800 text-sm mb-1 flex items-center"><i data-lucide="lightbulb" class="h-4 w-4 mr-2"></i>Nexus AI Insight</h4><p id="watcher-modal-insight" class="text-xs text-blue-700"></p></div></div></div></div>
+    <div id="runAnalysisModal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4 hidden"><div class="bg-white rounded-lg shadow-xl w-full max-w-2xl"><div class="p-6 border-b flex justify-between items-center"><h3 class="text-lg font-semibold text-slate-900">Run On-Demand Analysis</h3><button id="close-analysis-modal" class="p-1 rounded-full hover:bg-slate-100"><i data-lucide="x" class="h-5 w-5 text-slate-500"></i></button></div><div class="p-6"><label class="text-sm font-medium text-slate-700">What would you like to analyze?</label><textarea class="mt-1 w-full border border-slate-300 rounded-md p-2" rows="2" placeholder="e.g., 'Simulate reassigning the payment gateway task to David'"></textarea></div><div class="px-6 pb-6"><div class="bg-slate-50 p-4 rounded-lg"><h4 class="font-semibold text-slate-800 text-sm mb-2">Analysis Results for: "Simulate reassigning payment gateway to David"</h4><div class="grid grid-cols-2 gap-4"><div class="text-xs text-slate-600 space-y-2"><p><strong>Problem Identified:</strong> The 'Refactor payment gateway' task is a bottleneck. It's high-priority, assigned to an overloaded resource (Laura), and dependent on an incomplete task.</p><p><strong>AI Recommendation:</strong> Reassign this task to <strong>David (40% workload)</strong>. This mitigates the primary resource risk.</p><p><strong>Predicted Impact:</strong> This action is predicted to reduce the task's completion time by <strong>3 days</strong> and increases the project's on-time completion probability from <strong>68% to 85%</strong>.</p></div><div><canvas id="analysis-chart"></canvas></div></div></div></div><div class="bg-slate-100 px-6 py-4 rounded-b-lg flex justify-end space-x-3"><button id="cancel-analysis" class="px-4 py-2 text-sm font-medium bg-white hover:bg-slate-50 border border-slate-300 rounded-md text-slate-700">Close</button><button class="px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 rounded-md text-white">Run Analysis</button></div></div></div>
+    <div id="getReportModal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-3xl flex flex-col max-h-[90vh]">
+            <div id="report-content-printable" class="overflow-y-auto custom-scrollbar">
+                 <div class="p-8">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="flex-1">
+                            <h2 class="text-2xl font-bold text-slate-900">Project Status Report</h2>
+                            <h3 class="text-xl font-semibold text-slate-700">Phoenix Project</h3>
+                        </div>
+                        <div class="text-right flex-shrink-0">
+                            <p class="text-xs text-slate-500">Generated On:</p>
+                            <p id="report-date" class="font-semibold"></p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-4 gap-4 text-center my-6">
+                        <div class="bg-slate-50 p-3 rounded-lg">
+                            <p class="text-xs text-slate-500">Status</p>
+                            <p class="text-xl font-bold text-green-600">On Track</p>
+                        </div>
+                        <div class="bg-slate-50 p-3 rounded-lg">
+                            <p class="text-xs text-slate-500">Progress</p>
+                            <p class="text-xl font-bold text-slate-700">75%</p>
+                        </div>
+                        <div class="bg-slate-50 p-3 rounded-lg">
+                            <p class="text-xs text-slate-500">Budget Variance</p>
+                            <p class="text-xl font-bold text-red-600">+15%</p>
+                        </div>
+                        <div class="bg-slate-50 p-3 rounded-lg">
+                            <p class="text-xs text-slate-500">Timeline Forecast</p>
+                            <p class="text-xl font-bold text-green-600">On Time</p>
+                        </div>
+                    </div>
+                    <hr class="my-6">
+                    <h4 class="text-lg font-semibold text-slate-800 mb-2">AI Executive Summary</h4>
+                    <p class="text-sm text-slate-600">The <strong>Phoenix Project</strong> is progressing well but requires immediate attention to its budget, which is forecast to exceed allocation by 15%. This is primarily driven by a <strong>$5,000 overage</strong> in contingency spending. The project timeline remains on track, but a key dependency is the workload of Laura, who is currently at 110% capacity. Proactive reallocation of her non-critical tasks is advised to prevent future delays.</p>
+                    <hr class="my-6">
+                    <div class="grid grid-cols-2 gap-8">
+                        <div class="space-y-6">
+                            <h4 class="text-lg font-semibold text-slate-800 mb-2">Budget Breakdown</h4>
+                            <div class="w-full h-48"><canvas id="report-budget-chart"></canvas></div>
+                            <h4 class="text-lg font-semibold text-slate-800 mt-6 mb-2">Resource Allocation</h4>
+                            <ul class="text-sm space-y-2">
+                                <li><strong>Laura (110%):</strong> Refactor payment gateway (High)</li>
+                                <li><strong>Samantha (85%):</strong> Design new API endpoints (High)</li>
+                                <li><strong>David (40%):</strong> Write user documentation (Medium)</li>
+                            </ul>
+                        </div>
+                        <div class="space-y-6">
+                            <h4 class="text-lg font-semibold text-slate-800 mb-2">Task Burn-down</h4>
+                             <div class="w-full h-48"><canvas id="report-burndown-chart"></canvas></div>
+                            <h4 class="text-lg font-semibold text-slate-800 mt-6 mb-2">Recent Milestones (Last 14 Days)</h4>
+                            <ul class="list-disc list-inside text-sm text-slate-600 space-y-1">
+                                <li>Staging database setup completed by David.</li>
+                                <li>Initial API draft submitted by Samantha.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-slate-50 px-6 py-4 rounded-b-lg flex justify-end space-x-3 flex-shrink-0 border-t border-slate-200 non-printable">
+                <button id="close-report-modal" class="px-4 py-2 text-sm font-medium bg-white hover:bg-slate-50 border border-slate-300 rounded-md text-slate-700">Close</button>
+                <button onclick="window.print()" class="px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 rounded-md text-white flex items-center space-x-2">
+                    <i data-lucide="printer" class="h-4 w-4"></i><span>Print / Save PDF</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    <div id="takeActionModal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+            <div class="p-5 border-b flex justify-between items-center flex-shrink-0">
+                <div>
+                    <h3 class="text-lg font-semibold text-slate-900">Resolve Blocker</h3>
+                    <p id="blocker-modal-description" class="text-sm text-slate-500 mt-1"></p>
+                </div>
+                <button id="close-action-modal" class="p-1 rounded-full hover:bg-slate-100">
+                    <i data-lucide="x" class="h-5 w-5 text-slate-500"></i>
+                </button>
+            </div>
+    
+            <div class="p-6 space-y-6 overflow-y-auto custom-scrollbar">
+                <div>
+                    <h4 class="text-base font-semibold text-slate-800 mb-3 flex items-center">
+                        <i data-lucide="list-checks" class="h-5 w-5 mr-2 text-slate-500"></i>
+                        Manual Resolution Steps
+                    </h4>
+                    <div id="blocker-modal-tasks" class="space-y-2">
+                        </div>
+                </div>
+                
+                <div>
+                    <h4 class="text-base font-semibold text-slate-800 mb-3 flex items-center">
+                        <i data-lucide="sparkles" class="h-5 w-5 mr-2 text-blue-500"></i>
+                        Nexus AI Actions
+                    </h4>
+                    <div id="blocker-modal-ai-actions" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        </div>
+                </div>
+            </div>
+    
+            <div class="bg-slate-50 px-6 py-4 rounded-b-lg flex justify-end space-x-3 flex-shrink-0 border-t">
+                <button id="cancel-action-modal" class="px-4 py-2 text-sm font-medium bg-white hover:bg-slate-50 border border-slate-300 rounded-md text-slate-700">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            let burndownChartInstance = null;
+            let watcherChartInstance = null;
+            let budgetChartInstance = null;
+            let analysisChartInstance = null;
+            let reportBurndownChartInstance = null;
+            let reportBudgetChartInstance = null;
+
+            // --- Sidebar Logic ---
+            const sidebar = document.getElementById('sidebar');
+            sidebar.addEventListener('mouseenter', () => { sidebar.classList.remove('sidebar-collapsed'); sidebar.classList.add('sidebar-expanded'); document.getElementById('logo-text').innerHTML = 'Nexus<span class="text-blue-600">PM</span>'; document.querySelectorAll('.nav-text').forEach(text => text.classList.remove('hidden')); });
+            sidebar.addEventListener('mouseleave', () => { sidebar.classList.add('sidebar-collapsed'); sidebar.classList.remove('sidebar-expanded'); document.getElementById('logo-text').innerHTML = 'N<span class="text-blue-600">P</span>'; document.querySelectorAll('.nav-text').forEach(text => text.classList.add('hidden')); });
+            
+            // --- View Toggle Logic ---
+            document.querySelectorAll('.view-toggle button').forEach(button => { button.addEventListener('click', () => { document.querySelectorAll('.view-toggle button').forEach(btn => btn.classList.remove('active')); button.classList.add('active'); const view = button.dataset.view; if (view === 'grid') { document.getElementById('grid-view').classList.remove('hidden'); document.getElementById('list-view').classList.add('hidden'); } else { document.getElementById('grid-view').classList.add('hidden'); document.getElementById('list-view').classList.remove('hidden'); } }); });
+
+            // --- Modal Logic ---
+            const newTaskModal = document.getElementById('newTaskModal');
+            const addWatcherModal = document.getElementById('addWatcherModal');
+            const watcherDetailModal = document.getElementById('watcherDetailModal');
+            const runAnalysisModal = document.getElementById('runAnalysisModal');
+            const getReportModal = document.getElementById('getReportModal');
+            document.getElementById('new-project-btn').addEventListener('click', () => document.getElementById('newProjectModal').classList.remove('hidden'));
+            document.getElementById('cancel-new-project').addEventListener('click', () => document.getElementById('newProjectModal').classList.add('hidden'));
+            document.getElementById('add-task-btn').addEventListener('click', () => { newTaskModal.querySelector('h3').textContent = 'Add New Task'; document.getElementById('new-task-form').removeAttribute('data-editing-id'); document.getElementById('new-task-form').reset(); newTaskModal.classList.remove('hidden'); });
+            document.getElementById('cancel-new-task').addEventListener('click', () => newTaskModal.classList.add('hidden'));
+            document.getElementById('add-watcher-btn').addEventListener('click', () => addWatcherModal.classList.remove('hidden'));
+            document.getElementById('cancel-add-watcher').addEventListener('click', () => addWatcherModal.classList.add('hidden'));
+            document.getElementById('close-watcher-detail').addEventListener('click', () => watcherDetailModal.classList.add('hidden'));
+            document.getElementById('run-analysis-btn').addEventListener('click', () => { runAnalysisModal.classList.remove('hidden'); initializeAnalysisChart(); });
+            document.getElementById('close-analysis-modal').addEventListener('click', () => runAnalysisModal.classList.add('hidden'));
+            document.getElementById('cancel-analysis').addEventListener('click', () => runAnalysisModal.classList.add('hidden'));
+            document.getElementById('get-report-btn').addEventListener('click', () => { document.getElementById('report-date').textContent = new Date().toLocaleDateString(); getReportModal.classList.remove('hidden'); initializeReportCharts(); });
+            document.getElementById('close-report-modal').addEventListener('click', () => getReportModal.classList.add('hidden'));
+            
+            // --- View Switching Logic ---
+            function showProjectDetail() { 
+                document.getElementById('all-projects-view').classList.add('hidden'); 
+                document.getElementById('project-detail-view').classList.remove('hidden'); 
+                initializeCharts(); 
+                populateActivityLog();
+            }
+            function showAllProjects() { document.getElementById('all-projects-view').classList.remove('hidden'); document.getElementById('project-detail-view').classList.add('hidden'); document.getElementById('progress-watchers-container').classList.add('hidden'); document.getElementById('progress-watchers-grid').innerHTML = ''; }
+            document.querySelectorAll('.project-card, .project-row').forEach(item => item.addEventListener('click', showProjectDetail));
+            document.getElementById('back-to-projects-btn').addEventListener('click', showAllProjects);
+
+            // --- Kanban Board Logic ---
+            function updateTaskCounts() { document.querySelectorAll('.kanban-column').forEach(col => { const count = col.querySelectorAll('.kanban-task').length; col.querySelector('.task-count').textContent = count; }); }
+            function makeTasksDraggable(tasks) { tasks.forEach(task => { task.addEventListener('dragstart', () => task.classList.add('dragging')); task.addEventListener('dragend', () => task.classList.remove('dragging')); }); }
+            document.querySelectorAll('.kanban-column').forEach(column => { column.addEventListener('dragover', e => { e.preventDefault(); column.classList.add('drag-over'); }); column.addEventListener('dragleave', () => column.classList.remove('drag-over')); column.addEventListener('drop', e => { e.preventDefault(); column.classList.remove('drag-over'); const draggingTask = document.querySelector('.dragging'); column.querySelector('.task-list').appendChild(draggingTask); updateTaskCounts(); }); });
+            makeTasksDraggable(document.querySelectorAll('.kanban-task'));
+            
+            document.getElementById('kanban-board').addEventListener('click', (e) => { const button = e.target.closest('.task-actions-btn'); const menu = e.target.closest('.task-menu'); if (button) { const taskMenu = button.nextElementSibling; document.querySelectorAll('.task-menu').forEach(m => { if(m !== taskMenu) m.classList.add('hidden')}); taskMenu.classList.toggle('hidden'); } else if(menu) { const task = menu.closest('.kanban-task'); if (e.target.matches('.task-complete')) { task.classList.toggle('completed'); e.target.textContent = task.classList.contains('completed') ? 'Undo' : 'Complete'; menu.classList.add('hidden'); } if (e.target.matches('.task-edit')) { newTaskModal.querySelector('h3').textContent = 'Edit Task'; document.getElementById('task-title').value = task.querySelector('p').textContent; document.getElementById('new-task-form').setAttribute('data-editing-id', task.id); newTaskModal.classList.remove('hidden'); menu.classList.add('hidden'); } if (e.target.matches('.task-delete')) { if (confirm('Are you sure you want to delete this task?')) { task.remove(); updateTaskCounts(); } } } else { document.querySelectorAll('.task-menu').forEach(m => m.classList.add('hidden')); } });
+            document.getElementById('new-task-form').addEventListener('submit', function(e) { e.preventDefault(); const title = document.getElementById('task-title').value; const status = document.getElementById('task-status').value; const assignee = document.getElementById('task-assignee').value; const priority = document.getElementById('task-priority').value; const priorityColors = { Low: 'green', Medium: 'yellow', High: 'red' }; const color = priorityColors[priority]; const editingId = this.getAttribute('data-editing-id'); if(editingId) { const taskToUpdate = document.getElementById(editingId); taskToUpdate.querySelector('p').textContent = title; } else { const newTaskHTML = `<div id="task-${Date.now()}" draggable="true" class="kanban-task bg-white p-3 rounded-md shadow group"><div class="flex justify-between items-start"><p class="font-medium text-sm flex-1 mr-2">${title}</p><div class="relative"><button class="task-actions-btn opacity-0 group-hover:opacity-100 transition-opacity"><i data-lucide="more-horizontal" class="h-5 w-5 text-slate-500"></i></button><div class="task-menu hidden absolute right-0 mt-2 w-32 bg-white rounded-md shadow-lg z-10"><a href="#" class="task-complete block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100">Complete</a><a href="#" class="task-edit block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100">Edit</a><a href="#" class="task-delete block px-4 py-2 text-sm text-red-600 hover:bg-red-50">Delete</a></div></div></div><div class="flex justify-between items-center mt-2"><span class="text-xs text-${color}-600 font-semibold">${priority}</span><img class="h-6 w-6 rounded-full" src="https://i.pravatar.cc/32?u=${assignee}" alt="${assignee}"></div></div>`; const targetColumn = Array.from(document.querySelectorAll('.kanban-column h4')).find(h4 => h4.textContent === status).closest('.kanban-column'); targetColumn.querySelector('.task-list').insertAdjacentHTML('beforeend', newTaskHTML); } makeTasksDraggable(document.querySelectorAll('.kanban-task')); updateTaskCounts(); this.reset(); newTaskModal.classList.add('hidden'); lucide.createIcons(); });
+
+            // --- Progress Watcher Logic ---
+            const watcherDetailData = { Samantha: { completion: '92%', workload: '85%', blockers: '1', insight: 'High dependency on API team for endpoint testing.', chartData: [5, 4] }, David: { completion: '85%', workload: '40%', blockers: '1', insight: 'Waiting for final design assets for documentation.', chartData: [3, 3] }, Laura: { completion: '78%', workload: '110%', blockers: '2', insight: 'High workload is causing context-switching delays.', chartData: [4, 3] } };
+            function showWatcherDetailModal(name) {
+                const data = watcherDetailData[name];
+                if (!data) return;
+                document.getElementById('watcher-modal-avatar').src = `https://i.pravatar.cc/40?u=${name.toLowerCase()}`;
+                document.getElementById('watcher-modal-name').textContent = `${name}'s Performance Metrics`;
+                document.getElementById('watcher-modal-completion').textContent = data.completion;
+                document.getElementById('watcher-modal-workload').textContent = data.workload;
+                document.getElementById('watcher-modal-blockers').textContent = data.blockers;
+                document.getElementById('watcher-modal-insight').textContent = data.insight;
+                
+                const watcherCtx = document.getElementById('watcher-performance-chart').getContext('2d');
+                if (watcherChartInstance) watcherChartInstance.destroy();
+                watcherChartInstance = new Chart(watcherCtx, {
+                    type: 'bar',
+                    data: { labels: ['Sprint 4', 'Sprint 5'], datasets: [{ label: 'Tasks Completed', data: data.chartData, backgroundColor: '#3b82f6' }] },
+                    options: { scales: { y: { beginAtZero: true, max: 6 } }, plugins: { legend: { display: false } } }
+                });
+
+                watcherDetailModal.classList.remove('hidden');
+                lucide.createIcons();
+            }
+
+            function createProgressWatcher(name) { const watchersContainer = document.getElementById('progress-watchers-container'); const watchersGrid = document.getElementById('progress-watchers-grid'); watchersContainer.classList.remove('hidden'); if (document.getElementById(`watcher-${name.toLowerCase()}`)) return; const watcherHTML = `<div id="watcher-${name.toLowerCase()}" data-employee="${name}" class="watcher-card bg-slate-50 p-4 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors"><div class="flex items-center justify-between"><div class="flex items-center"><img class="h-8 w-8 rounded-full" src="https://i.pravatar.cc/32?u=${name.toLowerCase()}" alt="${name}"><h4 class="font-semibold text-slate-800 ml-3">${name}'s Watcher</h4></div><button class="remove-watcher-btn text-slate-400 hover:text-red-500"><i data-lucide="x-circle" class="h-5 w-5"></i></button></div><div class="mt-4 space-y-2 text-sm"><div class="flex justify-between"><span>On-Time Completion:</span><span class="font-bold text-green-600">${watcherDetailData[name].completion}</span></div><p class="text-xs text-slate-500"><b>Current Blocker:</b> ${watcherDetailData[name].blockers}</p></div></div>`; watchersGrid.insertAdjacentHTML('beforeend', watcherHTML); lucide.createIcons(); }
+            document.getElementById('add-watcher-form').addEventListener('submit', (e) => { e.preventDefault(); const name = document.getElementById('watcher-name').value; createProgressWatcher(name); addWatcherModal.classList.add('hidden'); });
+             document.getElementById('progress-watchers-grid').addEventListener('click', (e) => { const removeBtn = e.target.closest('.remove-watcher-btn'); if (removeBtn) { e.stopPropagation(); removeBtn.closest('.watcher-card').remove(); } else if (e.target.closest('.watcher-card')) { const employeeName = e.target.closest('.watcher-card').dataset.employee; showWatcherDetailModal(employeeName); } });
+
+            // --- Chart.js Logic ---
+            function initializeCharts() { const burndownCtx = document.getElementById('burndown-chart').getContext('2d'); if (burndownChartInstance) burndownChartInstance.destroy(); burndownChartInstance = new Chart(burndownCtx, { type: 'line', data: { labels: ['Sprint 1', 'Sprint 2', 'Sprint 3', 'Sprint 4', 'Sprint 5', 'Sprint 6'], datasets: [ { label: 'Ideal', data: [30, 25, 20, 15, 10, 0], borderColor: '#94a3b8', borderDash: [5, 5], tension: 0.1, fill: false }, { label: 'Actual', data: [30, 28, 22, 18, 10, 4], borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', tension: 0.1, fill: true } ] }, options: { responsive: true, plugins: { legend: { display: true, position: 'top' } }, scales: { y: { beginAtZero: true, title: { display: true, text: 'Tasks Remaining' } } } } }); const budgetCtx = document.getElementById('budget-chart').getContext('2d'); if (budgetCtx) { if (budgetChartInstance) budgetChartInstance.destroy(); budgetChartInstance = new Chart(budgetCtx, { type: 'doughnut', data: { labels: ['Personnel', 'Software', 'Contingency'], datasets: [{ label: 'Budget', data: [25000, 12500, 5000], backgroundColor: ['#3b82f6', '#818cf8', '#ef4444'], borderColor: '#ffffff', borderWidth: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, cutout: '60%' } }); } }
+            function initializeAnalysisChart() { const analysisCtx = document.getElementById('analysis-chart').getContext('2d'); if(analysisChartInstance) analysisChartInstance.destroy(); analysisChartInstance = new Chart(analysisCtx, { type: 'bar', data: { labels: ['Completion Time (Days)'], datasets: [{ label: 'Current Timeline', data: [8], backgroundColor: '#f87171' }, { label: 'AI Optimized Timeline', data: [5], backgroundColor: '#4ade80' }] }, options: { scales: { y: { beginAtZero: true } }, plugins: { legend: { position: 'bottom' } } } }); }
+            function initializeReportCharts() { const reportBurndownCtx = document.getElementById('report-burndown-chart').getContext('2d'); if (reportBurndownChartInstance) reportBurndownChartInstance.destroy(); reportBurndownChartInstance = new Chart(reportBurndownCtx, { type: 'line', data: { labels: ['Sprint 1', 'Sprint 2', 'Sprint 3', 'Sprint 4', 'Sprint 5', 'Sprint 6'], datasets: [ { label: 'Ideal', data: [30, 25, 20, 15, 10, 0], borderColor: '#94a3b8', borderDash: [5, 5], tension: 0.1, fill: false }, { label: 'Actual', data: [30, 28, 22, 18, 10, 4], borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', tension: 0.1, fill: true } ] }, options: { responsive: true, plugins: { legend: { display: true, position: 'top' } } } }); const reportBudgetCtx = document.getElementById('report-budget-chart').getContext('2d'); if (reportBudgetCtx) { if (reportBudgetChartInstance) reportBudgetChartInstance.destroy(); reportBudgetChartInstance = new Chart(reportBudgetCtx, { type: 'doughnut', data: { labels: ['Personnel', 'Software', 'Contingency'], datasets: [{ label: 'Budget', data: [25000, 12500, 5000], backgroundColor: ['#3b82f6', '#818cf8', '#ef4444'], borderColor: '#ffffff', borderWidth: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } }, cutout: '60%' } }); } }
+        
+            // --- AI Prompt Bar Logic ---
+            const promptForm = document.getElementById('prompt-form');
+            const responseContainer = document.getElementById('ai-response-container');
+            const responseHeader = document.getElementById('ai-response-header');
+            const messageList = document.getElementById('message-list');
+            let lastUserQuery = '';
+            let isConversationActive = false;
+
+            if (promptForm) {
+                promptForm.addEventListener('submit', (e) => { e.preventDefault(); const userQuery = document.getElementById('prompt-textarea').value.trim(); if (!userQuery) return; lastUserQuery = userQuery; if (!isConversationActive) { isConversationActive = true; renderExpandedHeader(); } messageList.insertAdjacentHTML('beforeend', `<div class="flex items-start gap-3 justify-end"><div class="bg-slate-200 p-3 rounded-lg max-w-xl"><p class="text-sm text-slate-800">${userQuery}</p></div><img class="w-8 h-8 rounded-full" src="https://i.pravatar.cc/40?u=nexus-user" alt="User avatar"></div>`); const thinkingId = `thinking-${Date.now()}`; messageList.insertAdjacentHTML('beforeend', `<div id="${thinkingId}" class="flex items-start gap-3"><div class="bg-blue-100 p-2 rounded-full h-8 w-8 flex items-center justify-center animate-pulse flex-shrink-0"><i data-lucide="bot" class="h-5 w-5 text-blue-600"></i></div><div class="bg-slate-100 p-3 rounded-lg"><p class="text-sm text-slate-500">Nexus is thinking...</p></div></div>`); lucide.createIcons(); responseContainer.classList.remove('minimized'); responseContainer.classList.add('expanded'); setTimeout(() => { messageList.scrollTop = messageList.scrollHeight; }, 10); document.getElementById('prompt-textarea').value = ''; document.getElementById('prompt-textarea').style.height = 'auto'; setTimeout(() => { const aiResult = getAIResponse(userQuery); const thinkingElement = document.getElementById(thinkingId); if (thinkingElement) { thinkingElement.outerHTML = `<div class="flex items-start gap-3"><div class="bg-blue-100 p-2 rounded-full h-8 w-8 flex items-center justify-center flex-shrink-0"><i data-lucide="bot" class="h-5 w-5 text-blue-600"></i></div><div class="text-sm text-slate-700 space-y-2 prose prose-sm max-w-none bg-slate-100 p-3 rounded-lg">${aiResult.message}</div></div>`; lucide.createIcons(); messageList.scrollTop = messageList.scrollHeight; if(aiResult.action) { aiResult.action(); } } }, 1500); });
+            }
+
+            const renderExpandedHeader = () => { responseHeader.innerHTML = `<div class="flex justify-between items-start"><h3 class="text-lg font-semibold text-slate-900">Nexus AI Response</h3><div class="flex items-center"><button id="minimize-ai-response" class="p-1 rounded-full hover:bg-slate-100 mr-2"><i data-lucide="chevrons-down" class="h-5 w-5 text-slate-500"></i></button><button id="close-ai-response" class="p-1 rounded-full hover:bg-slate-100"><i data-lucide="x" class="h-5 w-5 text-slate-500"></i></button></div></div>`; lucide.createIcons(); }
+            const renderMinimizedHeader = () => { responseHeader.innerHTML = `<div class="flex items-center justify-between h-full"><p class="text-sm text-slate-600 truncate"><span class="font-semibold text-slate-800">AI Response:</span> ${lastUserQuery}</p><button id="expand-ai-response" class="p-1 rounded-full hover:bg-slate-100"><i data-lucide="chevrons-up" class="h-5 w-5 text-slate-500"></i></button></div>`; lucide.createIcons(); }
+
+            if(responseContainer) {
+                responseContainer.addEventListener('click', (e) => { const button = e.target.closest('button'); if (!button) return; if (button.id === 'close-ai-response') { responseContainer.classList.remove('expanded', 'minimized'); messageList.innerHTML = ''; responseHeader.innerHTML = ''; isConversationActive = false; } else if (button.id === 'minimize-ai-response') { responseContainer.classList.remove('expanded'); responseContainer.classList.add('minimized'); renderMinimizedHeader(); } else if (button.id === 'expand-ai-response') { responseContainer.classList.remove('minimized'); responseContainer.classList.add('expanded'); renderExpandedHeader(); setTimeout(() => { messageList.scrollTop = messageList.scrollHeight; }, 10); } });
+            }
+
+            function getAIResponse(message) {
+                const lowerMessage = message.toLowerCase();
+                if (lowerMessage.includes('progress watcher for') || lowerMessage.includes('track')) {
+                    const names = ['samantha', 'david', 'laura'];
+                    const foundName = names.find(name => lowerMessage.includes(name));
+                    if(foundName) {
+                        return { 
+                            message: `<p>Okay, I've created a progress watcher for <strong>${foundName.charAt(0).toUpperCase() + foundName.slice(1)}</strong> on your project detail view.</p>`,
+                            action: () => createProgressWatcher(foundName.charAt(0).toUpperCase() + foundName.slice(1))
+                        };
+                    }
+                     return { message: `<p>I can create a progress watcher for Samantha, David, or Laura. Who would you like to track?</p>`};
+                }
+                if (lowerMessage.includes('risk')) { return { message: `<p>The primary risk for the <strong>Phoenix Project</strong> is the budget, which is currently trending 15% over. This is mainly due to unforeseen software licensing costs. A secondary risk is a potential bottleneck with Laura, whose workload is at 110%.</p>`}; } 
+                else if (lowerMessage.includes('tasks for david')) { return { message: `<p>David is currently assigned to:</p><ul class="list-disc list-inside mt-2 text-sm"><li><strong>Write user documentation</strong> (Medium Priority)</li><li><strong>Setup staging database</strong> (Low Priority - Done)</li></ul><p class="mt-2 text-sm">He has the lowest workload on the team and could take on more tasks.</p>`}; }
+                else { return { message: `<p>I can help with project summaries, risk assessments, and resource allocation. How can I assist with your projects today?</p>`}; }
+            }
+
+            // --- Blocker "Take Action" Modal Logic ---
+            const blockerData = {
+                'resource-overload': {
+                    description: "Laura's workload is at 110%, which is blocking the high-priority 'Refactor payment gateway' task.",
+                    manualTasks: [
+                        { text: 'Conduct a priority review session with Laura to identify deletable tasks.', completed: false },
+                        { text: 'Analyze David\'s current tasks to confirm he has capacity.', completed: false },
+                        { text: 'Hold a 15-minute sync with both Laura and David to hand over the task.', completed: false }
+                    ],
+                    aiActions: [
+                        { id: 'reassign', icon: 'users', title: 'Reassign Gateway Task', description: 'Automatically reassign the task to David and adjust project timelines.' },
+                        { id: 'draft_slack', icon: 'slack', title: 'Draft Sync Message', description: 'Write a Slack message to Laura and David to schedule the handover sync.' },
+                        { id: 'run_simulation', icon: 'brain-circuit', title: 'Run New Simulation', description: 'Analyze the project-wide impact of this reassignment on budget and timeline.' }
+                    ]
+                },
+                'dependency-delay': {
+                    description: "Samantha's 'Design new API endpoints' task is blocked because the required schema updates have not been reviewed.",
+                    manualTasks: [
+                        { text: 'Identify who pushed the schema updates (check git history).', completed: true },
+                        { text: 'Ping the reviewer in the #phoenix-project Slack channel.', completed: false },
+                        { text: 'Confirm with Samantha once the review is complete.', completed: false }
+                    ],
+                    aiActions: [
+                        { id: 'find_reviewer', icon: 'user-check', title: 'Identify Reviewer', description: 'Scan commit history and Slack to find the best person to review the schema updates.' },
+                        { id: 'send_nudge', icon: 'message-square', title: 'Send Automated Nudge', description: 'Draft and send a polite reminder to the responsible party on Slack.' }
+                    ]
+                }
+            };
+            const takeActionModal = document.getElementById('takeActionModal');
+            function openTakeActionModal(blockerId) {
+                const data = blockerData[blockerId];
+                if (!data) return;
+                document.getElementById('blocker-modal-description').textContent = data.description;
+                const tasksContainer = document.getElementById('blocker-modal-tasks');
+                tasksContainer.innerHTML = '';
+                data.manualTasks.forEach(task => {
+                    const taskHtml = `
+                        <div class="flex items-center bg-slate-50 p-3 rounded-md">
+                            <i data-lucide="${task.completed ? 'check-circle-2' : 'circle'}" class="h-5 w-5 mr-3 ${task.completed ? 'text-green-500' : 'text-slate-400'} flex-shrink-0"></i>
+                            <p class="text-sm text-slate-700 ${task.completed ? 'line-through text-slate-500' : ''}">${task.text}</p>
+                        </div>
+                    `;
+                    tasksContainer.insertAdjacentHTML('beforeend', taskHtml);
+                });
+                const aiActionsContainer = document.getElementById('blocker-modal-ai-actions');
+                aiActionsContainer.innerHTML = '';
+                data.aiActions.forEach(action => {
+                    const actionHtml = `
+                        <button data-action-id="${action.id}" class="ai-action-btn text-left bg-white p-4 rounded-lg border hover:border-blue-500 hover:bg-blue-50 transition-all group">
+                            <div class="flex items-center">
+                                <div class="bg-blue-100 p-2 rounded-md mr-3">
+                                    <i data-lucide="${action.icon}" class="h-5 w-5 text-blue-600"></i>
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-slate-800">${action.title}</p>
+                                    <p class="text-xs text-slate-500">${action.description}</p>
+                                </div>
+                                <i data-lucide="arrow-right" class="h-5 w-5 text-slate-400 ml-auto opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                            </div>
+                        </button>
+                    `;
+                    aiActionsContainer.insertAdjacentHTML('beforeend', actionHtml);
+                });
+                takeActionModal.classList.remove('hidden');
+                lucide.createIcons();
+            }
+            document.body.addEventListener('click', (e) => {
+                const takeActionButton = e.target.closest('.take-action-btn');
+                if (takeActionButton) {
+                    const blockerId = takeActionButton.dataset.blockerId;
+                    openTakeActionModal(blockerId);
+                    return;
+                }
+                const closeButton = e.target.closest('#close-action-modal, #cancel-action-modal');
+                if (closeButton) {
+                    takeActionModal.classList.add('hidden');
+                    return;
+                }
+                const aiActionButton = e.target.closest('.ai-action-btn');
+                if (aiActionButton) {
+                    aiActionButton.disabled = true;
+                    aiActionButton.classList.add('opacity-50', 'cursor-not-allowed');
+                    aiActionButton.querySelector('p.font-semibold').textContent += ' (Executing...)';
+                    setTimeout(() => {
+                        aiActionButton.querySelector('p.font-semibold').textContent = aiActionButton.querySelector('p.font-semibold').textContent.replace('(Executing...)', '(Done!)');
+                        const iconContainer = aiActionButton.querySelector('.bg-blue-100');
+                        iconContainer.classList.remove('bg-blue-100');
+                        iconContainer.classList.add('bg-green-100');
+                        iconContainer.innerHTML = `<i data-lucide="check" class="h-5 w-5 text-green-600"></i>`;
+                        lucide.createIcons();
+                    }, 1200);
+                }
+            });
+
+            // --- Activity Log Logic ---
+            const projectActivityData = {
+                reports: [
+                    { title: "Q3 Budget Forecast", generatedBy: "Nexus AI", date: "2025-08-28", icon: "file-text" },
+                    { title: "Resource Workload Analysis", generatedBy: "Alex Hartman", date: "2025-08-15", icon: "file-pie-chart" }
+                ],
+                decisions: [
+                    { text: "Approved task reassignment: 'Refactor payment gateway' from Laura to David.", loggedBy: "Alex Hartman", date: "2025-09-05", icon: "gavel" },
+                    { text: "Decision to move forward with microservices architecture for Phoenix Project.", loggedBy: "Stakeholder Committee", date: "2025-08-20", icon: "check-circle" },
+                    { text: "Increased contingency budget by 10% due to software cost overruns.", loggedBy: "Nexus AI Recommendation", date: "2025-08-12", icon: "trending-up" }
+                ],
+                files: [
+                    { name: "Final_Designs_v3.fig", source: "Figma", date: "2025-09-02", typeIcon: "figma", appIcon: "figma" },
+                    { name: "User_Feedback_Summary.pdf", source: "Uploaded", date: "2025-08-30", typeIcon: "file-bar-chart-2", appIcon: "upload" },
+                    { name: "Meeting_Notes_2025-08-20.docx", source: "Slack", date: "2025-08-20", typeIcon: "file-text", appIcon: "slack" }
+                ]
+            };
+            function populateActivityLog() {
+                const reportsPanel = document.getElementById('reports-panel');
+                const decisionsPanel = document.getElementById('decisions-panel');
+                const filesPanel = document.getElementById('files-panel');
+                reportsPanel.innerHTML = '';
+                decisionsPanel.innerHTML = '';
+                filesPanel.innerHTML = '';
+                projectActivityData.reports.forEach(report => {
+                    reportsPanel.innerHTML += `
+                        <div class="flex items-center justify-between p-3 hover:bg-slate-50 rounded-md">
+                            <div class="flex items-center">
+                                <i data-lucide="${report.icon}" class="h-5 w-5 text-slate-500 mr-4"></i>
+                                <div>
+                                    <p class="font-medium text-sm text-slate-800">${report.title}</p>
+                                    <p class="text-xs text-slate-500">Generated by ${report.generatedBy} on ${new Date(report.date).toLocaleDateString()}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <button class="text-xs font-semibold text-blue-600 hover:underline">View</button>
+                                <button class="text-xs font-semibold text-blue-600 hover:underline">Download</button>
+                            </div>
+                        </div>`;
+                });
+                projectActivityData.decisions.forEach(decision => {
+                    decisionsPanel.innerHTML += `
+                        <div class="flex items-center p-3 hover:bg-slate-50 rounded-md border-l-4 border-transparent">
+                            <i data-lucide="${decision.icon}" class="h-5 w-5 text-blue-600 mr-4 flex-shrink-0"></i>
+                            <div>
+                                <p class="text-sm text-slate-800">${decision.text}</p>
+                                <p class="text-xs text-slate-500">Logged by ${decision.loggedBy} on ${new Date(decision.date).toLocaleDateString()}</p>
+                            </div>
+                        </div>`;
+                });
+                projectActivityData.files.forEach(file => {
+                    filesPanel.innerHTML += `
+                        <div class="flex items-center justify-between p-3 hover:bg-slate-50 rounded-md">
+                            <div class="flex items-center">
+                                <i data-lucide="${file.typeIcon}" class="h-5 w-5 text-slate-500 mr-4"></i>
+                                <div>
+                                    <p class="font-medium text-sm text-slate-800">${file.name}</p>
+                                    <p class="text-xs text-slate-500">Added from ${file.source} on ${new Date(file.date).toLocaleDateString()}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <button class="p-1.5 rounded-md hover:bg-slate-200"><i data-lucide="${file.appIcon}" class="h-4 w-4 text-slate-600"></i></button>
+                            </div>
+                        </div>`;
+                });
+                lucide.createIcons();
+            }
+            const activityLogContainer = document.getElementById('activity-log-container');
+            if (activityLogContainer) {
+                const toggleButton = document.getElementById('toggle-activity-log');
+                const content = document.getElementById('activity-log-content');
+                const toggleIcon = toggleButton.querySelector('i');
+                toggleButton.addEventListener('click', () => {
+                    content.classList.toggle('hidden');
+                    if (content.classList.contains('hidden')) {
+                        toggleIcon.setAttribute('data-lucide', 'chevron-down');
+                    } else {
+                        toggleIcon.setAttribute('data-lucide', 'chevron-up');
+                    }
+                    lucide.createIcons();
+                });
+                const tabsContainer = activityLogContainer.querySelector('.activity-tabs');
+                tabsContainer.addEventListener('click', (e) => {
+                    const clickedTab = e.target.closest('button');
+                    if (!clickedTab) return;
+                    tabsContainer.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
+                    clickedTab.classList.add('active');
+                    const targetTab = clickedTab.dataset.tab;
+                    activityLogContainer.querySelectorAll('[id$="-panel"]').forEach(panel => {
+                        if (panel.id === `${targetTab}-panel`) {
+                            panel.classList.remove('hidden');
+                        } else {
+                            panel.classList.add('hidden');
+                        }
+                    });
+                });
+            }
+
+        });
+    </script>
+</body>
+</html>

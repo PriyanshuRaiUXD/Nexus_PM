@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus PM - Chat History</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+            color: #1e293b; /* slate-800 */
+        }
+        .sidebar {
+            transition: width 0.3s ease-in-out;
+        }
+        .sidebar-collapsed {
+            width: 5rem; /* 80px */
+        }
+        .sidebar-expanded {
+            width: 16rem; /* 256px */
+        }
+        #sidebar.sidebar-collapsed nav a, #sidebar.sidebar-collapsed #user-profile-container {
+            justify-content: center;
+        }
+        .bento-box {
+            background-color: #ffffff; /* white */
+            border-radius: 0.75rem; /* rounded-xl */
+            padding: 1.5rem;
+            border: 1px solid #e2e8f0; /* slate-200 */
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        }
+        #ai-response-container {
+            transition: all 0.5s ease-in-out;
+            max-height: 0;
+            overflow: hidden;
+        }
+        #ai-response-container.expanded {
+            max-height: 50vh;
+        }
+        #ai-response-container.minimized {
+            max-height: 4rem;
+        }
+        #ai-response-container.minimized #message-list {
+            display: none;
+        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        #conversation-list a.active {
+            background-color: #eef2ff; /* indigo-50 */
+        }
+        .project-group-content .conversation-item.active {
+             border-left-color: #4f46e5; /* indigo-600 */
+        }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar sidebar-collapsed bg-white border-r border-slate-200 flex flex-col h-full">
+        <!-- Logo -->
+        <div class="flex items-center justify-center p-4 h-16 border-b border-slate-200">
+            <h1 id="logo-text" class="text-2xl font-bold text-slate-800 transition-opacity duration-300">N<span class="text-blue-600">P</span></h1>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="flex-1 px-4 py-4 space-y-2">
+            <a href="index.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600">
+                <i data-lucide="home" class="h-6 w-6"></i>
+                <span class="ml-4 nav-text hidden">Home</span>
+            </a>
+            <a href="projects.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600">
+                <i data-lucide="folder-kanban" class="h-6 w-6"></i>
+                <span class="ml-4 nav-text hidden">Projects</span>
+            </a>
+            <a href="goals.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600">
+                <i data-lucide="target" class="h-6 w-6"></i>
+                <span class="ml-4 nav-text hidden">Goals</span>
+            </a>
+            <a href="intelligence.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600">
+                <i data-lucide="bar-chart-big" class="h-6 w-6"></i>
+                <span class="ml-4 nav-text hidden">Intelligence</span>
+            </a>
+            <!-- Active Link -->
+             <a href="chat-history.html" class="flex items-center p-3 rounded-lg bg-blue-100 text-blue-700 font-semibold">
+                <i data-lucide="message-square" class="h-6 w-6"></i>
+                <span class="ml-4 nav-text hidden">Chat History</span>
+            </a>
+            <a href="activity.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600">
+                <i data-lucide="activity" class="h-6 w-6"></i>
+                <span class="ml-4 nav-text hidden">Activity</span>
+            </a>
+            <a href="settings.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600">
+                <i data-lucide="settings" class="h-6 w-6"></i>
+                <span class="ml-4 nav-text hidden">Settings</span>
+            </a>
+        </nav>
+
+        <!-- User Profile -->
+        <div class="p-4 border-t border-slate-200">
+             <div id="user-profile-container" class="flex items-center">
+                <img src="https://i.pravatar.cc/40?u=nexus-user" alt="User Avatar" class="rounded-full h-10 w-10">
+                <div class="ml-3 overflow-hidden nav-text hidden">
+                    <p class="font-semibold text-slate-800 text-sm truncate">Alex Hartman</p>
+                    <p class="text-xs text-slate-500 truncate">Product Manager</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 bg-slate-50 flex flex-col overflow-hidden">
+        <div id="main-content" class="flex-1 flex overflow-hidden">
+            <!-- Left Panel: Conversation List -->
+            <div id="conversation-list-panel" class="w-full md:w-2/5 lg:w-1/3 xl:w-1/4 bg-white border-r border-slate-200 flex flex-col">
+                <div class="p-4 border-b">
+                    <div class="flex justify-between items-center mb-2">
+                        <h1 class="text-xl font-bold text-slate-900">Chat History</h1>
+                        <button title="Start New Chat" class="p-2 rounded-lg hover:bg-slate-100">
+                            <i data-lucide="plus-square" class="h-5 w-5 text-blue-600"></i>
+                        </button>
+                    </div>
+                    <div class="relative">
+                        <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400"></i>
+                        <input type="text" placeholder="Search conversations..." class="pl-9 pr-4 py-2 w-full text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                    </div>
+                </div>
+                <div id="conversation-list" class="flex-1 overflow-y-auto custom-scrollbar">
+                    <!-- Conversations will be dynamically inserted here -->
+                </div>
+            </div>
+            
+            <!-- Right Panel: Chat Transcript -->
+            <div id="chat-transcript-panel" class="flex-1 flex flex-col">
+                <div class="p-4 border-b flex justify-between items-center flex-shrink-0">
+                    <div>
+                        <h2 id="transcript-title" class="text-lg font-semibold text-slate-800"></h2>
+                        <p id="transcript-date" class="text-xs text-slate-500"></p>
+                    </div>
+                    <button class="flex items-center space-x-2 text-sm font-medium text-slate-600 hover:text-slate-900">
+                        <i data-lucide="download" class="h-4 w-4"></i>
+                        <span>Export</span>
+                    </button>
+                </div>
+                <div id="message-list-history" class="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6">
+                    <!-- Messages will be dynamically inserted here -->
+                </div>
+                <!-- Prompt Bar -->
+                <div class="p-4 bg-white border-t border-slate-200 shadow-[0_-2px_5px_rgba(0,0,0,0.05)] flex-shrink-0">
+                    <div class="max-w-4xl mx-auto">
+                         <form id="prompt-form" class="relative">
+                            <textarea id="prompt-textarea" rows="1" placeholder="Continue this conversation with Nexus AI..." class="w-full py-3 pl-5 pr-14 text-sm text-slate-800 bg-slate-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 border border-transparent focus:border-blue-500 transition-all duration-200 max-h-40 overflow-y-auto no-scrollbar"></textarea>
+                            <button type="submit" class="absolute bottom-3.5 right-0 flex items-center justify-center w-14 text-slate-500 hover:text-blue-600"><i data-lucide="send" class="h-5 w-5"></i></button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+
+            // --- Sidebar Logic ---
+            const sidebar = document.getElementById('sidebar');
+            sidebar.addEventListener('mouseenter', () => { 
+                sidebar.classList.remove('sidebar-collapsed'); 
+                sidebar.classList.add('sidebar-expanded'); 
+                document.getElementById('logo-text').innerHTML = 'Nexus<span class="text-blue-600">PM</span>'; 
+                document.querySelectorAll('.nav-text').forEach(text => text.classList.remove('hidden')); 
+            });
+            sidebar.addEventListener('mouseleave', () => { 
+                sidebar.classList.add('sidebar-collapsed'); 
+                sidebar.classList.remove('sidebar-expanded'); 
+                document.getElementById('logo-text').innerHTML = 'N<span class="text-blue-600">P</span>'; 
+                document.querySelectorAll('.nav-text').forEach(text => text.classList.add('hidden')); 
+            });
+
+            // --- Chat History Data & Logic ---
+            const chatHistoryData = [
+                {
+                    id: 'conv1',
+                    project: 'Phoenix Project',
+                    title: 'Phoenix Project Risk Analysis',
+                    date: '2025-09-04T14:30:00Z',
+                    messages: [
+                        { sender: 'user', text: 'What are the biggest risks for the Phoenix Project?' },
+                        { sender: 'ai', text: `The primary risk for the <strong>Phoenix Project</strong> is the budget, which is currently trending 15% over. This is mainly due to unforeseen software licensing costs. A secondary risk is a potential bottleneck with Laura, whose workload is at 110%.` }
+                    ]
+                },
+                {
+                    id: 'conv2',
+                    project: 'Phoenix Project',
+                    title: 'Progress Watcher for David',
+                    date: '2025-09-02T11:15:00Z',
+                    action: true,
+                    messages: [
+                        { sender: 'user', text: 'Create a progress watcher for David' },
+                        { sender: 'ai', text: `Okay, I've created a progress watcher for <strong>David</strong> on your project detail view.` }
+                    ]
+                },
+                {
+                    id: 'conv4',
+                    project: 'Orion App',
+                    title: 'User Engagement Goal',
+                    date: '2025-09-01T10:00:00Z',
+                    messages: [
+                        { sender: 'user', text: 'How is the Orion App affecting the user engagement goal?' },
+                        { sender: 'ai', text: `The <strong>Orion App</strong> is the primary driver for the "Increase User Engagement" objective. Its "10k downloads" Key Result is 95% complete, which is positively impacting the overall goal.`}
+                    ]
+                },
+                {
+                    id: 'conv3',
+                    project: 'Phoenix Project',
+                    title: 'Scalability Goal Inquiry',
+                    date: '2025-08-28T09:00:00Z',
+                    messages: [
+                        { sender: 'user', text: 'How is the backend scalability objective progressing?' },
+                        { sender: 'ai', text: `Progress on the scalability objective is at <strong>40%</strong>. The main Key Result is to complete Phase 1 of the backend refactoring. Currently, 2 of the 5 required microservices have been migrated.` },
+                        { sender: 'user', text: 'Which project is that linked to?' },
+                        { sender: 'ai', text: `That Key Result is linked to the <strong>Phoenix Project</strong>.` }
+                    ]
+                }
+            ];
+
+            const conversationList = document.getElementById('conversation-list');
+            const transcriptTitle = document.getElementById('transcript-title');
+            const transcriptDate = document.getElementById('transcript-date');
+            const messageListHistory = document.getElementById('message-list-history');
+
+            function displayConversation(conversationId) {
+                const conversation = chatHistoryData.find(c => c.id === conversationId);
+                if (!conversation) return;
+
+                // Update header
+                transcriptTitle.textContent = conversation.title;
+                transcriptDate.textContent = `Conversation from ${new Date(conversation.date).toLocaleString()}`;
+                
+                // Update active item in list
+                conversationList.querySelectorAll('a').forEach(a => a.classList.remove('active'));
+                conversationList.querySelector(`a[data-id="${conversationId}"]`).classList.add('active');
+
+                // Render messages
+                messageListHistory.innerHTML = '';
+                conversation.messages.forEach(msg => {
+                    if (msg.sender === 'user') {
+                        messageListHistory.innerHTML += `
+                            <div class="flex items-start gap-3 justify-end">
+                                <div class="bg-slate-200 p-3 rounded-lg max-w-xl">
+                                    <p class="text-sm text-slate-800">${msg.text}</p>
+                                </div>
+                                <img class="w-8 h-8 rounded-full" src="https://i.pravatar.cc/40?u=nexus-user" alt="User avatar">
+                            </div>`;
+                    } else {
+                        messageListHistory.innerHTML += `
+                            <div class="flex items-start gap-3">
+                                <div class="bg-blue-100 p-2 rounded-full h-8 w-8 flex items-center justify-center flex-shrink-0">
+                                    <i data-lucide="bot" class="h-5 w-5 text-blue-600"></i>
+                                </div>
+                                <div class="text-sm text-slate-700 space-y-2 prose prose-sm max-w-none bg-slate-100 p-3 rounded-lg">${msg.text}</div>
+                            </div>`;
+                    }
+                });
+                lucide.createIcons();
+                messageListHistory.scrollTop = messageListHistory.scrollHeight;
+            }
+
+            function loadConversationList() {
+                const groupedConversations = chatHistoryData.reduce((acc, conv) => {
+                    const project = conv.project || 'General';
+                    if (!acc[project]) acc[project] = [];
+                    acc[project].push(conv);
+                    return acc;
+                }, {});
+
+                conversationList.innerHTML = '';
+
+                Object.keys(groupedConversations).sort().forEach(project => {
+                    const conversations = groupedConversations[project];
+                    const projectGroupHTML = `
+                        <div class="project-group border-b border-slate-200">
+                            <button class="project-group-header w-full text-left p-4 flex justify-between items-center hover:bg-slate-50">
+                                <span class="font-semibold text-sm text-slate-600">${project}</span>
+                                <i data-lucide="chevron-down" class="h-4 w-4 transition-transform"></i>
+                            </button>
+                            <div class="project-group-content pl-2 hidden">
+                                ${conversations.map(conv => `
+                                    <a href="#" data-id="${conv.id}" class="block p-4 border-b border-l-4 border-transparent hover:bg-slate-50 conversation-item">
+                                        <div class="flex justify-between items-center">
+                                            <p class="font-semibold text-sm text-slate-800 truncate">${conv.title}</p>
+                                            ${conv.action ? '<i data-lucide="zap" class="h-4 w-4 text-blue-500 flex-shrink-0" title="This conversation resulted in an action."></i>' : ''}
+                                        </div>
+                                        <p class="text-xs text-slate-500 mt-1">${new Date(conv.date).toLocaleDateString()}</p>
+                                    </a>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                    conversationList.insertAdjacentHTML('beforeend', projectGroupHTML);
+                });
+
+                conversationList.querySelectorAll('.project-group-header').forEach(header => {
+                    header.addEventListener('click', () => {
+                        const content = header.nextElementSibling;
+                        const icon = header.querySelector('i');
+                        content.classList.toggle('hidden');
+                        icon.classList.toggle('rotate-180');
+                    });
+                });
+
+                conversationList.querySelectorAll('.conversation-item').forEach(item => {
+                    item.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const id = e.currentTarget.dataset.id;
+                        displayConversation(id);
+                    });
+                });
+
+                lucide.createIcons();
+            }
+            
+            // Initial Load
+            loadConversationList();
+            if (chatHistoryData.length > 0) {
+                displayConversation(chatHistoryData[0].id);
+            }
+        });
+    </script>
+</body>
+</html>
+

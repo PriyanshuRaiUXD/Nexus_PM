@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus PM - Goals</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+            color: #1e293b; /* slate-800 */
+        }
+        .sidebar {
+            transition: width 0.3s ease-in-out;
+        }
+        .sidebar-collapsed {
+            width: 5rem; /* 80px */
+        }
+        .sidebar-expanded {
+            width: 16rem; /* 256px */
+        }
+        #sidebar.sidebar-collapsed nav a, #sidebar.sidebar-collapsed #user-profile-container {
+            justify-content: center;
+        }
+        .bento-box {
+            background-color: #ffffff; /* white */
+            border-radius: 0.75rem; /* rounded-xl */
+            padding: 1.5rem;
+            border: 1px solid #e2e8f0; /* slate-200 */
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        }
+        .modal-overlay {
+            background-color: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(4px);
+        }
+        .key-results-container {
+            transition: max-height 0.5s ease-in-out, opacity 0.3s ease-in-out;
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+        }
+        .key-results-container.expanded {
+            max-height: 1000px; /* Large enough for content */
+            opacity: 1;
+        }
+        .status-on-track { color: #16a34a; background-color: #dcfce7; }
+        .status-at-risk { color: #d97706; background-color: #fef3c7; }
+        .status-off-track { color: #dc2626; background-color: #fee2e2; }
+        #ai-response-container {
+            transition: all 0.5s ease-in-out;
+            max-height: 0;
+            overflow: hidden;
+        }
+        #ai-response-container.expanded {
+            max-height: 50vh;
+        }
+        #ai-response-container.minimized {
+            max-height: 4rem;
+        }
+        #ai-response-container.minimized #message-list {
+            display: none;
+        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        #message-list::-webkit-scrollbar { width: 6px; }
+        #message-list::-webkit-scrollbar-track { background: #f1f5f9; }
+        #message-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        #message-list::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar sidebar-collapsed bg-white border-r border-slate-200 flex flex-col h-full">
+        <!-- Logo -->
+        <div class="flex items-center justify-center p-4 h-16 border-b border-slate-200">
+            <h1 id="logo-text" class="text-2xl font-bold text-slate-800 transition-opacity duration-300">N<span class="text-blue-600">P</span></h1>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="flex-1 px-4 py-4 space-y-2">
+            <a href="index.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600">
+                <i data-lucide="home" class="h-6 w-6"></i>
+                <span class="ml-4 nav-text hidden">Home</span>
+            </a>
+            <a href="projects.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600">
+                <i data-lucide="folder-kanban" class="h-6 w-6"></i>
+                <span class="ml-4 nav-text hidden">Projects</span>
+            </a>
+            <!-- Active Link -->
+            <a href="goals.html" class="flex items-center p-3 rounded-lg bg-blue-100 text-blue-700 font-semibold">
+                <i data-lucide="target" class="h-6 w-6"></i>
+                <span class="ml-4 nav-text hidden">Goals</span>
+            </a>
+            <a href="intelligence.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600">
+                <i data-lucide="bar-chart-big" class="h-6 w-6"></i>
+                <span class="ml-4 nav-text hidden">Intelligence</span>
+            </a>
+             <a href="chat-history.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600">
+                <i data-lucide="message-square" class="h-6 w-6"></i>
+                <span class="ml-4 nav-text hidden">Chat History</span>
+            </a>
+            <a href="activity.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600">
+                <i data-lucide="activity" class="h-6 w-6"></i>
+                <span class="ml-4 nav-text hidden">Activity</span>
+            </a>
+            <a href="settings.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600">
+                <i data-lucide="settings" class="h-6 w-6"></i>
+                <span class="ml-4 nav-text hidden">Settings</span>
+            </a>
+        </nav>
+
+        <!-- User Profile -->
+        <div class="p-4 border-t border-slate-200">
+             <div id="user-profile-container" class="flex items-center">
+                <img src="https://i.pravatar.cc/40?u=nexus-user" alt="User Avatar" class="rounded-full h-10 w-10">
+                <div class="ml-3 overflow-hidden nav-text hidden">
+                    <p class="font-semibold text-slate-800 text-sm truncate">Alex Hartman</p>
+                    <p class="text-xs text-slate-500 truncate">Product Manager</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 bg-slate-50 flex flex-col">
+        <div id="main-content" class="flex-1 overflow-y-auto overflow-x-hidden p-8">
+            <header class="mb-8">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h1 class="text-3xl font-bold text-slate-900">Goals & OKRs</h1>
+                        <p class="text-slate-500 mt-1">Track company objectives and their alignment with active projects.</p>
+                    </div>
+                    <button id="new-objective-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg flex items-center space-x-2">
+                        <i data-lucide="plus" class="h-5 w-5"></i>
+                        <span>New Objective</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Strategic Metrics Bento Box -->
+            <div class="bento-box mb-6">
+                <h3 class="text-xl font-semibold text-slate-900 mb-4">Strategic Metrics (Q3 2025)</h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-center md:text-left">
+                    <div class="p-4 bg-slate-50 rounded-lg">
+                        <p class="text-sm text-slate-500">Goal Achievement</p>
+                        <p class="text-3xl font-bold text-slate-800 mt-1">72%</p>
+                        <p class="text-xs text-green-600 flex items-center justify-center md:justify-start"><i data-lucide="arrow-up" class="h-3 w-3 mr-1"></i>+5% from last quarter</p>
+                    </div>
+                    <div class="p-4 bg-slate-50 rounded-lg">
+                        <p class="text-sm text-slate-500">Project Alignment</p>
+                        <p class="text-3xl font-bold text-slate-800 mt-1">95%</p>
+                        <p class="text-xs text-slate-500 flex items-center justify-center md:justify-start"><i data-lucide="check-circle" class="h-3 w-3 mr-1"></i>Strongly Aligned</p>
+                    </div>
+                    <div class="p-4 bg-slate-50 rounded-lg">
+                        <p class="text-sm text-slate-500">Team Health</p>
+                        <p class="text-3xl font-bold text-slate-800 mt-1">88%</p>
+                        <p class="text-xs text-yellow-600 flex items-center justify-center md:justify-start"><i data-lucide="trending-down" class="h-3 w-3 mr-1"></i>Burnout risk detected</p>
+                    </div>
+                    <div class="p-4 bg-blue-50 rounded-lg">
+                        <p class="text-sm text-blue-700">AI Forecasted Rate</p>
+                        <p class="text-3xl font-bold text-blue-800 mt-1">78%</p>
+                        <p class="text-xs text-blue-600 flex items-center justify-center md:justify-start"><i data-lucide="brain-circuit" class="h-3 w-3 mr-1"></i>Based on current velocity</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Summary Bento Box -->
+            <div class="bento-box mb-6">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center space-x-2"><h3 class="text-xl font-semibold text-slate-900">AI Strategy Summary</h3><i data-lucide="info" class="h-4 w-4 text-slate-400 cursor-pointer" title="This summary is generated by Nexus AI based on goal progress and linked project data."></i></div>
+                    <button class="text-blue-600 hover:text-blue-500 p-1 rounded-md hover:bg-blue-100"><i data-lucide="refresh-cw" class="h-4 w-4"></i></button>
+                </div>
+                <p class="text-sm text-slate-600 mt-2">With <strong>95% of projects aligned</strong> to strategic goals, overall progress is trending positively. However, the <strong>"Enhance Backend Scalability"</strong> objective is <span class="font-bold text-red-600">at risk</span>, pulling the forecasted achievement rate down to <strong>78%</strong>. This is primarily due to resource contention impacting the Phoenix Project.</p>
+            </div>
+
+            <!-- Objectives Container -->
+            <div id="objectives-container" class="space-y-6">
+                
+                <!-- Objective 1: User Engagement -->
+                <div class="bento-box">
+                    <div class="objective-header flex justify-between items-center cursor-pointer">
+                        <div class="flex-1">
+                            <div class="flex items-center mb-2">
+                                <h3 class="text-lg font-semibold text-slate-800">Increase User Engagement by 20% in Q3</h3>
+                                <span class="text-xs font-semibold px-2 py-1 rounded-full ml-3 status-on-track">On Track</span>
+                            </div>
+                            <div class="flex items-center space-x-4 text-xs text-slate-500 mb-3">
+                                <div class="flex items-center"><i data-lucide="folder-kanban" class="h-3.5 w-3.5 mr-1.5"></i>1 Contributing Project</div>
+                                <div class="flex items-center text-green-600 font-medium"><i data-lucide="trending-up" class="h-3.5 w-3.5 mr-1.5"></i>Trending Positively</div>
+                            </div>
+                            <div class="flex justify-between text-sm text-slate-500 mb-1"><span>Overall Progress</span><span>85%</span></div>
+                            <div class="w-full bg-slate-200 rounded-full h-2.5"><div class="bg-green-500 h-2.5 rounded-full" style="width: 85%"></div></div>
+                        </div>
+                        <i data-lucide="chevron-down" class="ml-4 h-5 w-5 toggle-icon transition-transform"></i>
+                    </div>
+                    <div class="key-results-container">
+                        <hr class="my-4">
+                        <div class="space-y-4">
+                            <!-- KR 1.1 -->
+                            <div class="p-4 bg-slate-50 rounded-lg">
+                                <p class="font-semibold text-sm text-slate-700">KR: Launch Orion App to achieve 10k downloads</p>
+                                <div class="flex items-center justify-between text-xs text-slate-500 mt-2">
+                                    <span>Progress: 9,500 / 10,000</span>
+                                    <span>95%</span>
+                                </div>
+                                <div class="w-full bg-slate-200 rounded-full h-1.5 mt-1"><div class="bg-blue-500 h-1.5 rounded-full" style="width: 95%"></div></div>
+                                <div class="mt-3 flex items-center justify-between">
+                                    <div class="flex items-center space-x-2">
+                                        <i data-lucide="link" class="h-4 w-4 text-slate-400"></i>
+                                        <p class="text-xs font-medium text-slate-600">Linked Project: <a href="projects.html" class="text-blue-600 hover:underline">Orion App</a></p>
+                                    </div>
+                                    <div class="bg-green-100 text-green-700 p-2 rounded-md text-xs">
+                                        <i data-lucide="lightbulb" class="inline h-3 w-3 mr-1"></i><strong>AI Insight:</strong> Download velocity exceeds forecast by 8%.
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- KR 1.2 -->
+                            <div class="p-4 bg-slate-50 rounded-lg">
+                                <p class="font-semibold text-sm text-slate-700">KR: Reduce user churn from 15% to 10%</p>
+                                <div class="flex items-center justify-between text-xs text-slate-500 mt-2">
+                                    <span>Progress: 11% Current Churn</span>
+                                    <span>80%</span>
+                                </div>
+                                <div class="w-full bg-slate-200 rounded-full h-1.5 mt-1"><div class="bg-blue-500 h-1.5 rounded-full" style="width: 80%"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Objective 2: Backend Scalability -->
+                <div class="bento-box">
+                    <div class="objective-header flex justify-between items-center cursor-pointer">
+                        <div class="flex-1">
+                            <div class="flex items-center mb-2">
+                                <h3 class="text-lg font-semibold text-slate-800">Enhance Backend Scalability for 50k Concurrent Users</h3>
+                                <span class="text-xs font-semibold px-2 py-1 rounded-full ml-3 status-at-risk">At Risk</span>
+                            </div>
+                            <div class="flex items-center space-x-4 text-xs text-slate-500 mb-3">
+                                <div class="flex items-center"><i data-lucide="folder-kanban" class="h-3.5 w-3.5 mr-1.5"></i>1 Contributing Project</div>
+                                <div class="flex items-center text-yellow-600 font-medium"><i data-lucide="trending-down" class="h-3.5 w-3.5 mr-1.5"></i>Trending Negatively</div>
+                            </div>
+                            <div class="flex justify-between text-sm text-slate-500 mb-1"><span>Overall Progress</span><span>40%</span></div>
+                            <div class="w-full bg-slate-200 rounded-full h-2.5"><div class="bg-yellow-500 h-2.5 rounded-full" style="width: 40%"></div></div>
+                        </div>
+                        <i data-lucide="chevron-down" class="ml-4 h-5 w-5 toggle-icon transition-transform"></i>
+                    </div>
+                    <div class="key-results-container">
+                        <hr class="my-4">
+                        <div class="space-y-4">
+                            <!-- KR 2.1 -->
+                            <div class="p-4 bg-slate-50 rounded-lg">
+                                <p class="font-semibold text-sm text-slate-700">KR: Complete Phase 1 of backend refactoring</p>
+                                <div class="flex items-center justify-between text-xs text-slate-500 mt-2">
+                                    <span>Progress: 2 of 5 services migrated</span>
+                                    <span>40%</span>
+                                </div>
+                                <div class="w-full bg-slate-200 rounded-full h-1.5 mt-1"><div class="bg-yellow-500 h-1.5 rounded-full" style="width: 40%"></div></div>
+                                <div class="mt-3 flex items-center justify-between">
+                                    <div class="flex items-center space-x-2">
+                                        <i data-lucide="link" class="h-4 w-4 text-slate-400"></i>
+                                        <p class="text-xs font-medium text-slate-600">Linked Project: <a href="projects.html" class="text-blue-600 hover:underline">Phoenix Project</a></p>
+                                    </div>
+                                    <div class="bg-yellow-100 text-yellow-700 p-2 rounded-md text-xs">
+                                        <i data-lucide="alert-triangle" class="inline h-3 w-3 mr-1"></i><strong>AI Insight:</strong> Resource overload on Laura is delaying this KR by a predicted 8 days.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Response Container -->
+        <div id="ai-response-container" class="bg-white border-t border-slate-200 no-scrollbar flex flex-col max-w-full">
+            <div id="ai-response-header" class="px-6 py-4 max-w-4xl w-full mx-auto"></div>
+            <div id="message-list" class="flex-1 overflow-y-auto px-6 space-y-6 max-w-4xl w-full mx-auto pb-6"></div>
+        </div>
+
+        <!-- Prompt Bar -->
+        <div class="p-4 bg-white border-t border-slate-200 shadow-[0_-2px_5px_rgba(0,0,0,0.05)]">
+            <div class="max-w-4xl mx-auto">
+                 <form id="prompt-form" class="relative">
+                    <textarea id="prompt-textarea" rows="1" placeholder="Ask Nexus AI about your goals..." class="w-full py-3 pl-5 pr-14 text-sm text-slate-800 bg-slate-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 border border-transparent focus:border-blue-500 transition-all duration-200 max-h-40 overflow-y-auto no-scrollbar"></textarea>
+                    <button type="submit" class="absolute bottom-3.5 right-0 flex items-center justify-center w-14 text-slate-500 hover:text-blue-600"><i data-lucide="send" class="h-5 w-5"></i></button>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modals -->
+    <div id="newObjectiveModal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg">
+            <div class="p-6 border-b"><h3 class="text-lg font-semibold text-slate-900">Create New Objective</h3></div>
+            <div class="p-6 space-y-4">
+                <div><label class="text-sm font-medium text-slate-700">Objective Title</label><input type="text" class="mt-1 w-full border border-slate-300 rounded-md p-2" placeholder="e.g., Enhance Backend Scalability..."></div>
+                <div><label class="text-sm font-medium text-slate-700">Timeframe</label><select class="mt-1 w-full border border-slate-300 rounded-md p-2"><option>Q3 2025</option><option>Q4 2025</option><option>H1 2026</option></select></div>
+            </div>
+            <div class="bg-slate-50 px-6 py-4 rounded-b-lg flex justify-end space-x-3">
+                <button id="cancel-new-objective" class="px-4 py-2 text-sm font-medium bg-white hover:bg-slate-50 border border-slate-300 rounded-md text-slate-700">Cancel</button>
+                <button class="px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 rounded-md text-white">Create Objective</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+
+            // --- Sidebar Logic ---
+            const sidebar = document.getElementById('sidebar');
+            sidebar.addEventListener('mouseenter', () => { 
+                sidebar.classList.remove('sidebar-collapsed'); 
+                sidebar.classList.add('sidebar-expanded'); 
+                document.getElementById('logo-text').innerHTML = 'Nexus<span class="text-blue-600">PM</span>'; 
+                document.querySelectorAll('.nav-text').forEach(text => text.classList.remove('hidden')); 
+            });
+            sidebar.addEventListener('mouseleave', () => { 
+                sidebar.classList.add('sidebar-collapsed'); 
+                sidebar.classList.remove('sidebar-expanded'); 
+                document.getElementById('logo-text').innerHTML = 'N<span class="text-blue-600">P</span>'; 
+                document.querySelectorAll('.nav-text').forEach(text => text.classList.add('hidden')); 
+            });
+
+            // --- Modal Logic ---
+            const newObjectiveModal = document.getElementById('newObjectiveModal');
+            document.getElementById('new-objective-btn').addEventListener('click', () => newObjectiveModal.classList.remove('hidden'));
+            document.getElementById('cancel-new-objective').addEventListener('click', () => newObjectiveModal.classList.add('hidden'));
+
+            // --- OKR Expansion Logic ---
+            document.querySelectorAll('.objective-header').forEach(header => {
+                header.addEventListener('click', () => {
+                    const krContainer = header.nextElementSibling;
+                    const icon = header.querySelector('.toggle-icon');
+                    krContainer.classList.toggle('expanded');
+                    icon.classList.toggle('rotate-180');
+                });
+            });
+
+            // --- AI Prompt Bar Logic ---
+            const promptForm = document.getElementById('prompt-form');
+            const responseContainer = document.getElementById('ai-response-container');
+            const responseHeader = document.getElementById('ai-response-header');
+            const messageList = document.getElementById('message-list');
+            let lastUserQuery = '';
+            let isConversationActive = false;
+
+            if (promptForm) {
+                promptForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const userQuery = document.getElementById('prompt-textarea').value.trim();
+                    if (!userQuery) return;
+                    lastUserQuery = userQuery;
+                    if (!isConversationActive) {
+                        isConversationActive = true;
+                        renderExpandedHeader();
+                    }
+                    messageList.insertAdjacentHTML('beforeend', `<div class="flex items-start gap-3 justify-end"><div class="bg-slate-200 p-3 rounded-lg max-w-xl"><p class="text-sm text-slate-800">${userQuery}</p></div><img class="w-8 h-8 rounded-full" src="https://i.pravatar.cc/40?u=nexus-user" alt="User avatar"></div>`);
+                    const thinkingId = `thinking-${Date.now()}`;
+                    messageList.insertAdjacentHTML('beforeend', `<div id="${thinkingId}" class="flex items-start gap-3"><div class="bg-blue-100 p-2 rounded-full h-8 w-8 flex items-center justify-center animate-pulse flex-shrink-0"><i data-lucide="bot" class="h-5 w-5 text-blue-600"></i></div><div class="bg-slate-100 p-3 rounded-lg"><p class="text-sm text-slate-500">Nexus is thinking...</p></div></div>`);
+                    lucide.createIcons();
+                    responseContainer.classList.remove('minimized');
+                    responseContainer.classList.add('expanded');
+                    setTimeout(() => { messageList.scrollTop = messageList.scrollHeight; }, 10);
+                    document.getElementById('prompt-textarea').value = '';
+                    document.getElementById('prompt-textarea').style.height = 'auto';
+
+                    setTimeout(() => {
+                        const aiResult = getAIResponse(userQuery);
+                        const thinkingElement = document.getElementById(thinkingId);
+                        if (thinkingElement) {
+                            thinkingElement.outerHTML = `<div class="flex items-start gap-3"><div class="bg-blue-100 p-2 rounded-full h-8 w-8 flex items-center justify-center flex-shrink-0"><i data-lucide="bot" class="h-5 w-5 text-blue-600"></i></div><div class="text-sm text-slate-700 space-y-2 prose prose-sm max-w-none bg-slate-100 p-3 rounded-lg">${aiResult.message}</div></div>`;
+                            lucide.createIcons();
+                            messageList.scrollTop = messageList.scrollHeight;
+                        }
+                    }, 1500);
+                });
+            }
+
+            const renderExpandedHeader = () => {
+                responseHeader.innerHTML = `<div class="flex justify-between items-start"><h3 class="text-lg font-semibold text-slate-900">Nexus AI Response</h3><div class="flex items-center"><button id="minimize-ai-response" class="p-1 rounded-full hover:bg-slate-100 mr-2"><i data-lucide="chevrons-down" class="h-5 w-5 text-slate-500"></i></button><button id="close-ai-response" class="p-1 rounded-full hover:bg-slate-100"><i data-lucide="x" class="h-5 w-5 text-slate-500"></i></button></div></div>`;
+                lucide.createIcons();
+            }
+            const renderMinimizedHeader = () => {
+                responseHeader.innerHTML = `<div class="flex items-center justify-between h-full"><p class="text-sm text-slate-600 truncate"><span class="font-semibold text-slate-800">AI Response:</span> ${lastUserQuery}</p><button id="expand-ai-response" class="p-1 rounded-full hover:bg-slate-100"><i data-lucide="chevrons-up" class="h-5 w-5 text-slate-500"></i></button></div>`;
+                lucide.createIcons();
+            }
+
+            if(responseContainer) {
+                responseContainer.addEventListener('click', (e) => {
+                    const button = e.target.closest('button');
+                    if (!button) return;
+                    if (button.id === 'close-ai-response') {
+                        responseContainer.classList.remove('expanded', 'minimized');
+                        messageList.innerHTML = '';
+                        responseHeader.innerHTML = '';
+                        isConversationActive = false;
+                    } else if (button.id === 'minimize-ai-response') {
+                        responseContainer.classList.remove('expanded');
+                        responseContainer.classList.add('minimized');
+                        renderMinimizedHeader();
+                    } else if (button.id === 'expand-ai-response') {
+                        responseContainer.classList.remove('minimized');
+                        responseContainer.classList.add('expanded');
+                        renderExpandedHeader();
+                        setTimeout(() => { messageList.scrollTop = messageList.scrollHeight; }, 10);
+                    }
+                });
+            }
+
+            function getAIResponse(message) {
+                const lowerMessage = message.toLowerCase();
+                if (lowerMessage.includes('risk')) {
+                    return {
+                        message: `<p>The objective <strong>"Enhance Backend Scalability for 50k Concurrent Users"</strong> is currently flagged as 'At Risk'. This is due to a 40% completion rate on its key result, which is blocked by resource contention in the linked Phoenix Project. The AI predicts an 8-day delay if no action is taken.</p>`
+                    };
+                }
+                if (lowerMessage.includes('user engagement')) {
+                    return {
+                        message: `<p>The "Increase User Engagement" objective is primarily supported by the <strong>Orion App</strong> project. Its key results are:</p><ul class="list-disc list-inside mt-2 text-sm"><li>Launch Orion App to achieve 10k downloads (95% complete)</li><li>Reduce user churn from 15% to 10% (80% complete)</li></ul>`
+                    };
+                }
+                if (lowerMessage.includes('scalability')) {
+                    return {
+                        message: `<p>Progress on the scalability objective is at <strong>40%</strong>. The main Key Result is to complete Phase 1 of the backend refactoring. Currently, 2 of the 5 required microservices have been migrated. The linked <strong>Phoenix Project</strong> is driving this work.</p>`
+                    };
+                }
+                else {
+                    return {
+                        message: `<p>I can provide summaries on goal progress, identify risks, and show project alignment. How can I help you with your strategic goals today?</p>`
+                    };
+                }
+            }
+        });
+    </script>
+</body>
+</html>
+

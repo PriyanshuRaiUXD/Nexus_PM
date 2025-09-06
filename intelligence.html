@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus PM - Intelligence</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+            color: #1e293b; /* slate-800 */
+        }
+        .sidebar {
+            transition: width 0.3s ease-in-out;
+        }
+        .sidebar-collapsed {
+            width: 5rem; /* 80px */
+        }
+        .sidebar-expanded {
+            width: 16rem; /* 256px */
+        }
+        #sidebar.sidebar-collapsed nav a, #sidebar.sidebar-collapsed #user-profile-container {
+            justify-content: center;
+        }
+        .bento-box {
+            background-color: #ffffff; /* white */
+            border-radius: 0.75rem; /* rounded-xl */
+            padding: 1.5rem;
+            border: 1px solid #e2e8f0; /* slate-200 */
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        }
+        #ai-response-container {
+            transition: all 0.5s ease-in-out;
+            max-height: 0;
+            overflow: hidden;
+        }
+        #ai-response-container.expanded {
+            max-height: 50vh;
+        }
+        #ai-response-container.minimized {
+            max-height: 4rem;
+        }
+        #ai-response-container.minimized #message-list {
+            display: none;
+        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        #message-list::-webkit-scrollbar { width: 6px; }
+        #message-list::-webkit-scrollbar-track { background: #f1f5f9; }
+        #message-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        #message-list::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        .health-score-high { background-color: #16a34a; }
+        .health-score-medium { background-color: #f59e0b; }
+        .health-score-low { background-color: #ef4444; }
+
+        .modal-overlay {
+            background-color: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(4px);
+        }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar sidebar-collapsed bg-white border-r border-slate-200 flex flex-col h-full">
+        <!-- Logo -->
+        <div class="flex items-center justify-center p-4 h-16 border-b border-slate-200">
+            <h1 id="logo-text" class="text-2xl font-bold text-slate-800 transition-opacity duration-300">N<span class="text-blue-600">P</span></h1>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="flex-1 px-4 py-4 space-y-2">
+            <a href="index.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600">
+                <i data-lucide="home" class="h-6 w-6"></i>
+                <span class="ml-4 nav-text hidden">Home</span>
+            </a>
+            <a href="projects.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600">
+                <i data-lucide="folder-kanban" class="h-6 w-6"></i>
+                <span class="ml-4 nav-text hidden">Projects</span>
+            </a>
+            <a href="goals.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600">
+                <i data-lucide="target" class="h-6 w-6"></i>
+                <span class="ml-4 nav-text hidden">Goals</span>
+            </a>
+            <!-- Active Link -->
+            <a href="intelligence.html" class="flex items-center p-3 rounded-lg bg-blue-100 text-blue-700 font-semibold">
+                <i data-lucide="bar-chart-big" class="h-6 w-6"></i>
+                <span class="ml-4 nav-text hidden">Intelligence</span>
+            </a>
+             <a href="chat-history.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600">
+                <i data-lucide="message-square" class="h-6 w-6"></i>
+                <span class="ml-4 nav-text hidden">Chat History</span>
+            </a>
+            <a href="activity.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600">
+                <i data-lucide="activity" class="h-6 w-6"></i>
+                <span class="ml-4 nav-text hidden">Activity</span>
+            </a>
+            <a href="settings.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600">
+                <i data-lucide="settings" class="h-6 w-6"></i>
+                <span class="ml-4 nav-text hidden">Settings</span>
+            </a>
+        </nav>
+
+        <!-- User Profile -->
+        <div class="p-4 border-t border-slate-200">
+             <div id="user-profile-container" class="flex items-center">
+                <img src="https://i.pravatar.cc/40?u=nexus-user" alt="User Avatar" class="rounded-full h-10 w-10">
+                <div class="ml-3 overflow-hidden nav-text hidden">
+                    <p class="font-semibold text-slate-800 text-sm truncate">Alex Hartman</p>
+                    <p class="text-xs text-slate-500 truncate">Product Manager</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 bg-slate-50 flex flex-col">
+        <div id="main-content" class="flex-1 overflow-y-auto overflow-x-hidden p-8">
+            <header class="mb-8">
+                <div>
+                    <h1 class="text-3xl font-bold text-slate-900">Portfolio Intelligence</h1>
+                    <p class="text-slate-500 mt-1">AI-driven forecasts, simulations, and risk analysis for all projects.</p>
+                </div>
+            </header>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Project Health & Forecast -->
+                <div class="lg:col-span-3 bento-box">
+                    <h3 class="text-xl font-semibold text-slate-900 mb-4">Project Health & Forecast</h3>
+                    <table class="w-full text-sm text-left">
+                        <thead class="text-xs text-slate-500 uppercase bg-slate-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3">Project Name</th>
+                                <th scope="col" class="px-6 py-3">Health Score</th>
+                                <th scope="col" class="px-6 py-3">Budget Variance</th>
+                                <th scope="col" class="px-6 py-3">AI Completion Forecast</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="bg-white border-b hover:bg-slate-50">
+                                <th scope="row" class="px-6 py-4 font-semibold text-slate-900 whitespace-nowrap">Phoenix Project</th>
+                                <td class="px-6 py-4"><div class="flex items-center"><div class="h-2.5 w-2.5 rounded-full health-score-medium mr-2"></div> 78/100</div></td>
+                                <td class="px-6 py-4 font-medium text-red-600">+15%</td>
+                                <td class="px-6 py-4"><span class="font-medium">Dec 20, 2025</span> <span class="text-xs text-yellow-600">(5 days late)</span></td>
+                            </tr>
+                            <tr class="bg-white border-b hover:bg-slate-50">
+                                <th scope="row" class="px-6 py-4 font-semibold text-slate-900 whitespace-nowrap">Orion App</th>
+                                <td class="px-6 py-4"><div class="flex items-center"><div class="h-2.5 w-2.5 rounded-full health-score-high mr-2"></div> 92/100</div></td>
+                                <td class="px-6 py-4 font-medium text-green-600">-2%</td>
+                                <td class="px-6 py-4"><span class="font-medium">Sep 05, 2025</span> <span class="text-xs text-green-600">(3 days early)</span></td>
+                            </tr>
+                             <tr class="bg-white hover:bg-slate-50">
+                                <th scope="row" class="px-6 py-4 font-semibold text-slate-900 whitespace-nowrap">Vega Initiative</th>
+                                <td class="px-6 py-4"><div class="flex items-center"><div class="h-2.5 w-2.5 rounded-full health-score-low mr-2"></div> 45/100</div></td>
+                                <td class="px-6 py-4 font-medium text-slate-600">+1%</td>
+                                <td class="px-6 py-4"><span class="font-medium">Nov 15, 2025</span> <span class="text-xs text-red-600">(15 days late)</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Portfolio Risk Matrix -->
+                <div class="bento-box lg:col-span-1">
+                    <h3 class="text-xl font-semibold text-slate-900 mb-4">Portfolio Risk Matrix</h3>
+                    <p class="text-xs text-slate-500 mb-4 -mt-2">Projects by AI-assessed risk vs. strategic impact.</p>
+                    <canvas id="riskMatrixChart"></canvas>
+                </div>
+
+                <!-- Portfolio Budget Tracker -->
+                <div class="bento-box lg:col-span-1">
+                    <h3 class="text-xl font-semibold text-slate-900 mb-4">Portfolio Budget Tracker</h3>
+                    <p class="text-xs text-slate-500 mb-4 -mt-2">Aggregated budget performance across all projects.</p>
+                    <canvas id="budgetChart"></canvas>
+                </div>
+
+                <!-- Anomaly Detection -->
+                <div class="bento-box lg:col-span-1">
+                     <h3 class="text-xl font-semibold text-slate-900 mb-4">Anomaly Detection Feed</h3>
+                     <p class="text-xs text-slate-500 mb-4 -mt-2">Unusual activity detected by Nexus AI.</p>
+                     <div class="space-y-3">
+                        <div class="flex items-start bg-slate-50 p-3 rounded-lg">
+                            <i data-lucide="zap" class="h-5 w-5 text-yellow-500 mr-3 mt-1 flex-shrink-0"></i>
+                            <div>
+                                <p class="font-semibold text-sm text-slate-800">Velocity Drop</p>
+                                <p class="text-xs text-slate-600">The <strong>Phoenix Project</strong> team's task completion rate dropped by 30% this week.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start bg-slate-50 p-3 rounded-lg">
+                            <i data-lucide="file-clock" class="h-5 w-5 text-red-500 mr-3 mt-1 flex-shrink-0"></i>
+                            <div>
+                                <p class="font-semibold text-sm text-slate-800">Stalled Task</p>
+                                <p class="text-xs text-slate-600">A task in <strong>Phoenix Project</strong> has been 'In Progress' for 9 days, 200% longer than average.</p>
+                            </div>
+                        </div>
+                     </div>
+                </div>
+
+                <!-- Resource Allocation Simulator -->
+                <div class="lg:col-span-3 bento-box">
+                    <h3 class="text-xl font-semibold text-slate-900 mb-2">Resource Allocation Simulator</h3>
+                     <div class="flex justify-between items-center mb-4">
+                        <p class="text-xs text-slate-500">Select a scenario to see the AI-predicted impact on team workload and project timelines.</p>
+                        <select id="scenario-selector" class="text-sm border border-slate-300 rounded-lg py-1 px-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                            <option value="current">Current State</option>
+                            <option value="reassign">Reassign Gateway Task to David</option>
+                            <option value="add_designer">Add Designer to Orion</option>
+                            <option value="custom">Create Custom Scenario...</option>
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h4 class="font-semibold text-center text-sm mb-2">Predicted Team Workload</h4>
+                            <canvas id="workloadChart" class="max-h-60"></canvas>
+                        </div>
+                        <div class="bg-slate-50 p-4 rounded-lg">
+                            <h4 id="impact-analysis-title" class="font-semibold text-sm mb-2">AI Impact Analysis: Current State</h4>
+                            <div id="impact-analysis-text" class="text-xs text-slate-600 space-y-2">
+                                <p>This is the current resource allocation. Laura is significantly overloaded at 110%, posing a major risk to the Phoenix Project. David has available capacity.</p>
+                                <p class="font-semibold">Phoenix Project Forecast: <span class="text-yellow-600">5 days late.</span></p>
+                                <p class="font-semibold">Orion App Forecast: <span class="text-green-600">3 days early.</span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Response Container -->
+        <div id="ai-response-container" class="bg-white border-t border-slate-200 no-scrollbar flex flex-col max-w-full">
+            <div id="ai-response-header" class="px-6 py-4 max-w-4xl w-full mx-auto"></div>
+            <div id="message-list" class="flex-1 overflow-y-auto px-6 space-y-6 max-w-4xl w-full mx-auto pb-6"></div>
+        </div>
+
+        <!-- Prompt Bar -->
+        <div class="p-4 bg-white border-t border-slate-200 shadow-[0_-2px_5px_rgba(0,0,0,0.05)]">
+            <div class="max-w-4xl mx-auto">
+                 <form id="prompt-form" class="relative">
+                    <textarea id="prompt-textarea" rows="1" placeholder="Ask Nexus AI about forecasts and simulations..." class="w-full py-3 pl-5 pr-14 text-sm text-slate-800 bg-slate-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 border border-transparent focus:border-blue-500 transition-all duration-200 max-h-40 overflow-y-auto no-scrollbar"></textarea>
+                    <button type="submit" class="absolute bottom-3.5 right-0 flex items-center justify-center w-14 text-slate-500 hover:text-blue-600"><i data-lucide="send" class="h-5 w-5"></i></button>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <!-- Custom Scenario Modal -->
+    <div id="customScenarioModal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md">
+            <form id="custom-scenario-form">
+                <div class="p-6 border-b"><h3 class="text-lg font-semibold text-slate-900">Create Custom Scenario</h3></div>
+                <div class="p-6 space-y-4">
+                    <div><label class="text-sm font-medium text-slate-700">Scenario Name</label><input type="text" id="scenario-name" class="mt-1 w-full border border-slate-300 rounded-md p-2" value="Custom Scenario" required></div>
+                    <div id="workload-sliders" class="space-y-3">
+                        <!-- Sliders will be dynamically inserted here -->
+                    </div>
+                </div>
+                <div class="bg-slate-50 px-6 py-4 rounded-b-lg flex justify-end space-x-3">
+                    <button type="button" id="cancel-custom-scenario" class="px-4 py-2 text-sm font-medium bg-white hover:bg-slate-50 border border-slate-300 rounded-md text-slate-700">Cancel</button>
+                    <button type="submit" class="px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 rounded-md text-white">Run Simulation</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            let workloadChartInstance = null;
+            let riskMatrixChartInstance = null;
+            let budgetChartInstance = null;
+            const teamMembers = ['Laura', 'Samantha', 'David'];
+
+            // --- Sidebar Logic ---
+            const sidebar = document.getElementById('sidebar');
+            sidebar.addEventListener('mouseenter', () => { 
+                sidebar.classList.remove('sidebar-collapsed'); 
+                sidebar.classList.add('sidebar-expanded'); 
+                document.getElementById('logo-text').innerHTML = 'Nexus<span class="text-blue-600">PM</span>'; 
+                document.querySelectorAll('.nav-text').forEach(text => text.classList.remove('hidden')); 
+            });
+            sidebar.addEventListener('mouseleave', () => { 
+                sidebar.classList.add('sidebar-collapsed'); 
+                sidebar.classList.remove('sidebar-expanded'); 
+                document.getElementById('logo-text').innerHTML = 'N<span class="text-blue-600">P</span>'; 
+                document.querySelectorAll('.nav-text').forEach(text => text.classList.add('hidden')); 
+            });
+
+            // --- Chart Data ---
+            const simulationData = {
+                current: {
+                    title: "Current State",
+                    workload: [110, 85, 40],
+                    analysis: `<p>This is the current resource allocation. Laura is significantly overloaded at 110%, posing a major risk to the Phoenix Project. David has available capacity.</p>
+                               <p class="font-semibold mt-2">Phoenix Project Forecast: <span class="text-yellow-600">5 days late.</span></p>
+                               <p class="font-semibold">Orion App Forecast: <span class="text-green-600">3 days early.</span></p>`
+                },
+                reassign: {
+                    title: "Reassign Gateway Task",
+                    workload: [75, 85, 70],
+                    analysis: `<p>Reassigning the high-effort 'Payment Gateway' task from Laura to David balances the team's workload effectively.</p>
+                               <p class="font-semibold mt-2">Phoenix Project Forecast: <span class="text-green-600">1 day early.</span></p>
+                               <p class="font-semibold">Orion App Forecast: <span class="text-green-600">3 days early.</span></p>`
+                },
+                add_designer: {
+                    title: "Add Designer to Orion",
+                    workload: [110, 65, 40, 90],
+                    analysis: `<p>Adding a new designer to the Orion App reduces Samantha's load but does not address the primary bottleneck (Laura). The new resource is immediately utilized at 90%.</p>
+                               <p class="font-semibold mt-2">Phoenix Project Forecast: <span class="text-yellow-600">5 days late.</span></p>
+                               <p class="font-semibold">Orion App Forecast: <span class="text-green-600">6 days early.</span></p>`
+                }
+            };
+            
+            // --- Chart Initialization ---
+            function renderWorkloadChart(scenario) {
+                const ctx = document.getElementById('workloadChart').getContext('2d');
+                const data = simulationData[scenario];
+                let labels = teamMembers.slice();
+                if (scenario === 'add_designer') {
+                    labels.push('New Designer');
+                } else if (scenario === 'custom' && data.labels) {
+                    labels = data.labels;
+                }
+                
+                if (workloadChartInstance) {
+                    workloadChartInstance.destroy();
+                }
+
+                workloadChartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Workload %',
+                            data: data.workload,
+                            backgroundColor: data.workload.map(w => w > 100 ? '#ef4444' : (w > 90 ? '#f59e0b' : '#22c55e')),
+                            borderRadius: 4
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        plugins: { legend: { display: false } },
+                        scales: { x: { max: 120, ticks: { callback: value => value + '%' } } }
+                    }
+                });
+            }
+
+            function renderRiskMatrixChart() {
+                const ctx = document.getElementById('riskMatrixChart').getContext('2d');
+                if(riskMatrixChartInstance) riskMatrixChartInstance.destroy();
+                riskMatrixChartInstance = new Chart(ctx, {
+                    type: 'bubble',
+                    data: {
+                        datasets: [
+                            { label: 'Phoenix Project', data: [{x: 8, y: 7, r: 15}], backgroundColor: '#f59e0b' },
+                            { label: 'Orion App', data: [{x: 4, y: 9, r: 12}], backgroundColor: '#22c55e' },
+                            { label: 'Vega Initiative', data: [{x: 9, y: 3, r: 10}], backgroundColor: '#ef4444' },
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { position: 'bottom'},
+                            tooltip: { callbacks: { label: context => context.dataset.label } }
+                        },
+                        scales: {
+                            y: { min: 0, max: 10, title: { display: true, text: 'Strategic Impact' } },
+                            x: { min: 0, max: 10, title: { display: true, text: 'AI-Assessed Risk Level' } }
+                        }
+                    }
+                });
+            }
+
+            function renderBudgetChart() {
+                const ctx = document.getElementById('budgetChart').getContext('2d');
+                if(budgetChartInstance) budgetChartInstance.destroy();
+                budgetChartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Phoenix', 'Orion', 'Vega'],
+                        datasets: [
+                            { label: 'Budgeted', data: [50000, 80000, 20000], backgroundColor: '#d1d5db', borderRadius: 4 },
+                            { label: 'Actual', data: [57500, 78400, 20200], backgroundColor: '#60a5fa', borderRadius: 4 }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: { legend: { position: 'bottom' } },
+                        scales: { y: { ticks: { callback: value => '$' + value / 1000 + 'k' } } }
+                    }
+                });
+            }
+
+            // Initial render
+            renderWorkloadChart('current');
+            renderRiskMatrixChart();
+            renderBudgetChart();
+
+            // --- Simulator & Custom Scenario Modal Logic ---
+            const scenarioSelector = document.getElementById('scenario-selector');
+            const customScenarioModal = document.getElementById('customScenarioModal');
+            
+            scenarioSelector.addEventListener('change', (e) => {
+                const selectedScenario = e.target.value;
+                if (selectedScenario === 'custom') {
+                    openCustomScenarioModal();
+                } else {
+                    renderWorkloadChart(selectedScenario);
+                    document.getElementById('impact-analysis-title').textContent = `AI Impact Analysis: ${simulationData[selectedScenario].title}`;
+                    document.getElementById('impact-analysis-text').innerHTML = simulationData[selectedScenario].analysis;
+                }
+            });
+
+            function openCustomScenarioModal() {
+                const slidersContainer = document.getElementById('workload-sliders');
+                slidersContainer.innerHTML = '';
+                const currentWorkloads = simulationData['current'].workload;
+
+                teamMembers.forEach((member, index) => {
+                    slidersContainer.innerHTML += `
+                        <div>
+                            <label for="${member}-slider" class="text-sm font-medium text-slate-700 flex justify-between">
+                                <span>${member} Workload</span>
+                                <span id="${member}-value">${currentWorkloads[index]}%</span>
+                            </label>
+                            <input type="range" id="${member}-slider" name="${member}" min="0" max="120" value="${currentWorkloads[index]}" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+                        </div>`;
+                });
+                slidersContainer.querySelectorAll('input[type="range"]').forEach(slider => {
+                    slider.addEventListener('input', (e) => {
+                        document.getElementById(`${e.target.name}-value`).textContent = `${e.target.value}%`;
+                    });
+                });
+                customScenarioModal.classList.remove('hidden');
+            }
+
+            document.getElementById('cancel-custom-scenario').addEventListener('click', () => {
+                customScenarioModal.classList.add('hidden');
+                scenarioSelector.value = 'current'; // Reset dropdown
+            });
+
+            document.getElementById('custom-scenario-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const scenarioName = document.getElementById('scenario-name').value;
+                const newWorkloads = teamMembers.map(member => parseInt(document.getElementById(`${member}-slider`).value));
+
+                simulationData.custom = {
+                    title: scenarioName,
+                    labels: teamMembers.slice(),
+                    workload: newWorkloads,
+                    analysis: `<p>In your custom scenario, the workloads have been adjusted. This new distribution reduces Laura's overload but significantly increases David's.</p>
+                               <p class="font-semibold mt-2">AI predicts this would make the Phoenix Project <span class="text-green-600">2 days early</span>.</p>`
+                };
+
+                renderWorkloadChart('custom');
+                document.getElementById('impact-analysis-title').textContent = `AI Impact Analysis: ${scenarioName}`;
+                document.getElementById('impact-analysis-text').innerHTML = simulationData.custom.analysis;
+                customScenarioModal.classList.add('hidden');
+            });
+
+            // --- AI Prompt Bar Logic (same as before) ---
+            const promptForm = document.getElementById('prompt-form');
+            const responseContainer = document.getElementById('ai-response-container');
+            const responseHeader = document.getElementById('ai-response-header');
+            const messageList = document.getElementById('message-list');
+            let lastUserQuery = '';
+            let isConversationActive = false;
+
+            if (promptForm) {
+                promptForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const userQuery = document.getElementById('prompt-textarea').value.trim();
+                    if (!userQuery) return;
+                    lastUserQuery = userQuery;
+                    if (!isConversationActive) { isConversationActive = true; renderExpandedHeader(); }
+                    messageList.insertAdjacentHTML('beforeend', `<div class="flex items-start gap-3 justify-end"><div class="bg-slate-200 p-3 rounded-lg max-w-xl"><p class="text-sm text-slate-800">${userQuery}</p></div><img class="w-8 h-8 rounded-full" src="https://i.pravatar.cc/40?u=nexus-user" alt="User avatar"></div>`);
+                    const thinkingId = `thinking-${Date.now()}`;
+                    messageList.insertAdjacentHTML('beforeend', `<div id="${thinkingId}" class="flex items-start gap-3"><div class="bg-blue-100 p-2 rounded-full h-8 w-8 flex items-center justify-center animate-pulse flex-shrink-0"><i data-lucide="bot" class="h-5 w-5 text-blue-600"></i></div><div class="bg-slate-100 p-3 rounded-lg"><p class="text-sm text-slate-500">Nexus is thinking...</p></div></div>`);
+                    lucide.createIcons();
+                    responseContainer.classList.remove('minimized');
+                    responseContainer.classList.add('expanded');
+                    setTimeout(() => { messageList.scrollTop = messageList.scrollHeight; }, 10);
+                    document.getElementById('prompt-textarea').value = '';
+                    document.getElementById('prompt-textarea').style.height = 'auto';
+
+                    setTimeout(() => {
+                        const aiResult = getAIResponse(userQuery);
+                        const thinkingElement = document.getElementById(thinkingId);
+                        if (thinkingElement) {
+                            thinkingElement.outerHTML = `<div class="flex items-start gap-3"><div class="bg-blue-100 p-2 rounded-full h-8 w-8 flex items-center justify-center flex-shrink-0"><i data-lucide="bot" class="h-5 w-5 text-blue-600"></i></div><div class="text-sm text-slate-700 space-y-2 prose prose-sm max-w-none bg-slate-100 p-3 rounded-lg">${aiResult.message}</div></div>`;
+                            lucide.createIcons();
+                            messageList.scrollTop = messageList.scrollHeight;
+                        }
+                    }, 1500);
+                });
+            }
+
+            const renderExpandedHeader = () => {
+                responseHeader.innerHTML = `<div class="flex justify-between items-start"><h3 class="text-lg font-semibold text-slate-900">Nexus AI Response</h3><div class="flex items-center"><button id="minimize-ai-response" class="p-1 rounded-full hover:bg-slate-100 mr-2"><i data-lucide="chevrons-down" class="h-5 w-5 text-slate-500"></i></button><button id="close-ai-response" class="p-1 rounded-full hover:bg-slate-100"><i data-lucide="x" class="h-5 w-5 text-slate-500"></i></button></div></div>`;
+                lucide.createIcons();
+            }
+            const renderMinimizedHeader = () => {
+                responseHeader.innerHTML = `<div class="flex items-center justify-between h-full"><p class="text-sm text-slate-600 truncate"><span class="font-semibold text-slate-800">AI Response:</span> ${lastUserQuery}</p><button id="expand-ai-response" class="p-1 rounded-full hover:bg-slate-100"><i data-lucide="chevrons-up" class="h-5 w-5 text-slate-500"></i></button></div>`;
+                lucide.createIcons();
+            }
+
+            if(responseContainer) {
+                responseContainer.addEventListener('click', (e) => {
+                    const button = e.target.closest('button');
+                    if (!button) return;
+                    if (button.id === 'close-ai-response') {
+                        responseContainer.classList.remove('expanded', 'minimized');
+                        messageList.innerHTML = '';
+                        responseHeader.innerHTML = '';
+                        isConversationActive = false;
+                    } else if (button.id === 'minimize-ai-response') {
+                        responseContainer.classList.remove('expanded');
+                        responseContainer.classList.add('minimized');
+                        renderMinimizedHeader();
+                    } else if (button.id === 'expand-ai-response') {
+                        responseContainer.classList.remove('minimized');
+                        responseContainer.classList.add('expanded');
+                        renderExpandedHeader();
+                        setTimeout(() => { messageList.scrollTop = messageList.scrollHeight; }, 10);
+                    }
+                });
+            }
+
+            function getAIResponse(message) {
+                const lowerMessage = message.toLowerCase();
+                if (lowerMessage.includes('biggest risk')) {
+                    return { message: `<p>Based on the Risk Matrix, the <strong>Phoenix Project</strong> and the <strong>Vega Initiative</strong> represent the highest risk. Phoenix is high-risk due to its complexity and current delays, while Vega is high-risk due to market uncertainty. However, Phoenix has a much higher strategic impact, making it the top priority to de-risk.</p>` };
+                }
+                if (lowerMessage.includes('budget')) {
+                    return { message: `<p>The portfolio is currently trending <strong>$5,700 over budget</strong>. The main driver is the <strong>Phoenix Project</strong>, which is $7,500 over. The <strong>Orion App</strong> is running $1,600 under budget, partially offsetting the overage.</p>` };
+                }
+                if (lowerMessage.includes('simulate')) {
+                     return { message: `<p>Of course. You can use the "Resource Allocation Simulator" to explore different scenarios. Select a pre-defined scenario from the dropdown or choose "Create Custom Scenario" to open a modal where you can adjust workloads yourself and see the AI's prediction.</p>` };
+                }
+                else {
+                    return { message: `<p>I can provide details on project forecasts, explain portfolio risks, or run resource simulations. What would you like to analyze?</p>` };
+                }
+            }
+        });
+    </script>
+</body>
+</html>
+

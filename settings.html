@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus PM - Settings</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+            color: #1e293b; /* slate-800 */
+        }
+        .sidebar {
+            transition: width 0.3s ease-in-out;
+        }
+        .sidebar-collapsed {
+            width: 5rem; /* 80px */
+        }
+        .sidebar-expanded {
+            width: 16rem; /* 256px */
+        }
+        #sidebar.sidebar-collapsed nav a, #sidebar.sidebar-collapsed #user-profile-container {
+            justify-content: center;
+        }
+        .bento-box {
+            background-color: #ffffff; /* white */
+            border-radius: 0.75rem; /* rounded-xl */
+            padding: 1.5rem;
+            border: 1px solid #e2e8f0; /* slate-200 */
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        }
+        .settings-nav a.active {
+            background-color: #eef2ff; /* indigo-50 */
+            color: #4338ca; /* indigo-800 */
+            font-weight: 600;
+        }
+        /* Toggle Switch */
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #4f46e5;
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #4f46e5;
+        }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar sidebar-collapsed bg-white border-r border-slate-200 flex flex-col h-full">
+        <!-- Logo -->
+        <div class="flex items-center justify-center p-4 h-16 border-b border-slate-200">
+            <h1 id="logo-text" class="text-2xl font-bold text-slate-800 transition-opacity duration-300">N<span class="text-blue-600">P</span></h1>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="flex-1 px-4 py-4 space-y-2">
+            <a href="index.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600">
+                <i data-lucide="home" class="h-6 w-6"></i>
+                <span class="ml-4 nav-text hidden">Home</span>
+            </a>
+            <a href="projects.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600">
+                <i data-lucide="folder-kanban" class="h-6 w-6"></i>
+                <span class="ml-4 nav-text hidden">Projects</span>
+            </a>
+            <a href="goals.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600">
+                <i data-lucide="target" class="h-6 w-6"></i>
+                <span class="ml-4 nav-text hidden">Goals</span>
+            </a>
+            <a href="intelligence.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600">
+                <i data-lucide="bar-chart-big" class="h-6 w-6"></i>
+                <span class="ml-4 nav-text hidden">Intelligence</span>
+            </a>
+             <a href="chat-history.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600">
+                <i data-lucide="message-square" class="h-6 w-6"></i>
+                <span class="ml-4 nav-text hidden">Chat History</span>
+            </a>
+            <a href="activity.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600">
+                <i data-lucide="activity" class="h-6 w-6"></i>
+                <span class="ml-4 nav-text hidden">Activity</span>
+            </a>
+            <a href="settings.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600">
+                <i data-lucide="settings" class="h-6 w-6"></i>
+                <span class="ml-4 nav-text hidden">Settings</span>
+            </a>
+        </nav>
+
+        <!-- User Profile -->
+        <div class="p-4 border-t border-slate-200">
+             <div id="user-profile-container" class="flex items-center">
+                <img src="https://i.pravatar.cc/40?u=nexus-user" alt="User Avatar" class="rounded-full h-10 w-10">
+                <div class="ml-3 overflow-hidden nav-text hidden">
+                    <p class="font-semibold text-slate-800 text-sm truncate">Alex Hartman</p>
+                    <p class="text-xs text-slate-500 truncate">Product Manager</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 bg-slate-50 flex flex-col overflow-hidden">
+        <div id="main-content" class="flex-1 overflow-y-auto overflow-x-hidden p-8">
+            <header class="mb-8">
+                <div>
+                    <h1 class="text-3xl font-bold text-slate-900">Settings</h1>
+                    <p class="text-slate-500 mt-1">Manage your profile, workspace, and application settings.</p>
+                </div>
+            </header>
+
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                <!-- Settings Navigation -->
+                <div class="lg:col-span-1">
+                    <nav class="settings-nav flex flex-col space-y-2">
+                        <a href="#profile" data-tab="profile" class="flex items-center p-3 rounded-lg active"><i data-lucide="user-circle" class="h-5 w-5 mr-3"></i>My Profile</a>
+                        <a href="#ai-controls" data-tab="ai-controls" class="flex items-center p-3 rounded-lg"><i data-lucide="brain-circuit" class="h-5 w-5 mr-3"></i>AI Controls</a>
+                        <a href="#notifications" data-tab="notifications" class="flex items-center p-3 rounded-lg"><i data-lucide="bell" class="h-5 w-5 mr-3"></i>Notifications</a>
+                        <a href="#connected-apps" data-tab="connected-apps" class="flex items-center p-3 rounded-lg"><i data-lucide="app-window" class="h-5 w-5 mr-3"></i>Connected Apps</a>
+                        <a href="#workspace" data-tab="workspace" class="flex items-center p-3 rounded-lg"><i data-lucide="users" class="h-5 w-5 mr-3"></i>Workspace</a>
+                        <a href="#security" data-tab="security" class="flex items-center p-3 rounded-lg"><i data-lucide="shield" class="h-5 w-5 mr-3"></i>Security</a>
+                    </nav>
+                </div>
+
+                <!-- Settings Content -->
+                <div class="lg:col-span-3 space-y-6">
+                    <!-- Profile Panel -->
+                    <div id="profile-panel" class="settings-panel space-y-6">
+                        <div class="bento-box">
+                            <h2 class="text-xl font-semibold text-slate-900">Personal Information</h2>
+                            <p class="text-sm text-slate-500 mt-1">Update your personal details here.</p>
+                            <hr class="my-4">
+                            <div class="flex items-center space-x-4">
+                                <img src="https://i.pravatar.cc/80?u=nexus-user" class="h-20 w-20 rounded-full">
+                                <button class="text-sm bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2 px-3 rounded-lg">Change Avatar</button>
+                            </div>
+                            <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div><label class="text-sm font-medium text-slate-700">Full Name</label><input type="text" value="Alex Hartman" class="mt-1 w-full border border-slate-300 rounded-md p-2"></div>
+                                <div><label class="text-sm font-medium text-slate-700">Role</label><input type="text" value="Product Manager" class="mt-1 w-full border border-slate-300 rounded-md p-2"></div>
+                                <div><label class="text-sm font-medium text-slate-700">Email Address</label><input type="email" value="alex.hartman@example.com" disabled class="mt-1 w-full border border-slate-300 rounded-md p-2 bg-slate-50 cursor-not-allowed"></div>
+                            </div>
+                            <div class="mt-4 border-t pt-4 flex justify-end">
+                                <button class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg">Save Changes</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI Controls Panel -->
+                    <div id="ai-controls-panel" class="settings-panel space-y-6 hidden">
+                        <div class="bento-box">
+                             <h2 class="text-xl font-semibold text-slate-900">AI Persona & Behavior</h2>
+                            <p class="text-sm text-slate-500 mt-1">Customize how Nexus AI interacts and provides insights.</p>
+                            <hr class="my-4">
+                            <div>
+                                <label class="text-sm font-medium text-slate-700">AI Persona</label>
+                                <p class="text-xs text-slate-500 mb-2">Choose the communication style of your AI partner.</p>
+                                <select class="w-full md:w-1/2 border border-slate-300 rounded-md p-2">
+                                    <option>Analytical Co-pilot (Default)</option>
+                                    <option selected>Socratic Sparring Partner</option>
+                                    <option>Concise Assistant</option>
+                                </select>
+                            </div>
+                            <div class="mt-4">
+                                <label class="text-sm font-medium text-slate-700">AI Model Preference</label>
+                                <p class="text-xs text-slate-500 mb-2">Optimize for speed or for the most comprehensive analysis.</p>
+                                <select class="w-full md:w-1/2 border border-slate-300 rounded-md p-2">
+                                    <option selected>Balanced (Recommended)</option>
+                                    <option>Nexus Pro (Most Powerful)</option>
+                                    <option>Nexus Lite (Fastest)</option>
+                                </select>
+                            </div>
+                        </div>
+                         <div class="bento-box">
+                             <h2 class="text-xl font-semibold text-slate-900">AI Data & Privacy</h2>
+                            <p class="text-sm text-slate-500 mt-1">Control how your data is used to improve Nexus AI.</p>
+                            <hr class="my-4">
+                            <div class="flex items-start justify-between">
+                                <div>
+                                    <p class="font-medium">Contribute to Model Training</p>
+                                    <p class="text-xs text-slate-500 max-w-md">Allow anonymized data from your interactions to be used to improve the Nexus AI models for all users.</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer mt-1 flex-shrink-0"><input type="checkbox" class="sr-only peer toggle-checkbox" checked><div class="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border after:border-slate-300 after:rounded-full after:h-5 after:w-5 after:transition-all toggle-label"></div></label>
+                            </div>
+                         </div>
+                    </div>
+
+                    <!-- Notifications Panel -->
+                    <div id="notifications-panel" class="settings-panel bento-box hidden">
+                        <h2 class="text-xl font-semibold text-slate-900">Notifications</h2>
+                        <p class="text-sm text-slate-500 mt-1">Manage how you receive alerts and updates.</p>
+                        <hr class="my-4">
+                        <div class="space-y-4">
+                            <h3 class="font-semibold text-slate-800">Proactive AI Insights</h3>
+                            <div class="flex items-center justify-between"><p>Budget Risk Detection</p><label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" class="sr-only peer toggle-checkbox" checked><div class="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border after:border-slate-300 after:rounded-full after:h-5 after:w-5 after:transition-all toggle-label"></div></label></div>
+                            <div class="flex items-center justify-between"><p>Sentiment Drop Alerts</p><label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" class="sr-only peer toggle-checkbox" checked><div class="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border after:border-slate-300 after:rounded-full after:h-5 after:w-5 after:transition-all toggle-label"></div></label></div>
+                            <div class="flex items-center justify-between"><p>Velocity & Anomaly Detection</p><label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" class="sr-only peer toggle-checkbox" checked><div class="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border after:border-slate-300 after:rounded-full after:h-5 after:w-5 after:transition-all toggle-label"></div></label></div>
+                             <h3 class="font-semibold text-slate-800 pt-4 border-t">General Notifications</h3>
+                             <div class="flex items-center justify-between"><p>Task Mentions & Assignments</p><label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" class="sr-only peer toggle-checkbox" checked><div class="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border after:border-slate-300 after:rounded-full after:h-5 after:w-5 after:transition-all toggle-label"></div></label></div>
+                        </div>
+                    </div>
+
+
+                    <!-- Connected Apps Panel -->
+                    <div id="connected-apps-panel" class="settings-panel bento-box hidden">
+                        <h2 class="text-xl font-semibold text-slate-900">Connected Apps</h2>
+                        <p class="text-sm text-slate-500 mt-1">Integrate Nexus PM with your favorite tools to unlock more powerful insights.</p>
+                        <hr class="my-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="border rounded-lg p-4 flex items-center justify-between"><div class="flex items-center"><i data-lucide="slack" class="h-8 w-8 text-purple-600 mr-3"></i><p class="font-semibold">Slack</p></div><button class="text-sm bg-green-100 text-green-800 px-3 py-1 rounded-full">Connected</button></div>
+                            <div class="border rounded-lg p-4 flex items-center justify-between"><div class="flex items-center"><i data-lucide="figma" class="h-8 w-8 text-pink-600 mr-3"></i><p class="font-semibold">Figma</p></div><button class="text-sm bg-green-100 text-green-800 px-3 py-1 rounded-full">Connected</button></div>
+                            <div class="border rounded-lg p-4 flex items-center justify-between"><div class="flex items-center"><i data-lucide="git-branch" class="h-8 w-8 text-gray-800 mr-3"></i><p class="font-semibold">GitHub</p></div><button class="text-sm bg-slate-200 text-slate-800 px-3 py-1 rounded-full hover:bg-slate-300">Connect</button></div>
+                            <div class="border rounded-lg p-4 flex items-center justify-between"><div class="flex items-center"><svg class="h-8 w-8 mr-3" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5.22161 7.42111L11.9998 2.5L18.7779 7.42111L18.7779 16.5789L11.9998 21.5L5.22161 16.5789L5.22161 7.42111Z" fill="#0052CC"></path><path d="M11.9998 2.5L18.7779 7.42111L15.3889 9.88167L8.61072 4.96056L11.9998 2.5Z" fill="#2684FF"></path><path d="M12 21.5V9.88167L8.61099 12.3422L12 21.5Z" fill="#0052CC"></path><path d="M12 21.5V9.88167L15.3891 12.3422L12 21.5Z" fill="#2684FF" fill-opacity="0.6"></path></svg><p class="font-semibold">Jira</p></div><button class="text-sm bg-slate-200 text-slate-800 px-3 py-1 rounded-full hover:bg-slate-300">Connect</button></div>
+                        </div>
+                    </div>
+
+                    <!-- Workspace Panel -->
+                    <div id="workspace-panel" class="settings-panel space-y-6 hidden">
+                        <div class="bento-box">
+                            <h2 class="text-xl font-semibold text-slate-900">Workspace Members</h2>
+                            <p class="text-sm text-slate-500 mt-1">Manage who has access to this workspace.</p>
+                            <hr class="my-4">
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center"><p>Alex Hartman <span class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full ml-2">Owner</span></p><span class="text-sm text-slate-500">alex.hartman@example.com</span></div>
+                                <div class="flex justify-between items-center"><p>Laura</p><span class="text-sm text-slate-500">laura@example.com</span></div>
+                                <div class="flex justify-between items-center"><p>Samantha</p><span class="text-sm text-slate-500">samantha@example.com</span></div>
+                            </div>
+                            <div class="mt-4 border-t pt-4 flex items-center space-x-2">
+                                <input type="email" placeholder="new.member@example.com" class="flex-1 w-full border border-slate-300 rounded-md p-2 text-sm">
+                                <button class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-3 rounded-lg">Invite</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Security Panel -->
+                    <div id="security-panel" class="settings-panel bento-box hidden">
+                        <h2 class="text-xl font-semibold text-slate-900">Security</h2>
+                        <p class="text-sm text-slate-500 mt-1">Manage your account security settings.</p>
+                        <hr class="my-4">
+                        <div class="space-y-4">
+                            <div>
+                                <label class="text-sm font-medium text-slate-700">Password</label>
+                                <button class="mt-1 text-sm font-semibold text-blue-600 hover:underline">Change Password</button>
+                            </div>
+                            <div class="border-t pt-4">
+                                <p class="font-medium">Two-Factor Authentication (2FA)</p>
+                                <p class="text-sm text-slate-500">Protect your account with an extra layer of security.</p>
+                                <button class="mt-2 text-sm bg-slate-200 text-slate-800 px-3 py-1 rounded-full hover:bg-slate-300">Enable 2FA</button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+
+            // --- Sidebar Logic ---
+            const sidebar = document.getElementById('sidebar');
+            sidebar.addEventListener('mouseenter', () => { 
+                sidebar.classList.remove('sidebar-collapsed'); 
+                sidebar.classList.add('sidebar-expanded'); 
+                document.getElementById('logo-text').innerHTML = 'Nexus<span class="text-blue-600">PM</span>'; 
+                document.querySelectorAll('.nav-text').forEach(text => text.classList.remove('hidden')); 
+            });
+            sidebar.addEventListener('mouseleave', () => { 
+                sidebar.classList.add('sidebar-collapsed'); 
+                sidebar.classList.remove('sidebar-expanded'); 
+                document.getElementById('logo-text').innerHTML = 'N<span class="text-blue-600">P</span>'; 
+                document.querySelectorAll('.nav-text').forEach(text => text.classList.add('hidden')); 
+            });
+
+            // --- Dynamic Sidebar Active State ---
+            const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+            const navLinks = document.querySelectorAll('nav a');
+
+            navLinks.forEach(link => {
+                const linkPage = link.getAttribute('href');
+                link.classList.remove('bg-blue-100', 'text-blue-700', 'font-semibold');
+                link.classList.add('hover:bg-slate-100', 'text-slate-600');
+
+                if (linkPage === currentPage) {
+                    link.classList.add('bg-blue-100', 'text-blue-700', 'font-semibold');
+                    link.classList.remove('hover:bg-slate-100', 'text-slate-600');
+                }
+            });
+
+            // --- Settings Tab Logic ---
+            const settingsNav = document.querySelector('.settings-nav');
+            const settingsPanels = document.querySelectorAll('.settings-panel');
+
+            settingsNav.addEventListener('click', (e) => {
+                e.preventDefault();
+                const link = e.target.closest('a');
+                if (!link) return;
+
+                const tabId = link.dataset.tab;
+
+                // Update nav state
+                settingsNav.querySelectorAll('a').forEach(l => l.classList.remove('active'));
+                link.classList.add('active');
+
+                // Update panel visibility
+                settingsPanels.forEach(panel => {
+                    if (panel.id === `${tabId}-panel`) {
+                        panel.classList.remove('hidden');
+                    } else {
+                        panel.classList.add('hidden');
+                    }
+                });
+            });
+
+        });
+    </script>
+</body>
+</html>
+
