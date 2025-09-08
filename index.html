@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nexus PM - Project Management Dashboard</title>
+    <title>Nexus PM - Home</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -33,31 +33,10 @@
             border: 1px solid #e2e8f0; /* slate-200 */
             box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
         }
-        .modal-overlay {
-            background-color: rgba(30, 41, 59, 0.6);
-            backdrop-filter: blur(4px);
-        }
-        .modal-content {
-             background-color: #ffffff; /* white */
-             border: 1px solid #e2e8f0; /* slate-200 */
-        }
-        /* Custom scrollbar */
-        .custom-scrollbar::-webkit-scrollbar, .chat-window::-webkit-scrollbar, #message-list::-webkit-scrollbar {
-            width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track, .chat-window::-webkit-scrollbar-track, #message-list::-webkit-scrollbar-track {
-            background: #f1f5f9; /* slate-100 */
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb, .chat-window::-webkit-scrollbar-thumb, #message-list::-webkit-scrollbar-thumb {
-            background: #cbd5e1; /* slate-300 */
-            border-radius: 3px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover, .chat-window::-webkit-scrollbar-thumb:hover, #message-list::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8; /* slate-400 */
-        }
-        textarea {
-            resize: none;
-        }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         #ai-response-container {
             transition: all 0.5s ease-in-out;
             max-height: 0;
@@ -72,14 +51,17 @@
         #ai-response-container.minimized #message-list {
             display: none;
         }
-        /* Hide scrollbar for elements that need it */
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-        .email-tab.active {
-            background-color: #e0e7ff; /* indigo-100 */
-            color: #4338ca; /* indigo-700 */
-            font-weight: 500;
+        .task-checkbox:checked + .task-label {
+            text-decoration: line-through;
+            color: #64748b; /* slate-500 */
+        }
+        .modal-overlay {
+            background-color: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(4px);
+        }
+        #live-feed .feed-item:last-child .timeline-line {
+            display: none;
         }
     </style>
 </head>
@@ -94,7 +76,7 @@
 
         <!-- Navigation -->
         <nav class="flex-1 px-4 py-4 space-y-2">
-            <a href="index.html" class="flex items-center p-3 rounded-lg bg-blue-100 text-blue-700 font-semibold">
+            <a href="index.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600">
                 <i data-lucide="home" class="h-6 w-6"></i>
                 <span class="ml-4 nav-text hidden">Home</span>
             </a>
@@ -115,8 +97,8 @@
                 <span class="ml-4 nav-text hidden">Chat History</span>
             </a>
             <a href="activity.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600">
-                <i data-lucide="settings" class="h-6 w-6"></i>
-                <span class="ml-4 nav-text hidden">Settings</span>
+                <i data-lucide="activity" class="h-6 w-6"></i>
+                <span class="ml-4 nav-text hidden">Activity</span>
             </a>
             <a href="settings.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600">
                 <i data-lucide="settings" class="h-6 w-6"></i>
@@ -137,171 +119,104 @@
     </aside>
 
     <!-- Main Content -->
-    <main class="flex-1 bg-slate-50 flex flex-col">
-        <!-- Scrollable Content Area -->
-        <div class="flex-1 overflow-y-auto overflow-x-hidden p-8">
-            <!-- Header -->
-            <header class="mb-8 flex justify-between items-start">
+    <main class="flex-1 bg-slate-50 flex flex-col overflow-hidden">
+        <div id="main-content" class="flex-1 overflow-y-auto overflow-x-hidden p-8">
+            <header class="mb-8 flex justify-between items-center">
                 <div>
-                    <h1 class="text-3xl font-bold text-slate-900">Welcome back, Alex!</h1>
-                    <p class="text-slate-500 mt-1">Here's your project overview for today.</p>
+                    <h1 class="text-3xl font-bold text-slate-900">Welcome back, Alex</h1>
+                    <p class="text-slate-500 mt-1">Here's your mission control for today.</p>
                 </div>
-                <div class="text-right">
-                    <p id="time" class="text-2xl font-semibold text-slate-700"></p>
-                    <p id="date" class="text-sm text-slate-500"></p>
+                <div class="relative">
+                    <button id="notification-bell" class="p-2 rounded-full hover:bg-slate-200 relative">
+                        <i data-lucide="bell" class="h-6 w-6 text-slate-600"></i>
+                        <span class="absolute top-1 right-1 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white"></span>
+                    </button>
+                    <div id="notification-panel" class="hidden absolute top-full right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border z-10">
+                        <div class="p-3 border-b font-semibold text-sm">Notifications</div>
+                        <div class="max-h-80 overflow-y-auto custom-scrollbar">
+                           <a href="#" class="block p-3 hover:bg-slate-50 border-b"><p class="text-xs font-bold text-yellow-600">RISK DETECTED</p><p class="text-sm">Budget variance increased to +15% on <strong>Phoenix Project</strong>.</p><p class="text-xs text-slate-400 mt-1">2 hours ago</p></a>
+                           <a href="#" class="block p-3 hover:bg-slate-50 border-b"><p class="text-xs font-bold text-blue-600">NEW COMMENT</p><p class="text-sm"><strong>Laura</strong> commented on an issue in <strong>Phoenix Project</strong>.</p><p class="text-xs text-slate-400 mt-1">5 hours ago</p></a>
+                           <a href="#" class="block p-3 hover:bg-slate-50"><p class="text-xs font-bold text-green-600">FILE UPLOADED</p><p class="text-sm"><strong>Samantha</strong> uploaded a new file to <strong>Orion App</strong>.</p><p class="text-xs text-slate-400 mt-1">Yesterday</p></a>
+                        </div>
+                        <a href="activity.html" class="block text-center p-2 text-sm font-medium text-blue-600 hover:bg-slate-50 rounded-b-lg">View all activity</a>
+                    </div>
                 </div>
             </header>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                <!-- AI Daily Briefing -->
+                <div class="lg:col-span-4 bento-box bg-blue-50 border-blue-200">
+                    <div class="flex items-center space-x-2 mb-2"><i data-lucide="sparkles" class="h-6 w-6 text-blue-500"></i><h2 class="text-xl font-semibold text-slate-900">AI Daily Briefing</h2></div>
+                    <p class="text-sm text-slate-700">Good afternoon, Alex. Your portfolio health is strong at <strong>85/100</strong>, but the overall budget is trending <strong>8% over</strong>. The most critical issue is <strong>Laura's workload</strong>, which is now blocking the Phoenix Project. My top recommendation is to reassign her "Refactor payment gateway" task.</p>
+                </div>
 
-            <div class="flex flex-col xl:flex-row gap-8">
-                <!-- Main Bento Grid Wrapper -->
-                <div class="flex-1 min-w-0">
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <!-- Nexus Suggestions (Large) -->
-                        <div class="bento-box lg:col-span-2">
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <h2 class="text-xl font-semibold text-slate-900">Nexus Suggestions</h2>
-                                    <p class="text-sm text-slate-500">AI-powered insights to optimize your projects.</p>
-                                </div>
-                                <button class="text-sm font-medium text-blue-600 hover:text-blue-500">View All</button>
+                <!-- Personal Hub -->
+                <div class="lg:col-span-2 row-span-2 bento-box flex flex-col">
+                     <h2 class="text-xl font-semibold text-slate-900 mb-4">Personal Hub</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 flex-1">
+                        <!-- Action Items -->
+                        <div>
+                            <div id="task-list" class="space-y-3">
+                                <p class="text-xs font-semibold text-slate-400 uppercase">ACTION ITEMS</p>
+                                <div class="flex items-center justify-between"><div class="flex items-center"><input type="checkbox" id="task1" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 mr-3 task-checkbox"><label for="task1" class="font-medium text-sm task-label">Review API schema</label></div><span class="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full">Due Today</span></div>
+                                <div class="flex items-center justify-between"><div class="flex items-center"><input type="checkbox" id="task2" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 mr-3 task-checkbox"><label for="task2" class="font-medium text-sm task-label">Sync with stakeholders</label></div><span class="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full">Due Tomorrow</span></div>
                             </div>
-                            <div class="mt-6 space-y-4">
-                                <div class="bg-slate-100 p-4 rounded-lg flex items-center justify-between">
-                                   <div class="flex items-center">
-                                       <div class="bg-yellow-100 p-2 rounded-full mr-4"><i data-lucide="alert-triangle" class="h-5 w-5 text-yellow-600"></i></div>
-                                       <div>
-                                            <p class="font-medium text-slate-800">Budget Risk: 'Phoenix Project'</p>
-                                            <p class="text-xs text-slate-500">Project is on schedule but trending 15% over budget.</p>
-                                       </div>
-                                   </div>
-                                   <div class="flex space-x-2">
-                                        <button onclick="openModal('acceptModal')" class="px-3 py-1.5 text-xs font-semibold bg-green-100 text-green-700 rounded-md hover:bg-green-200">Accept</button>
-                                        <button onclick="openModal('refineModal')" class="px-3 py-1.5 text-xs font-semibold bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200">Refine</button>
-                                        <button class="px-3 py-1.5 text-xs font-semibold bg-slate-200 text-slate-600 rounded-md hover:bg-slate-300">Ignore</button>
-                                   </div>
-                                </div>
-                            </div>
+                            <form id="new-task-form" class="mt-4 border-t pt-4"><div class="relative"><input type="text" id="new-task-input" placeholder="Add a new action item..." class="w-full text-sm border-slate-300 rounded-lg py-2 pl-3 pr-10"><button type="submit" class="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-blue-600"><i data-lucide="plus-circle" class="h-5 w-5"></i></button></div></form>
                         </div>
-
-                        <!-- Today's Tasks -->
-                        <div class="bento-box">
-                             <div class="flex justify-between items-start">
-                                <div>
-                                   <h2 class="text-xl font-semibold text-slate-900">Today's Tasks</h2>
-                                   <p class="text-sm text-slate-500">Your top 3 priorities.</p>
-                                </div>
-                                <button class="text-sm font-medium text-blue-600 hover:text-blue-500">View All</button>
-                            </div>
-                            <div class="mt-6 space-y-4">
-                                <div class="flex items-start"><input type="checkbox" class="mt-1 h-4 w-4 rounded border-slate-300 bg-slate-100 text-blue-600 focus:ring-blue-500"><div class="ml-3"><p class="font-medium text-slate-800">Finalize Q3 roadmap for 'Phoenix Project'.</p><p class="text-xs text-slate-500">Review with stakeholders and publish.</p></div></div>
-                                <div class="flex items-start"><input type="checkbox" class="mt-1 h-4 w-4 rounded border-slate-300 bg-slate-100 text-blue-600 focus:ring-blue-500"><div class="ml-3"><p class="font-medium text-slate-800">User testing feedback for 'Orion App'.</p><p class="text-xs text-slate-500">Synthesize feedback from the latest session.</p></div></div>
-                                <div class="flex items-start"><input type="checkbox" checked class="mt-1 h-4 w-4 rounded border-slate-300 bg-slate-100 text-blue-600 focus:ring-blue-500"><div class="ml-3"><p class="font-medium text-slate-500 line-through">Onboard David to the 'Vega Initiative'.</p><p class="text-xs text-slate-400 line-through">Provide access to docs and schedule kick-off.</p></div></div>
-                            </div>
+                        <!-- Quick Notes -->
+                        <div class="flex flex-col">
+                            <h3 class="text-xs font-semibold text-slate-400 uppercase mb-2">QUICK NOTES</h3>
+                            <textarea id="quick-notes-textarea" class="w-full flex-1 text-sm bg-slate-50 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 no-scrollbar" placeholder="Jot down a quick thought..."></textarea>
                         </div>
-                        
-                        <!-- Project Health -->
-                        <div class="bento-box">
-                             <h2 class="text-xl font-semibold text-slate-900 mb-4">Project Health</h2>
-                             <div class="space-y-4">
-                                <div><div class="flex justify-between mb-1"><p class="text-sm font-medium text-slate-700">Phoenix Project</p><p class="text-sm text-green-600">On Track</p></div><div class="w-full bg-slate-200 rounded-full h-2.5"><div class="bg-green-500 h-2.5 rounded-full" style="width: 75%"></div></div></div>
-                                <div><div class="flex justify-between mb-1"><p class="text-sm font-medium text-slate-700">Orion App</p><p class="text-sm text-yellow-600">At Risk</p></div><div class="w-full bg-slate-200 rounded-full h-2.5"><div class="bg-yellow-500 h-2.5 rounded-full" style="width: 45%"></div></div></div>
-                                <div><div class="flex justify-between mb-1"><p class="text-sm font-medium text-slate-700">Vega Initiative</p><p class="text-sm text-red-600">Off Track</p></div><div class="w-full bg-slate-200 rounded-full h-2.5"><div class="bg-red-500 h-2.5 rounded-full" style="width: 20%"></div></div></div>
-                             </div>
-                        </div>
-
-                        <!-- Budget Burn Rate -->
-                        <div class="bento-box">
-                            <h2 class="text-xl font-semibold text-slate-900 mb-4">Budget Burn Rate</h2>
-                            <p class="text-sm text-slate-500 -mt-3 mb-4">Quarterly spending vs allocated budget.</p>
-                             <div class="space-y-4">
-                                <div>
-                                    <p class="text-sm font-medium text-slate-700 mb-1">Phoenix Project</p>
-                                    <div class="w-full bg-slate-200 rounded-full h-4 relative"><div class="bg-blue-500 h-4 rounded-full" style="width: 85%"></div><div class="absolute inset-0 flex items-center justify-center text-xs font-bold text-white">85%</div></div>
-                                </div>
-                                <div>
-                                    <p class="text-sm font-medium text-slate-700 mb-1">Orion App</p>
-                                    <div class="w-full bg-slate-200 rounded-full h-4 relative"><div class="bg-blue-500 h-4 rounded-full" style="width: 60%"></div><div class="absolute inset-0 flex items-center justify-center text-xs font-bold text-white">60%</div></div>
-                                </div>
-                                <div>
-                                    <p class="text-sm font-medium text-slate-700 mb-1">Vega Initiative</p>
-                                    <div class="w-full bg-slate-200 rounded-full h-4 relative"><div class="bg-blue-500 h-4 rounded-full" style="width: 35%"></div><div class="absolute inset-0 flex items-center justify-center text-xs font-bold text-white">35%</div></div>
-                                </div>
-                             </div>
-                        </div>
-
-                        <!-- Quick Actions -->
-                        <div class="bento-box">
-                             <h2 class="text-xl font-semibold text-slate-900 mb-4">Quick Actions</h2>
-                             <div class="grid grid-cols-2 gap-4">
-                                <button class="bg-blue-100 hover:bg-blue-200 text-blue-700 p-4 rounded-lg flex flex-col items-center justify-center text-center"><i data-lucide="plus-circle" class="h-8 w-8 mb-2"></i><span class="text-sm font-medium">New Project</span></button>
-                                <button class="bg-slate-100 hover:bg-slate-200 p-4 rounded-lg flex flex-col items-center justify-center text-center text-slate-600"><i data-lucide="file-plus-2" class="h-8 w-8 mb-2"></i><span class="text-sm font-medium">New Task</span></button>
-                                <button class="bg-slate-100 hover:bg-slate-200 p-4 rounded-lg flex flex-col items-center justify-center text-center text-slate-600"><i data-lucide="file-bar-chart-2" class="h-8 w-8 mb-2"></i><span class="text-sm font-medium">Generate Report</span></button>
-                                <button class="bg-slate-100 hover:bg-slate-200 p-4 rounded-lg flex flex-col items-center justify-center text-center text-slate-600"><i data-lucide="users" class="h-8 w-8 mb-2"></i><span class="text-sm font-medium">Manage Team</span></button>
-                             </div>
-                        </div>
-                        
-                        <!-- Recent Activity -->
-                        <div class="bento-box lg:col-span-2">
-                            <h2 class="text-xl font-semibold text-slate-900 mb-4">Recent Activity</h2>
-                            <div class="space-y-4">
-                                <div class="flex items-center"><div class="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center mr-3 flex-shrink-0"><i data-lucide="check-circle-2" class="h-5 w-5 text-green-600"></i></div><div><p class="text-sm text-slate-700"><span class="font-semibold">David</span> completed task 'Setup Staging DB' on <span class="font-semibold">Phoenix Project</span>.</p></div><p class="text-xs text-slate-400 ml-auto flex-shrink-0">15m ago</p></div>
-                                <div class="flex items-center"><div class="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center mr-3 flex-shrink-0"><i data-lucide="message-square" class="h-5 w-5 text-blue-600"></i></div><div><p class="text-sm text-slate-700"><span class="font-semibold">Laura</span> commented on 'Orion App's UI mockups.</p></div><p class="text-xs text-slate-400 ml-auto flex-shrink-0">45m ago</p></div>
-                                <div class="flex items-center"><div class="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center mr-3 flex-shrink-0"><i data-lucide="folder-plus" class="h-5 w-5 text-purple-600"></i></div><div><p class="text-sm text-slate-700"><span class="font-semibold">You</span> added 3 new files to <span class="font-semibold">Vega Initiative</span>.</p></div><p class="text-xs text-slate-400 ml-auto flex-shrink-0">1h ago</p></div>
-                             </div>
-                        </div>
-
                     </div>
                 </div>
-                 <!-- Right Column: Emails and Apps -->
-                <div class="w-full xl:w-96 flex-shrink-0 space-y-8">
-                    <!-- Priority Email Feed -->
-                    <div class="bento-box">
-                         <h2 class="text-xl font-semibold text-slate-900">Priority Inbox</h2>
-                         <div class="bg-slate-100 p-1 rounded-lg flex items-center text-sm text-slate-600 mt-4"><button class="email-tab active flex-1 text-center py-1.5 px-2 rounded-md">Action Required</button><button class="email-tab flex-1 text-center py-1.5 px-2 rounded-md">Important</button></div>
-                         <div class="mt-4 -mx-2 pr-2">
-                             <div class="space-y-1">
-                                <div class="flex items-start p-2 rounded-lg hover:bg-slate-50 cursor-pointer border-l-2 border-red-500"><img src="https://i.pravatar.cc/32?u=stakeholder1" class="h-8 w-8 rounded-full mr-3 mt-1 flex-shrink-0" alt="avatar"><div class="flex-1 min-w-0"><div class="flex items-center justify-between"><p class="font-semibold text-sm text-slate-800 truncate">Eleanor Vance</p><p class="text-xs text-slate-400 flex-shrink-0 ml-2">2h ago</p></div><p class="text-sm text-slate-600 font-medium truncate">Re: Urgent Feedback on Phoenix Mockups</p><p class="text-xs text-slate-500 truncate">"Hi Alex, a few points of feedback on the latest designs..."</p></div></div>
-                                <div class="flex items-start p-2 rounded-lg hover:bg-slate-50 cursor-pointer border-l-2 border-yellow-500"><img src="https://i.pravatar.cc/32?u=stakeholder2" class="h-8 w-8 rounded-full mr-3 mt-1 flex-shrink-0" alt="avatar"><div class="flex-1 min-w-0"><div class="flex items-center justify-between"><p class="font-semibold text-sm text-slate-800 truncate">Marcus Thorne</p><p class="text-xs text-slate-400 flex-shrink-0 ml-2">8h ago</p></div><p class="text-sm text-slate-600 font-medium truncate">Q4 Budget Question</p><p class="text-xs text-slate-500 truncate">"Can you clarify the vendor costs on slide 5? The numbers..."</p></div></div>
-                                <div class="flex items-start p-2 rounded-lg hover:bg-slate-50 cursor-pointer border-l-2 border-yellow-500"><img src="https://i.pravatar.cc/32?u=stakeholder3" class="h-8 w-8 rounded-full mr-3 mt-1 flex-shrink-0" alt="avatar"><div class="flex-1 min-w-0"><div class="flex items-center justify-between"><p class="font-semibold text-sm text-slate-800 truncate">IT Department</p><p class="text-xs text-slate-400 flex-shrink-0 ml-2">1d ago</p></div><p class="text-sm text-slate-600 font-medium truncate">Action Required: New Security Policy</p><p class="text-xs text-slate-500 truncate">"Please ensure your team reviews and acknowledges the new..."</p></div></div>
-                             </div>
-                         </div>
+
+                <!-- Live Feed -->
+                <div class="lg:col-span-2 row-span-2 bento-box flex flex-col">
+                     <h2 class="text-xl font-semibold text-slate-900 mb-4">Live Feed from Connected Apps</h2>
+                     <div id="live-feed" class="flex-1 -mx-2 space-y-1 overflow-y-auto custom-scrollbar">
+                        <!-- Feed items will be injected here -->
+                     </div>
+                </div>
+
+                <!-- AI Driven Recommendations -->
+                <div class="lg:col-span-1 bento-box">
+                    <h2 class="text-xl font-semibold text-slate-900 mb-4">AI Recommendations</h2>
+                    <div class="space-y-3">
+                        <div class="flex items-start bg-slate-50 p-3 rounded-lg"><i data-lucide="users" class="h-5 w-5 text-red-500 mr-3 mt-1 flex-shrink-0"></i><div><p class="font-semibold text-sm text-slate-800">De-risk Laura's Workload</p><p class="text-xs text-slate-600">Laura is at 110% capacity. Reassign her task to David to prevent burnout.</p></div></div>
+                        <div class="flex items-start bg-slate-50 p-3 rounded-lg"><i data-lucide="dollar-sign" class="h-5 w-5 text-yellow-500 mr-3 mt-1 flex-shrink-0"></i><div><p class="font-semibold text-sm text-slate-800">Review Phoenix Budget</p><p class="text-xs text-slate-600">The Phoenix Project is 15% over budget. Review recent software costs.</p></div></div>
                     </div>
-                    <!-- Connected Apps -->
-                    <div class="bento-box">
-                        <div class="flex justify-between items-start mb-4">
-                            <div>
-                               <h2 class="text-xl font-semibold text-slate-900">Connected Apps</h2>
-                               <p class="text-sm text-slate-500">Live feed from your tools.</p>
-                            </div>
-                            <div id="app-switcher" class="flex items-center space-x-2">
-                                <button data-app="slack" class="p-1 rounded-md bg-slate-100">
-                                    <svg class="h-5 w-5" viewBox="0 0 54 54" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.5 29.5C12.5 26.1863 15.1863 23.5 18.5 23.5H21.5V18.5C21.5 15.1863 18.8137 12.5 15.5 12.5C12.1863 12.5 9.5 15.1863 9.5 18.5V29.5H12.5Z" fill="#36C5F0"></path><path d="M23.5 29.5V18.5C23.5 15.1863 26.1863 12.5 29.5 12.5H32.5V18.5C32.5 21.8137 29.8137 24.5 26.5 24.5C23.1863 24.5 20.5 21.8137 20.5 18.5V9.5H29.5C32.8137 9.5 35.5 12.1863 35.5 15.5V29.5H23.5Z" fill="#2EB67D"></path><path d="M24.5 24.5C24.5 27.8137 21.8137 30.5 18.5 30.5H15.5V35.5C15.5 38.8137 18.1863 41.5 21.5 41.5C24.8137 41.5 27.5 38.8137 27.5 35.5V24.5H24.5Z" fill="#ECB22E"></path><path d="M30.5 24.5V35.5C30.5 38.8137 27.8137 41.5 24.5 41.5H21.5V35.5C21.5 32.1863 24.1863 29.5 27.5 29.5C30.8137 29.5 33.5 32.1863 33.5 35.5V44.5H24.5C21.1863 44.5 18.5 41.8137 18.5 38.5V24.5H30.5Z" fill="#E01E5A"></path></svg>
-                                </button>
-                                <button data-app="jira" class="p-1 rounded-md filter grayscale opacity-60">
-                                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M11.296 22.285L0 11.233l11.296-1.562 3.129 3.129-3.129 9.485z" fill="#2684FF"></path><path d="M12.704 1.715L24 12.767l-11.296 1.562-3.129-3.129 3.129-9.485z" fill="#2684FF"></path><path d="M11.296 20.723l-7.95-7.95 7.95-1.101 1.418 1.418-1.418 6.532z" fill="#0052CC"></path><path d="M12.704 3.277l7.95 7.95-7.95 1.1-1.418-1.417 1.418-6.533z" fill="#0052CC"></path></svg>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="space-y-3">
-                            <div id="app-content-slack">
-                                <div class="flex items-start"><div class="mt-1 mr-3"><i data-lucide="hash" class="w-4 h-4 text-slate-400"></i></div><div><p class="text-sm text-slate-600 font-medium">#phoenix-project</p><p class="text-xs text-slate-800"><b>Laura:</b> Just pushed the latest schema updates. Can someone review?</p><a href="#" class="text-xs text-blue-600 hover:underline">Open in Slack</a></div></div>
-                            </div>
-                            <div id="app-content-jira" class="hidden">
-                                <div class="flex items-start"><div class="mt-1 mr-3"><i data-lucide="ticket" class="w-4 h-4 text-blue-600"></i></div><div><p class="text-sm text-slate-600 font-medium">OR-241: User cannot login with SSO</p><p class="text-xs text-slate-800"><b>Status:</b> To Do, <b>Assignee:</b> Samantha</p><a href="#" class="text-xs text-blue-600 hover:underline">Open in Jira</a></div></div>
-                            </div>
-                        </div>
+                </div>
+
+                 <!-- Upcoming Milestones -->
+                <div class="lg:col-span-1 bento-box">
+                    <h2 class="text-xl font-semibold text-slate-900 mb-4">Upcoming Milestones</h2>
+                    <div class="space-y-3">
+                        <div class="flex items-center"><div class="h-2 w-2 rounded-full bg-green-500 mr-3"></div><div><p class="font-medium text-sm">Orion App Launch</p><p class="text-xs text-slate-500">in 2 days</p></div></div>
+                        <div class="flex items-center"><div class="h-2 w-2 rounded-full bg-yellow-500 mr-3"></div><div><p class="font-medium text-sm">Phoenix DB Migration</p><p class="text-xs text-slate-500">in 9 days</p></div></div>
+                        <div class="flex items-center"><div class="h-2 w-2 rounded-full bg-red-500 mr-3"></div><div><p class="font-medium text-sm">Vega Initiative Review</p><p class="text-xs text-slate-500">in 23 days</p></div></div>
                     </div>
-                     <!-- Portfolio Status Chart -->
-                    <div class="bento-box">
-                        <h2 class="text-xl font-semibold text-slate-900 mb-4">Portfolio Status</h2>
-                        <div class="flex items-center justify-center p-4">
-                            <canvas id="portfolio-chart" class="max-w-full max-h-52"></canvas>
+                </div>
+
+                 <!-- Priority Email -->
+                <div class="lg:col-span-2 bento-box flex flex-col">
+                    <h2 class="text-xl font-semibold text-slate-900 mb-4">Priority Email</h2>
+                    <div class="flex-1 space-y-3">
+                        <div class="flex items-center"><img src="https://i.pravatar.cc/32?u=stakeholder" class="h-8 w-8 rounded-full mr-3"><div><p class="font-semibold text-sm">Eleanor Vance</p><p class="text-xs text-slate-500">Feedback on latest designs</p></div></div>
+                        <p class="text-xs text-slate-600 bg-slate-50 p-3 rounded-lg border">"Hi Alex, a few points of feedback on the latest designs for the Orion App. Overall it's looking good, but I'm concerned about the complexity of the new user onboarding flow..."</p>
+                        <div id="ai-email-analysis" class="hidden text-xs text-blue-800 bg-blue-50 p-3 rounded-lg"><strong>AI Analysis:</strong> Positive sentiment with a key concern around 'user onboarding complexity'. Recommends acknowledging the feedback and suggesting a brief follow-up meeting.</div>
+                    </div>
+                    <div class="mt-4 border-t pt-4 flex justify-between items-center">
+                        <a href="mailto:eleanor.vance@example.com?subject=Re:%20Feedback%20on%20latest%20designs" class="text-sm font-medium text-blue-600 hover:underline">View Email →</a>
+                        <div class="flex space-x-2">
+                           <button id="analyze-email-btn" title="Analyze with AI" class="p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg"><i data-lucide="brain-circuit" class="h-4 w-4"></i></button>
+                           <button id="draft-reply-btn" title="Reply with Nexus AI" class="p-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg"><i data-lucide="pen-square" class="h-4 w-4"></i></button>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        
+
         <!-- AI Response Container -->
         <div id="ai-response-container" class="bg-white border-t border-slate-200 no-scrollbar flex flex-col max-w-full">
             <div id="ai-response-header" class="px-6 py-4 max-w-4xl w-full mx-auto"></div>
@@ -311,167 +226,192 @@
         <!-- Prompt Bar -->
         <div class="p-4 bg-white border-t border-slate-200 shadow-[0_-2px_5px_rgba(0,0,0,0.05)]">
             <div class="max-w-4xl mx-auto">
-                 <form id="prompt-form" class="relative">
-                    <textarea id="prompt-textarea" rows="1" placeholder="Ask Nexus AI anything..." class="w-full py-3 pl-5 pr-14 text-sm text-slate-800 bg-slate-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 border border-transparent focus:border-blue-500 transition-all duration-200 max-h-40 overflow-y-auto no-scrollbar"></textarea>
-                    <button type="submit" class="absolute bottom-3.5 right-0 flex items-center justify-center w-14 text-slate-500 hover:text-blue-600"><i data-lucide="send" class="w-5 h-5"></i></button>
-                </form>
+                 <form id="prompt-form">
+                    <div class="relative">
+                        <textarea id="prompt-textarea" rows="1" placeholder="Ask Nexus AI about your workspace..." class="w-full py-3 pl-5 pr-14 text-sm text-slate-800 bg-slate-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 border border-transparent transition-all duration-200 max-h-40 overflow-y-auto no-scrollbar"></textarea>
+                        <button type="submit" class="absolute bottom-3.5 right-0 flex items-center justify-center w-14 text-slate-500 hover:text-blue-600"><i data-lucide="send" class="h-5 w-5"></i></button>
+                    </div>
+                 </form>
+                 <div id="prompt-suggestions" class="mt-2 flex items-center gap-2">
+                    <button class="text-xs bg-slate-200 hover:bg-slate-300 text-slate-600 px-2 py-1 rounded-full">What are my biggest risks?</button>
+                    <button class="text-xs bg-slate-200 hover:bg-slate-300 text-slate-600 px-2 py-1 rounded-full">Who is under-utilized?</button>
+                    <button class="text-xs bg-slate-200 hover:bg-slate-300 text-slate-600 px-2 py-1 rounded-full">What are the next major deadlines?</button>
+                 </div>
             </div>
         </div>
     </main>
     
-    <!-- Modals -->
-    <!-- Accept Modal -->
-    <div id="acceptModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay hidden">
-        <div class="modal-content rounded-lg shadow-xl w-full max-w-3xl">
-            <div class="p-6">
-                 <div class="flex items-center justify-between">
-                    <h3 class="text-lg font-semibold text-slate-900">Accepted: Budget Realignment Plan</h3>
-                    <button onclick="closeModal('acceptModal')" class="p-1 rounded-full hover:bg-slate-100">
-                        <i data-lucide="x" class="h-5 w-5 text-slate-500"></i>
-                    </button>
-                </div>
-            </div>
-            <div class="border-t border-b border-slate-200 p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Action Plan -->
-                <div>
-                    <h4 class="font-semibold text-slate-800">Action Plan Steps</h4>
-                     <p class="text-sm text-slate-500 mt-1 mb-4">Nexus will now begin implementing the following steps:</p>
-                    <ol class="space-y-3 text-sm list-decimal list-inside text-slate-700">
-                        <li>
-                            <strong>Adjust Vendor Contract #V-45B:</strong><br>
-                            <span class="text-xs text-slate-600 pl-5">Notify vendor of 10% spending reduction for the current milestone.</span>
-                        </li>
-                        <li>
-                            <strong>Update Resource Allocation:</strong><br>
-                            <span class="text-xs text-slate-600 pl-5">Reassign Laura to 'Orion' (20hr/wk) & Samantha to 'Phoenix' (backfill).</span>
-                        </li>
-                         <li>
-                            <strong>Modify Project Backlog:</strong><br>
-                            <span class="text-xs text-slate-600 pl-5">Move feature #PNX-241 from 'Current Sprint' to 'Next Sprint' in Jira.</span>
-                        </li>
-                        <li>
-                            <strong>Notify Stakeholders:</strong><br>
-                             <span class="text-xs text-slate-600 pl-5">Send automated email update to project stakeholders about the changes.</span>
-                        </li>
-                    </ol>
-                </div>
-                 <!-- Q&A Chat -->
-                <div class="flex flex-col h-80">
-                    <h4 class="font-semibold text-slate-800 mb-2">Have questions about this plan?</h4>
-                    <div id="accept-chat-window" class="chat-window flex-1 bg-slate-100 rounded-t-md p-4 overflow-y-auto space-y-4">
-                        <div class="flex items-start gap-2.5">
-                            <div class="bg-blue-100 p-2 rounded-full h-8 w-8 flex-shrink-0 flex items-center justify-center"><i data-lucide="bot" class="h-5 w-5 text-blue-600"></i></div>
-                            <div class="flex flex-col w-full max-w-xs leading-1.5 p-3 border-slate-200 bg-slate-200 rounded-e-xl rounded-es-xl">
-                                <p class="text-sm font-normal text-slate-800">I'm ready to proceed. Ask me anything about these steps.</p>
-                            </div>
-                        </div>
-                    </div>
-                    <form id="accept-chat-form" class="flex items-center border-t border-slate-200">
-                        <input id="accept-chat-input" type="text" class="w-full bg-white p-3 text-sm focus:outline-none focus:ring-0 text-slate-800 placeholder-slate-400 rounded-bl-md border-r border-slate-200" placeholder="e.g., 'Why reassign Laura?'" autocomplete="off">
-                        <button type="submit" class="bg-blue-600 p-3 rounded-br-md hover:bg-blue-500">
-                            <i data-lucide="send" class="h-5 w-5 text-white"></i>
-                        </button>
-                    </form>
-                </div>
-            </div>
-            <div class="bg-slate-50 px-6 py-4 rounded-b-lg flex justify-end space-x-3">
-                <button onclick="closeModal('acceptModal')" class="px-4 py-2 text-sm font-medium bg-white hover:bg-slate-50 border border-slate-300 rounded-md text-slate-700">Close</button>
-                <button onclick="closeModal('acceptModal')" class="px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 rounded-md text-white">Confirm & Execute Plan</button>
-            </div>
-        </div>
-    </div>
-    
-    <div id="refineModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay hidden"><div class="modal-content rounded-lg shadow-xl w-full max-w-2xl"><div class="p-6"><div class="flex items-center justify-between"><h3 class="text-lg font-semibold text-slate-900">Refine Suggestion</h3><button onclick="closeModal('refineModal')" class="p-1 rounded-full hover:bg-slate-100"><i data-lucide="x" class="h-5 w-5 text-slate-500"></i></button></div><div class="mt-4 flex flex-col md:flex-row gap-6"><div class="md:w-1/2"><h4 class="font-semibold text-slate-800">Nexus's Current Plan</h4><ul class="mt-2 space-y-2 text-sm list-disc list-inside text-slate-600 bg-slate-50 p-4 rounded-md border border-slate-200"><li>Reduce non-essential vendor spending.</li><li>Reassign Laura to 'Orion App'.</li><li>Assign Samantha to 'Phoenix Project'.</li><li>Defer feature #PNX-241.</li></ul></div><div class="md:w-1/2 flex flex-col h-80"><h4 class="font-semibold text-slate-800 mb-2">Chat with Nexus AI</h4><div id="refine-chat-window" class="chat-window flex-1 bg-slate-100 rounded-t-md p-4 overflow-y-auto space-y-4"><div class="flex items-start gap-2.5"><div class="bg-blue-100 p-2 rounded-full h-8 w-8 flex-shrink-0 flex items-center justify-center"><i data-lucide="bot" class="h-5 w-5 text-blue-600"></i></div><div class="flex flex-col w-full max-w-xs leading-1.5 p-3 border-slate-200 bg-slate-200 rounded-e-xl rounded-es-xl"><p class="text-sm font-normal text-slate-800">How would you like to refine this plan?</p></div></div></div><form id="refine-chat-form" class="flex items-center border-t border-slate-200"><input id="refine-chat-input" type="text" class="w-full bg-white p-3 text-sm focus:outline-none focus:ring-0 text-slate-800 placeholder-slate-400 rounded-bl-md border-r border-slate-200" placeholder="Type your message..." autocomplete="off"><button type="submit" class="bg-blue-600 p-3 rounded-br-md hover:bg-blue-500"><i data-lucide="send" class="h-5 w-5 text-white"></i></button></form></div></div></div></div></div>
-
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
             
-            // --- Clock Logic ---
-            const timeElement = document.getElementById('time');
-            const dateElement = document.getElementById('date');
-
-            function updateClock() {
-                const now = new Date();
-                const timeOptions = { hour: 'numeric', minute: '2-digit', hour12: true };
-                const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-
-                if (timeElement) {
-                    timeElement.textContent = now.toLocaleTimeString('en-US', timeOptions);
-                }
-                if (dateElement) {
-                    dateElement.textContent = now.toLocaleDateString('en-US', dateOptions);
-                }
-            }
-            updateClock();
-            setInterval(updateClock, 1000);
-
             // --- Sidebar Logic ---
             const sidebar = document.getElementById('sidebar');
-            sidebar.addEventListener('mouseenter', () => {
-                sidebar.classList.remove('sidebar-collapsed');
-                sidebar.classList.add('sidebar-expanded');
-                document.getElementById('logo-text').innerHTML = 'Nexus<span class="text-blue-600">PM</span>';
-                document.querySelectorAll('.nav-text').forEach(text => text.classList.remove('hidden'));
+            sidebar.addEventListener('mouseenter', () => { 
+                sidebar.classList.remove('sidebar-collapsed'); 
+                sidebar.classList.add('sidebar-expanded'); 
+                document.getElementById('logo-text').innerHTML = 'Nexus<span class="text-blue-600">PM</span>'; 
+                document.querySelectorAll('.nav-text').forEach(text => text.classList.remove('hidden')); 
             });
-            sidebar.addEventListener('mouseleave', () => {
-                sidebar.classList.add('sidebar-collapsed');
-                sidebar.classList.remove('sidebar-expanded');
-                document.getElementById('logo-text').innerHTML = 'N<span class="text-blue-600">P</span>';
-                document.querySelectorAll('.nav-text').forEach(text => text.classList.add('hidden'));
+            sidebar.addEventListener('mouseleave', () => { 
+                sidebar.classList.add('sidebar-collapsed'); 
+                sidebar.classList.remove('sidebar-expanded'); 
+                document.getElementById('logo-text').innerHTML = 'N<span class="text-blue-600">P</span>'; 
+                document.querySelectorAll('.nav-text').forEach(text => text.classList.add('hidden')); 
             });
 
-            // --- Modal Logic ---
-            window.openModal = (modalId) => document.getElementById(modalId)?.classList.remove('hidden');
-            window.closeModal = (modalId) => document.getElementById(modalId)?.classList.add('hidden');
-            window.addEventListener('click', (event) => {
-                if (event.target.classList.contains('modal-overlay')) {
-                    closeModal('acceptModal');
-                    closeModal('refineModal');
+            // --- Dynamic Sidebar Active State ---
+            const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+            const navLinks = document.querySelectorAll('nav a');
+            navLinks.forEach(link => {
+                const linkPage = link.getAttribute('href');
+                if (linkPage === currentPage || (currentPage === '' && linkPage === 'index.html')) {
+                    link.classList.add('bg-blue-100', 'text-blue-700', 'font-semibold');
+                    link.classList.remove('hover:bg-slate-100', 'text-slate-600');
+                } else {
+                    link.classList.remove('bg-blue-100', 'text-blue-700', 'font-semibold');
+                    link.classList.add('hover:bg-slate-100', 'text-slate-600');
                 }
             });
 
-            // --- Generic Chat Handler ---
-            function handleChatSubmit(e, inputEl, windowEl) {
+            // --- Notification Bell Logic ---
+            const notificationBell = document.getElementById('notification-bell');
+            const notificationPanel = document.getElementById('notification-panel');
+            notificationBell.addEventListener('click', (e) => {
+                e.stopPropagation();
+                notificationPanel.classList.toggle('hidden');
+            });
+            document.addEventListener('click', (e) => {
+                if (!notificationPanel.contains(e.target) && !notificationBell.contains(e.target)) {
+                    notificationPanel.classList.add('hidden');
+                }
+            });
+
+            // --- My Hub Task Logic ---
+            const taskList = document.getElementById('task-list');
+            const newTaskForm = document.getElementById('new-task-form');
+            const newTaskInput = document.getElementById('new-task-input');
+
+            taskList.addEventListener('change', (e) => {
+                if (e.target.classList.contains('task-checkbox')) {
+                    const label = e.target.nextElementSibling;
+                    label.classList.toggle('line-through');
+                    label.classList.toggle('text-slate-500');
+                }
+            });
+            
+            newTaskForm.addEventListener('submit', (e) => {
                 e.preventDefault();
-                const userMessage = inputEl.value.trim();
-                if (!userMessage) return;
+                const taskText = newTaskInput.value.trim();
+                if (taskText === '') return;
+                
+                const taskId = `task-${Date.now()}`;
+                const newTaskHTML = `
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <input type="checkbox" id="${taskId}" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 mr-3 task-checkbox">
+                            <label for="${taskId}" class="font-medium text-sm task-label">${taskText}</label>
+                        </div>
+                        <span class="text-xs bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full">Pending</span>
+                    </div>`;
+                taskList.insertAdjacentHTML('beforeend', newTaskHTML);
+                newTaskInput.value = '';
+            });
 
-                const userMessageHtml = `<div class="flex items-start gap-2.5 justify-end"><div class="flex flex-col w-full max-w-xs leading-1.5 p-3 border-blue-600 bg-blue-600 rounded-s-xl rounded-ee-xl"><p class="text-sm font-normal text-white">${userMessage}</p></div><img class="w-8 h-8 rounded-full" src="https://i.pravatar.cc/32?u=nexus-user" alt="User avatar"></div>`;
-                windowEl.insertAdjacentHTML('beforeend', userMessageHtml);
-                inputEl.value = '';
-                windowEl.scrollTop = windowEl.scrollHeight;
-
-                setTimeout(() => {
-                    const aiResponse = getAIResponse(userMessage);
-                    const aiMessageHtml = `<div class="flex items-start gap-2.5"><div class="bg-blue-100 p-2 rounded-full h-8 w-8 flex-shrink-0 flex items-center justify-center"><i data-lucide="bot" class="h-5 w-5 text-blue-600"></i></div><div class="flex flex-col w-full max-w-xs leading-1.5 p-3 border-slate-200 bg-slate-200 rounded-e-xl rounded-es-xl"><p class="text-sm font-normal text-slate-800">${aiResponse.replace(/<[^>]*>?/gm, '')}</p></div></div>`;
-                    windowEl.insertAdjacentHTML('beforeend', aiMessageHtml);
-                    lucide.createIcons();
-                    windowEl.scrollTop = windowEl.scrollHeight;
-                }, 1000);
+            // --- Quick Notes Logic ---
+            const notesTextarea = document.getElementById('quick-notes-textarea');
+            const savedNotes = localStorage.getItem('nexus-pm-quick-notes');
+            if (savedNotes) { notesTextarea.value = savedNotes; }
+            notesTextarea.addEventListener('input', () => {
+                localStorage.setItem('nexus-pm-quick-notes', notesTextarea.value);
+            });
+            
+            // --- Live Feed Logic ---
+            const liveFeedContainer = document.getElementById('live-feed');
+            const liveFeedData = [
+                { source: 'Jira', link: '#', icon: 'check-circle', color: 'text-blue-500', user: 'Laura', userAvatar: 'laura', action: 'completed issue', target: 'PROJ-123', timestamp: new Date(Date.now() - 5 * 60000), aiContext: 'This unblocks the "Refactor payment gateway" task.' },
+                { source: 'Slack', link: '#', icon: 'message-square', color: 'text-purple-500', user: 'Samantha', userAvatar: 'samantha', action: 'mentioned you in', target: '#phoenix-project', timestamp: new Date(Date.now() - 15 * 60000), aiContext: 'A question about the new API schema design.' },
+                { source: 'GitHub', link: '#', icon: 'git-commit', color: 'text-gray-700', user: 'David', userAvatar: 'david', action: 'pushed a commit to', target: 'orion-app', timestamp: new Date(Date.now() - 2 * 3600000), aiContext: 'The new user profile page has been deployed to staging.' },
+                { source: 'Figma', link: '#', icon: 'figma', color: 'text-pink-500', user: 'Samantha', userAvatar: 'samantha', action: 'updated the file', target: 'Orion App Designs', timestamp: new Date(Date.now() - 5 * 3600000), aiContext: 'Changes reflect feedback from the latest stakeholder review.' },
+            ];
+            
+            function timeAgo(date) {
+                const seconds = Math.floor((new Date() - date) / 1000);
+                let interval = seconds / 31536000;
+                if (interval > 1) return Math.floor(interval) + "y ago";
+                interval = seconds / 2592000;
+                if (interval > 1) return Math.floor(interval) + "mo ago";
+                interval = seconds / 86400;
+                if (interval > 1) return Math.floor(interval) + "d ago";
+                interval = seconds / 3600;
+                if (interval > 1) return Math.floor(interval) + "h ago";
+                interval = seconds / 60;
+                if (interval > 1) return Math.floor(interval) + "m ago";
+                return Math.floor(seconds) + "s ago";
             }
 
-            // --- Initialize Modal Chats ---
-            const refineChatForm = document.getElementById('refine-chat-form');
-            if (refineChatForm) {
-                refineChatForm.addEventListener('submit', (e) => handleChatSubmit(e, document.getElementById('refine-chat-input'), document.getElementById('refine-chat-window')));
-            }
-            const acceptChatForm = document.getElementById('accept-chat-form');
-            if (acceptChatForm) {
-                acceptChatForm.addEventListener('submit', (e) => handleChatSubmit(e, document.getElementById('accept-chat-input'), document.getElementById('accept-chat-window')));
-            }
+            liveFeedContainer.innerHTML = '';
+            liveFeedData.forEach(item => {
+                liveFeedContainer.innerHTML += `
+                    <div class="feed-item flex space-x-4 relative">
+                        <div class="absolute left-5 top-5 h-full w-0.5 bg-slate-200 timeline-line"></div>
+                        <div class="flex-shrink-0 z-10">
+                            <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center border-2 border-slate-200">
+                               <i data-lucide="${item.icon}" class="${item.color} h-5 w-5"></i>
+                            </div>
+                        </div>
+                        <div class="flex-1 pb-4">
+                             <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="text-sm text-slate-600">
+                                        <img src="https://i.pravatar.cc/24?u=${item.userAvatar}" class="inline-block h-6 w-6 rounded-full mr-1"/>
+                                        <span class="font-semibold">${item.user}</span>
+                                        ${item.action}
+                                        <span class="font-semibold text-blue-600">${item.target}</span>.
+                                    </p>
+                                    <div class="flex items-center mt-1">
+                                        <p class="text-xs text-slate-400 flex-shrink-0">${timeAgo(item.timestamp)}</p>
+                                        <a href="${item.link}" target="_blank" class="ml-3 text-xs font-semibold text-blue-600 hover:underline flex items-center">
+                                            View in ${item.source} <i data-lucide="arrow-up-right" class="h-3 w-3 ml-1"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-2 text-xs text-slate-500 bg-slate-50 p-2 rounded-md border border-slate-200 flex items-center">
+                                <i data-lucide="sparkles" class="h-3 w-3 text-blue-500 mr-2 flex-shrink-0"></i>
+                                <strong>AI Context:</strong>&nbsp;<span>${item.aiContext}</span>
+                            </div>
+                        </div>
+                    </div>`;
+            });
+            lucide.createIcons();
 
-            // --- Prompt Bar Auto-Resize Logic ---
-            const promptTextarea = document.getElementById('prompt-textarea');
-            if(promptTextarea) {
-                promptTextarea.addEventListener('input', () => {
-                    promptTextarea.style.height = 'auto';
-                    promptTextarea.style.height = `${promptTextarea.scrollHeight}px`;
-                });
-            }
 
-            // --- Expanding AI Response Logic ---
+            // --- Priority Email Logic ---
+            document.getElementById('analyze-email-btn').addEventListener('click', () => {
+                document.getElementById('ai-email-analysis').classList.toggle('hidden');
+            });
+
+            document.getElementById('draft-reply-btn').addEventListener('click', () => {
+                const recipient = 'eleanor.vance@example.com';
+                const subject = 'Re: Feedback on latest designs';
+                const body = "Hi Eleanor,\n\nThanks for the feedback on the Orion App designs. I appreciate you highlighting the concern about the onboarding flow complexity.\n\nCould you spare 15 minutes this week to walk me through your specific thoughts? I want to make sure we get it right.\n\nBest,\nAlex";
+                window.location.href = `mailto:${recipient}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+            });
+
+            // --- AI Prompt Bar Logic ---
             const promptForm = document.getElementById('prompt-form');
+            const promptTextarea = document.getElementById('prompt-textarea');
+            const promptSuggestions = document.getElementById('prompt-suggestions');
+
+            promptSuggestions.addEventListener('click', (e) => {
+                if(e.target.tagName === 'BUTTON') {
+                    promptTextarea.value = e.target.textContent;
+                    promptTextarea.focus();
+                    promptForm.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+                }
+            });
+
             const responseContainer = document.getElementById('ai-response-container');
             const responseHeader = document.getElementById('ai-response-header');
             const messageList = document.getElementById('message-list');
@@ -484,42 +424,32 @@
                     const userQuery = promptTextarea.value.trim();
                     if (!userQuery) return;
                     lastUserQuery = userQuery;
-                    if (!isConversationActive) {
-                        isConversationActive = true;
-                        renderExpandedHeader();
-                    }
-                    
+                    if (!isConversationActive) { isConversationActive = true; renderExpandedHeader(); }
                     messageList.insertAdjacentHTML('beforeend', `<div class="flex items-start gap-3 justify-end"><div class="bg-slate-200 p-3 rounded-lg max-w-xl"><p class="text-sm text-slate-800">${userQuery}</p></div><img class="w-8 h-8 rounded-full" src="https://i.pravatar.cc/40?u=nexus-user" alt="User avatar"></div>`);
-                    
                     const thinkingId = `thinking-${Date.now()}`;
                     messageList.insertAdjacentHTML('beforeend', `<div id="${thinkingId}" class="flex items-start gap-3"><div class="bg-blue-100 p-2 rounded-full h-8 w-8 flex items-center justify-center animate-pulse flex-shrink-0"><i data-lucide="bot" class="h-5 w-5 text-blue-600"></i></div><div class="bg-slate-100 p-3 rounded-lg"><p class="text-sm text-slate-500">Nexus is thinking...</p></div></div>`);
                     lucide.createIcons();
-                    
-                    renderExpandedHeader();
                     responseContainer.classList.remove('minimized');
                     responseContainer.classList.add('expanded');
                     setTimeout(() => { messageList.scrollTop = messageList.scrollHeight; }, 10);
-                    
                     promptTextarea.value = '';
                     promptTextarea.style.height = 'auto';
-                    
+
                     setTimeout(() => {
                         const aiResult = getAIResponse(userQuery);
                         const thinkingElement = document.getElementById(thinkingId);
                         if (thinkingElement) {
-                            thinkingElement.outerHTML = `<div class="flex items-start gap-3"><div class="bg-blue-100 p-2 rounded-full h-8 w-8 flex items-center justify-center flex-shrink-0"><i data-lucide="bot" class="h-5 w-5 text-blue-600"></i></div><div class="text-sm text-slate-700 space-y-2 prose prose-sm max-w-none bg-slate-100 p-3 rounded-lg">${aiResult}</div></div>`;
+                            thinkingElement.outerHTML = `<div class="flex items-start gap-3"><div class="bg-blue-100 p-2 rounded-full h-8 w-8 flex items-center justify-center flex-shrink-0"><i data-lucide="bot" class="h-5 w-5 text-blue-600"></i></div><div class="text-sm text-slate-700 space-y-2 prose prose-sm max-w-none bg-slate-100 p-3 rounded-lg">${aiResult.message}</div></div>`;
                             lucide.createIcons();
                             messageList.scrollTop = messageList.scrollHeight;
                         }
-                    }, 2000);
+                    }, 1500);
                 });
             }
-
-            const renderExpandedHeader = () => {
+             const renderExpandedHeader = () => {
                 responseHeader.innerHTML = `<div class="flex justify-between items-start"><h3 class="text-lg font-semibold text-slate-900">Nexus AI Response</h3><div class="flex items-center"><button id="minimize-ai-response" class="p-1 rounded-full hover:bg-slate-100 mr-2"><i data-lucide="chevrons-down" class="h-5 w-5 text-slate-500"></i></button><button id="close-ai-response" class="p-1 rounded-full hover:bg-slate-100"><i data-lucide="x" class="h-5 w-5 text-slate-500"></i></button></div></div>`;
                 lucide.createIcons();
             }
-
             const renderMinimizedHeader = () => {
                 responseHeader.innerHTML = `<div class="flex items-center justify-between h-full"><p class="text-sm text-slate-600 truncate"><span class="font-semibold text-slate-800">AI Response:</span> ${lastUserQuery}</p><button id="expand-ai-response" class="p-1 rounded-full hover:bg-slate-100"><i data-lucide="chevrons-up" class="h-5 w-5 text-slate-500"></i></button></div>`;
                 lucide.createIcons();
@@ -547,60 +477,22 @@
                 });
             }
 
-            // --- Connected Apps Switcher Logic ---
-            const appSwitcher = document.getElementById('app-switcher');
-            const appContents = { slack: document.getElementById('app-content-slack'), jira: document.getElementById('app-content-jira') };
-            if(appSwitcher) {
-                appSwitcher.addEventListener('click', (e) => {
-                    const button = e.target.closest('button');
-                    if (!button) return;
-                    const app = button.dataset.app;
-                    Object.values(appContents).forEach(content => content.classList.add('hidden'));
-                    appContents[app].classList.remove('hidden');
-                    appSwitcher.querySelectorAll('button').forEach(btn => {
-                        btn.classList.add('filter', 'grayscale', 'opacity-60');
-                        btn.classList.remove('bg-slate-100');
-                    });
-                    button.classList.remove('filter', 'grayscale', 'opacity-60');
-                    button.classList.add('bg-slate-100');
-                });
-            }
-            
-            // --- Portfolio Status Pie Chart Logic ---
-            const portfolioChartCtx = document.getElementById('portfolio-chart');
-            if (portfolioChartCtx) {
-                new Chart(portfolioChartCtx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: ['On Track', 'At Risk', 'Off Track'],
-                        datasets: [{ label: 'Projects', data: [5, 2, 1], backgroundColor: ['#22c55e', '#f59e0b', '#ef4444'], borderColor: '#ffffff', borderWidth: 4 }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 20, font: { family: "'Inter', sans-serif" } } }, tooltip: { bodyFont: { family: "'Inter', sans-serif" }, titleFont: { family: "'Inter', sans-serif" } } },
-                        cutout: '60%'
-                    }
-                });
-            }
-             // --- Mock AI Response Function ---
             function getAIResponse(message) {
                 const lowerMessage = message.toLowerCase();
-                if (lowerMessage.includes('why') && lowerMessage.includes('laura')) {
-                    return `<p>Laura has critical expertise for the 'Orion App' which is currently a high-priority project. Moving her temporarily will accelerate that project, while Samantha, who has context on 'Phoenix', can effectively manage the backfill tasks, minimizing disruption.</p>`;
-                } else if (lowerMessage.includes('david') && !lowerMessage.includes('samantha')) {
-                    return `<p>Okay, I've updated the plan. David will be assigned to the 'Phoenix Project' instead of Samantha. David's current workload is low, so this is an efficient change. Is there anything else you'd like to adjust?</p>`;
-                } else if (lowerMessage.includes('budget') || lowerMessage.includes('phoenix') || lowerMessage.includes('summarize')) {
-                    return `<h4>Summary of 'Phoenix Project'</h4>
-                            <p class="mt-2">The Phoenix Project is a high-priority initiative to refactor our legacy backend services into a modern microservices architecture.</p>
-                            <h5 class="font-semibold mt-4">Current Status:</h5>
-                            <ul class="list-disc list-inside mt-2 space-y-1">
-                                <li><strong>Timeline:</strong> On Track (75% complete).</li>
-                                <li><strong>Budget:</strong> <span class="text-yellow-600 font-medium">At Risk</span> (15% over).</li>
-                                <li><strong>Key Personnel:</strong> Lead by Alex Hartman.</li>
-                            </ul>`;
-                } else {
-                    return "<p>I've noted your feedback. How else can I adjust the plan to better suit your goals?</p>";
+                if (lowerMessage.includes('summarize my day')) {
+                    return { message: `<p>Good afternoon, Alex. Today, your top priority is to <strong>Review the API schema</strong>. You also have a meeting with stakeholders tomorrow. Your current workload is at a healthy 75%.</p>` };
+                }
+                if (lowerMessage.includes('biggest risks')) {
+                    return { message: `<p>The biggest risk right now is the <strong>resource overload on Laura (110%)</strong>, which threatens the Phoenix Project timeline. The second is the <strong>Phoenix Project's budget overage (15%)</strong>.</p>` };
+                }
+                 if (lowerMessage.includes('under-utilized')) {
+                    return { message: `<p><strong>David</strong> currently has the most available capacity with a workload of only <strong>40%</strong>. He is a good candidate to take on additional tasks to help balance the team's effort.</p>` };
+                }
+                 if (lowerMessage.includes('major deadlines')) {
+                    return { message: `<p>Your next major deadline is the <strong>Orion App Launch</strong>, which is due in 2 days. After that, the <strong>Phoenix DB Migration</strong> is due in 9 days.</p>` };
+                }
+                else {
+                    return { message: `<p>I can summarize your day, explain risks, or provide details on any project. What would you like to know?</p>` };
                 }
             }
         });
