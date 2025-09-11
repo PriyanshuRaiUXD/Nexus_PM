@@ -28,232 +28,159 @@
         .bento-box {
             background-color: #ffffff; /* white */
             border-radius: 0.75rem; /* rounded-xl */
-            padding: 1.5rem;
             border: 1px solid #e2e8f0; /* slate-200 */
             box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
         }
         .settings-nav a.active {
-            background-color: #eef2ff; /* indigo-50 */
-            color: #4338ca; /* indigo-800 */
+            background-color: #eef2ff;
+            color: #4338ca;
             font-weight: 600;
         }
-        /* Toggle Switch */
-        .toggle-checkbox:checked {
-            right: 0;
-            border-color: #4f46e5;
+        .modal-overlay {
+            background-color: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(4px);
         }
+        /* Toggle Switch */
         .toggle-checkbox:checked + .toggle-label {
             background-color: #4f46e5;
         }
+        /* Toast Notification */
+        #toast-container {
+            position: fixed;
+            top: 1.25rem;
+            right: 1.25rem;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        .toast {
+            animation: fadeIn 0.3s ease-out, fadeOut 0.3s ease-in 3.7s forwards;
+            max-width: 320px;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateX(100%); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes fadeOut { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(100%); } }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden">
 
-    <!-- Sidebar -->
     <aside id="sidebar" class="sidebar sidebar-collapsed bg-white border-r border-slate-200 flex flex-col h-full">
-        <!-- Logo -->
         <div class="flex items-center justify-center p-4 h-16 border-b border-slate-200">
             <h1 id="logo-text" class="text-2xl font-bold text-slate-800 transition-opacity duration-300">N<span class="text-blue-600">P</span></h1>
         </div>
-
-        <!-- Navigation -->
         <nav class="flex-1 px-4 py-4 space-y-2">
-            <a href="index.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600">
-                <i data-lucide="home" class="h-6 w-6"></i>
-                <span class="ml-4 nav-text hidden">Home</span>
-            </a>
-            <a href="projects.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600">
-                <i data-lucide="folder-kanban" class="h-6 w-6"></i>
-                <span class="ml-4 nav-text hidden">Projects</span>
-            </a>
-            <a href="goals.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600">
-                <i data-lucide="target" class="h-6 w-6"></i>
-                <span class="ml-4 nav-text hidden">Goals</span>
-            </a>
-            <a href="intelligence.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600">
-                <i data-lucide="bar-chart-big" class="h-6 w-6"></i>
-                <span class="ml-4 nav-text hidden">Intelligence</span>
-            </a>
-             <a href="chat-history.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600">
-                <i data-lucide="message-square" class="h-6 w-6"></i>
-                <span class="ml-4 nav-text hidden">Chat History</span>
-            </a>
-            <a href="activity.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600">
-                <i data-lucide="activity" class="h-6 w-6"></i>
-                <span class="ml-4 nav-text hidden">Activity</span>
-            </a>
-            <a href="settings.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600">
-                <i data-lucide="settings" class="h-6 w-6"></i>
-                <span class="ml-4 nav-text hidden">Settings</span>
-            </a>
+            <a href="index.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600"><i data-lucide="home" class="h-6 w-6"></i><span class="ml-4 nav-text hidden">Home</span></a>
+            <a href="projects.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600"><i data-lucide="folder-kanban" class="h-6 w-6"></i><span class="ml-4 nav-text hidden">Projects</span></a>
+            <a href="goals.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600"><i data-lucide="target" class="h-6 w-6"></i><span class="ml-4 nav-text hidden">Goals</span></a>
+            <a href="intelligence.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600"><i data-lucide="bar-chart-big" class="h-6 w-6"></i><span class="ml-4 nav-text hidden">Intelligence</span></a>
+            <a href="chat-history.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600"><i data-lucide="message-square" class="h-6 w-6"></i><span class="ml-4 nav-text hidden">Chat History</span></a>
+            <a href="activity.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600"><i data-lucide="activity" class="h-6 w-6"></i><span class="ml-4 nav-text hidden">Activity</span></a>
+            <a href="settings.html" class="flex items-center p-3 rounded-lg bg-blue-100 text-blue-700 font-semibold"><i data-lucide="settings" class="h-6 w-6"></i><span class="ml-4 nav-text hidden">Settings</span></a>
         </nav>
-
-        <!-- User Profile -->
         <div class="p-4 border-t border-slate-200">
              <div id="user-profile-container" class="flex items-center">
-                <img src="https://i.pravatar.cc/40?u=nexus-user" alt="User Avatar" class="rounded-full h-10 w-10">
-                <div class="ml-3 overflow-hidden nav-text hidden">
-                    <p class="font-semibold text-slate-800 text-sm truncate">Alex Hartman</p>
-                    <p class="text-xs text-slate-500 truncate">Product Manager</p>
-                </div>
-            </div>
+                 <img src="https://i.pravatar.cc/40?u=nexus-user" alt="User Avatar" class="rounded-full h-10 w-10">
+                 <div class="ml-3 overflow-hidden nav-text hidden">
+                     <p class="font-semibold text-slate-800 text-sm truncate">Alex Hartman</p>
+                     <p class="text-xs text-slate-500 truncate">Product Manager</p>
+                 </div>
+             </div>
         </div>
     </aside>
 
-    <!-- Main Content -->
-    <main class="flex-1 bg-slate-50 flex flex-col overflow-hidden">
+    <main class="flex-1 bg-slate-50 flex flex-col">
         <div id="main-content" class="flex-1 overflow-y-auto overflow-x-hidden p-8">
             <header class="mb-8">
                 <div>
                     <h1 class="text-3xl font-bold text-slate-900">Settings</h1>
-                    <p class="text-slate-500 mt-1">Manage your profile, workspace, and application settings.</p>
+                    <p class="text-slate-500 mt-1">Manage your profile, workspace, and notification preferences.</p>
                 </div>
             </header>
 
-            <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
-                <!-- Settings Navigation -->
-                <div class="lg:col-span-1">
-                    <nav class="settings-nav flex flex-col space-y-2">
-                        <a href="#profile" data-tab="profile" class="flex items-center p-3 rounded-lg active"><i data-lucide="user-circle" class="h-5 w-5 mr-3"></i>My Profile</a>
-                        <a href="#ai-controls" data-tab="ai-controls" class="flex items-center p-3 rounded-lg"><i data-lucide="brain-circuit" class="h-5 w-5 mr-3"></i>AI Controls</a>
-                        <a href="#notifications" data-tab="notifications" class="flex items-center p-3 rounded-lg"><i data-lucide="bell" class="h-5 w-5 mr-3"></i>Notifications</a>
-                        <a href="#connected-apps" data-tab="connected-apps" class="flex items-center p-3 rounded-lg"><i data-lucide="app-window" class="h-5 w-5 mr-3"></i>Connected Apps</a>
-                        <a href="#workspace" data-tab="workspace" class="flex items-center p-3 rounded-lg"><i data-lucide="users" class="h-5 w-5 mr-3"></i>Workspace</a>
-                        <a href="#security" data-tab="security" class="flex items-center p-3 rounded-lg"><i data-lucide="shield" class="h-5 w-5 mr-3"></i>Security</a>
-                    </nav>
-                </div>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <nav class="settings-nav md:col-span-1 flex flex-row md:flex-col md:space-y-1 space-x-1 md:space-x-0 overflow-x-auto -mx-2 px-2 pb-2">
+                    <a href="#" data-tab="profile" class="flex items-center space-x-3 px-4 py-2 rounded-lg text-sm text-slate-700 hover:bg-slate-100 whitespace-nowrap active"><i data-lucide="user-circle" class="h-5 w-5"></i><span>Profile</span></a>
+                    <a href="#" data-tab="notifications" class="flex items-center space-x-3 px-4 py-2 rounded-lg text-sm text-slate-700 hover:bg-slate-100 whitespace-nowrap"><i data-lucide="bell" class="h-5 w-5"></i><span>Notifications</span></a>
+                    <a href="#" data-tab="ai" class="flex items-center space-x-3 px-4 py-2 rounded-lg text-sm text-slate-700 hover:bg-slate-100 whitespace-nowrap"><i data-lucide="brain-circuit" class="h-5 w-5"></i><span>AI Settings</span></a>
+                    <a href="#" data-tab="team" class="flex items-center space-x-3 px-4 py-2 rounded-lg text-sm text-slate-700 hover:bg-slate-100 whitespace-nowrap"><i data-lucide="users" class="h-5 w-5"></i><span>Team</span></a>
+                    <a href="#" data-tab="workspace" class="flex items-center space-x-3 px-4 py-2 rounded-lg text-sm text-slate-700 hover:bg-slate-100 whitespace-nowrap"><i data-lucide="briefcase" class="h-5 w-5"></i><span>Workspace</span></a>
+                </nav>
 
-                <!-- Settings Content -->
-                <div class="lg:col-span-3 space-y-6">
-                    <!-- Profile Panel -->
-                    <div id="profile-panel" class="settings-panel space-y-6">
-                        <div class="bento-box">
-                            <h2 class="text-xl font-semibold text-slate-900">Personal Information</h2>
-                            <p class="text-sm text-slate-500 mt-1">Update your personal details here.</p>
-                            <hr class="my-4">
-                            <div class="flex items-center space-x-4">
-                                <img src="https://i.pravatar.cc/80?u=nexus-user" class="h-20 w-20 rounded-full">
-                                <button class="text-sm bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2 px-3 rounded-lg">Change Avatar</button>
-                            </div>
-                            <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div><label class="text-sm font-medium text-slate-700">Full Name</label><input type="text" value="Alex Hartman" class="mt-1 w-full border border-slate-300 rounded-md p-2"></div>
-                                <div><label class="text-sm font-medium text-slate-700">Role</label><input type="text" value="Product Manager" class="mt-1 w-full border border-slate-300 rounded-md p-2"></div>
-                                <div><label class="text-sm font-medium text-slate-700">Email Address</label><input type="email" value="alex.hartman@example.com" disabled class="mt-1 w-full border border-slate-300 rounded-md p-2 bg-slate-50 cursor-not-allowed"></div>
-                            </div>
-                            <div class="mt-4 border-t pt-4 flex justify-end">
-                                <button class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg">Save Changes</button>
-                            </div>
-                        </div>
+                <div class="md:col-span-3">
+                    <div class="relative mb-4">
+                        <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400"></i>
+                        <input type="search" id="settings-search" placeholder="Search settings in this tab..." class="pl-9 pr-4 py-2 w-full text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
                     </div>
-
-                    <!-- AI Controls Panel -->
-                    <div id="ai-controls-panel" class="settings-panel space-y-6 hidden">
-                        <div class="bento-box">
-                             <h2 class="text-xl font-semibold text-slate-900">AI Persona & Behavior</h2>
-                            <p class="text-sm text-slate-500 mt-1">Customize how Nexus AI interacts and provides insights.</p>
-                            <hr class="my-4">
-                            <div>
-                                <label class="text-sm font-medium text-slate-700">AI Persona</label>
-                                <p class="text-xs text-slate-500 mb-2">Choose the communication style of your AI partner.</p>
-                                <select class="w-full md:w-1/2 border border-slate-300 rounded-md p-2">
-                                    <option>Analytical Co-pilot (Default)</option>
-                                    <option selected>Socratic Sparring Partner</option>
-                                    <option>Concise Assistant</option>
-                                </select>
-                            </div>
-                            <div class="mt-4">
-                                <label class="text-sm font-medium text-slate-700">AI Model Preference</label>
-                                <p class="text-xs text-slate-500 mb-2">Optimize for speed or for the most comprehensive analysis.</p>
-                                <select class="w-full md:w-1/2 border border-slate-300 rounded-md p-2">
-                                    <option selected>Balanced (Recommended)</option>
-                                    <option>Nexus Pro (Most Powerful)</option>
-                                    <option>Nexus Lite (Fastest)</option>
-                                </select>
-                            </div>
-                        </div>
-                         <div class="bento-box">
-                             <h2 class="text-xl font-semibold text-slate-900">AI Data & Privacy</h2>
-                            <p class="text-sm text-slate-500 mt-1">Control how your data is used to improve Nexus AI.</p>
-                            <hr class="my-4">
-                            <div class="flex items-start justify-between">
-                                <div>
-                                    <p class="font-medium">Contribute to Model Training</p>
-                                    <p class="text-xs text-slate-500 max-w-md">Allow anonymized data from your interactions to be used to improve the Nexus AI models for all users.</p>
-                                </div>
-                                <label class="relative inline-flex items-center cursor-pointer mt-1 flex-shrink-0"><input type="checkbox" class="sr-only peer toggle-checkbox" checked><div class="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border after:border-slate-300 after:rounded-full after:h-5 after:w-5 after:transition-all toggle-label"></div></label>
-                            </div>
-                         </div>
-                    </div>
-
-                    <!-- Notifications Panel -->
-                    <div id="notifications-panel" class="settings-panel bento-box hidden">
-                        <h2 class="text-xl font-semibold text-slate-900">Notifications</h2>
-                        <p class="text-sm text-slate-500 mt-1">Manage how you receive alerts and updates.</p>
-                        <hr class="my-4">
-                        <div class="space-y-4">
-                            <h3 class="font-semibold text-slate-800">Proactive AI Insights</h3>
-                            <div class="flex items-center justify-between"><p>Budget Risk Detection</p><label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" class="sr-only peer toggle-checkbox" checked><div class="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border after:border-slate-300 after:rounded-full after:h-5 after:w-5 after:transition-all toggle-label"></div></label></div>
-                            <div class="flex items-center justify-between"><p>Sentiment Drop Alerts</p><label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" class="sr-only peer toggle-checkbox" checked><div class="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border after:border-slate-300 after:rounded-full after:h-5 after:w-5 after:transition-all toggle-label"></div></label></div>
-                            <div class="flex items-center justify-between"><p>Velocity & Anomaly Detection</p><label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" class="sr-only peer toggle-checkbox" checked><div class="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border after:border-slate-300 after:rounded-full after:h-5 after:w-5 after:transition-all toggle-label"></div></label></div>
-                             <h3 class="font-semibold text-slate-800 pt-4 border-t">General Notifications</h3>
-                             <div class="flex items-center justify-between"><p>Task Mentions & Assignments</p><label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" class="sr-only peer toggle-checkbox" checked><div class="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border after:border-slate-300 after:rounded-full after:h-5 after:w-5 after:transition-all toggle-label"></div></label></div>
-                        </div>
-                    </div>
-
-
-                    <!-- Connected Apps Panel -->
-                    <div id="connected-apps-panel" class="settings-panel bento-box hidden">
-                        <h2 class="text-xl font-semibold text-slate-900">Connected Apps</h2>
-                        <p class="text-sm text-slate-500 mt-1">Integrate Nexus PM with your favorite tools to unlock more powerful insights.</p>
-                        <hr class="my-4">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div class="border rounded-lg p-4 flex items-center justify-between"><div class="flex items-center"><i data-lucide="slack" class="h-8 w-8 text-purple-600 mr-3"></i><p class="font-semibold">Slack</p></div><button class="text-sm bg-green-100 text-green-800 px-3 py-1 rounded-full">Connected</button></div>
-                            <div class="border rounded-lg p-4 flex items-center justify-between"><div class="flex items-center"><i data-lucide="figma" class="h-8 w-8 text-pink-600 mr-3"></i><p class="font-semibold">Figma</p></div><button class="text-sm bg-green-100 text-green-800 px-3 py-1 rounded-full">Connected</button></div>
-                            <div class="border rounded-lg p-4 flex items-center justify-between"><div class="flex items-center"><i data-lucide="git-branch" class="h-8 w-8 text-gray-800 mr-3"></i><p class="font-semibold">GitHub</p></div><button class="text-sm bg-slate-200 text-slate-800 px-3 py-1 rounded-full hover:bg-slate-300">Connect</button></div>
-                            <div class="border rounded-lg p-4 flex items-center justify-between"><div class="flex items-center"><svg class="h-8 w-8 mr-3" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5.22161 7.42111L11.9998 2.5L18.7779 7.42111L18.7779 16.5789L11.9998 21.5L5.22161 16.5789L5.22161 7.42111Z" fill="#0052CC"></path><path d="M11.9998 2.5L18.7779 7.42111L15.3889 9.88167L8.61072 4.96056L11.9998 2.5Z" fill="#2684FF"></path><path d="M12 21.5V9.88167L8.61099 12.3422L12 21.5Z" fill="#0052CC"></path><path d="M12 21.5V9.88167L15.3891 12.3422L12 21.5Z" fill="#2684FF" fill-opacity="0.6"></path></svg><p class="font-semibold">Jira</p></div><button class="text-sm bg-slate-200 text-slate-800 px-3 py-1 rounded-full hover:bg-slate-300">Connect</button></div>
-                        </div>
-                    </div>
-
-                    <!-- Workspace Panel -->
-                    <div id="workspace-panel" class="settings-panel space-y-6 hidden">
-                        <div class="bento-box">
-                            <h2 class="text-xl font-semibold text-slate-900">Workspace Members</h2>
-                            <p class="text-sm text-slate-500 mt-1">Manage who has access to this workspace.</p>
-                            <hr class="my-4">
-                            <div class="space-y-3">
-                                <div class="flex justify-between items-center"><p>Alex Hartman <span class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full ml-2">Owner</span></p><span class="text-sm text-slate-500">alex.hartman@example.com</span></div>
-                                <div class="flex justify-between items-center"><p>Laura</p><span class="text-sm text-slate-500">laura@example.com</span></div>
-                                <div class="flex justify-between items-center"><p>Samantha</p><span class="text-sm text-slate-500">samantha@example.com</span></div>
-                            </div>
-                            <div class="mt-4 border-t pt-4 flex items-center space-x-2">
-                                <input type="email" placeholder="new.member@example.com" class="flex-1 w-full border border-slate-300 rounded-md p-2 text-sm">
-                                <button class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-3 rounded-lg">Invite</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Security Panel -->
-                    <div id="security-panel" class="settings-panel bento-box hidden">
-                        <h2 class="text-xl font-semibold text-slate-900">Security</h2>
-                        <p class="text-sm text-slate-500 mt-1">Manage your account security settings.</p>
-                        <hr class="my-4">
-                        <div class="space-y-4">
-                            <div>
-                                <label class="text-sm font-medium text-slate-700">Password</label>
-                                <button class="mt-1 text-sm font-semibold text-blue-600 hover:underline">Change Password</button>
-                            </div>
-                            <div class="border-t pt-4">
-                                <p class="font-medium">Two-Factor Authentication (2FA)</p>
-                                <p class="text-sm text-slate-500">Protect your account with an extra layer of security.</p>
-                                <button class="mt-2 text-sm bg-slate-200 text-slate-800 px-3 py-1 rounded-full hover:bg-slate-300">Enable 2FA</button>
-                            </div>
-                        </div>
-                    </div>
-
+                    
+                    <div id="profile-panel" class="settings-panel space-y-6"></div>
+                    <div id="notifications-panel" class="settings-panel space-y-6 hidden"></div>
+                    <div id="ai-panel" class="settings-panel space-y-6 hidden"></div>
+                    <div id="team-panel" class="settings-panel space-y-6 hidden"></div>
+                    <div id="workspace-panel" class="settings-panel space-y-6 hidden"></div>
                 </div>
             </div>
         </div>
     </main>
+
+    <div id="toast-container"></div>
+
+    <div id="confirmationModal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md">
+            <div class="p-6">
+                <div class="flex items-start space-x-3">
+                    <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                        <i data-lucide="alert-triangle" class="h-6 w-6 text-red-600"></i>
+                    </div>
+                    <div>
+                        <h3 id="confirm-title" class="text-lg font-semibold text-slate-900"></h3>
+                        <p id="confirm-message" class="text-sm text-slate-500 mt-2"></p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-slate-50 px-6 py-4 rounded-b-lg flex justify-end space-x-3">
+                <button class="cancel-modal-btn px-4 py-2 text-sm font-medium bg-white hover:bg-slate-50 border border-slate-300 rounded-md text-slate-700">Cancel</button>
+                <button id="confirm-action-btn" class="px-4 py-2 text-sm font-medium bg-red-600 hover:bg-red-700 rounded-md text-white">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="perProjectNotificationModal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg">
+            <div class="p-6 border-b"><h3 id="per-project-title" class="text-lg font-semibold text-slate-900"></h3></div>
+            <div id="per-project-list" class="p-6 space-y-3 max-h-80 overflow-y-auto">
+                </div>
+            <div class="bg-slate-50 px-6 py-4 rounded-b-lg flex justify-end space-x-3">
+                <button class="cancel-modal-btn px-4 py-2 text-sm font-medium bg-white hover:bg-slate-50 border border-slate-300 rounded-md text-slate-700">Cancel</button>
+                <button id="save-per-project-btn" class="px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 rounded-md text-white">Save Preferences</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="inviteMemberModal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg">
+            <form id="invite-member-form">
+                <div class="p-6 border-b"><h3 class="text-lg font-semibold text-slate-900">Invite New Team Member</h3></div>
+                <div class="p-6 space-y-4">
+                    <div>
+                        <label for="invite-email" class="text-sm font-medium text-slate-700">Email Address</label>
+                        <input type="email" id="invite-email" class="mt-1 w-full border border-slate-300 rounded-md p-2" placeholder="e.g., new.member@example.com" required>
+                    </div>
+                    <div>
+                        <label for="invite-role" class="text-sm font-medium text-slate-700">Role</label>
+                        <select id="invite-role" class="mt-1 w-full border border-slate-300 rounded-md p-2">
+                            <option value="Editor">Editor</option>
+                            <option value="Viewer">Viewer</option>
+                            <option value="Admin">Admin</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="bg-slate-50 px-6 py-4 rounded-b-lg flex justify-end space-x-3">
+                    <button type="button" class="cancel-modal-btn px-4 py-2 text-sm font-medium bg-white hover:bg-slate-50 border border-slate-300 rounded-md text-slate-700">Cancel</button>
+                    <button type="submit" class="px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 rounded-md text-white">Send Invite</button>
+                </div>
+            </form>
+        </div>
+    </div>
     
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -274,48 +201,354 @@
                 document.querySelectorAll('.nav-text').forEach(text => text.classList.add('hidden')); 
             });
 
-            // --- Dynamic Sidebar Active State ---
-            const currentPage = window.location.pathname.split('/').pop() || 'index.html';
-            const navLinks = document.querySelectorAll('nav a');
+            // --- Settings Page Data & Logic ---
+            const panels = {
+                profile: document.getElementById('profile-panel'),
+                notifications: document.getElementById('notifications-panel'),
+                ai: document.getElementById('ai-panel'),
+                team: document.getElementById('team-panel'),
+                workspace: document.getElementById('workspace-panel')
+            };
 
-            navLinks.forEach(link => {
-                const linkPage = link.getAttribute('href');
-                link.classList.remove('bg-blue-100', 'text-blue-700', 'font-semibold');
-                link.classList.add('hover:bg-slate-100', 'text-slate-600');
+            const initialData = {
+                profile: { name: 'Alex Hartman', email: 'alex.hartman@example.com', jobTitle: 'Product Manager' },
+                notifications: {
+                    byProject: {
+                        'Phoenix Project': { taskAssigned: true, commentMention: true },
+                        'Orion App': { taskAssigned: false, commentMention: true },
+                        'Vega Initiative': { taskAssigned: true, commentMention: false },
+                    }
+                },
+                team: [
+                    { name: 'Laura', role: 'Lead Engineer', avatar: 'laura' },
+                    { name: 'Samantha', role: 'UX Designer', avatar: 'samantha' },
+                    { name: 'David', role: 'Software Engineer', avatar: 'david' },
+                ],
+                integrations: [
+                    { name: 'Slack', connected: true, aiEnabled: true },
+                    { name: 'Jira', connected: true, aiEnabled: true },
+                    { name: 'Figma', connected: false, aiEnabled: false },
+                    { name: 'Google Drive', connected: false, aiEnabled: false },
+                ]
+            };
+            
+            // --- Toast Notification Logic ---
+            const toastContainer = document.getElementById('toast-container');
+            function showToast(message, type = 'success') {
+                const icon = type === 'success' ? '<i data-lucide="check-circle" class="h-5 w-5 text-green-500"></i>' : '<i data-lucide="x-circle" class="h-5 w-5 text-red-500"></i>';
+                const toast = document.createElement('div');
+                toast.className = `toast bg-white rounded-lg shadow-lg p-4 flex items-start space-x-3 border-l-4 ${type === 'success' ? 'border-green-500' : 'border-red-500'}`;
+                toast.innerHTML = `${icon}<p class="text-sm font-medium text-slate-800">${message}</p>`;
+                toastContainer.appendChild(toast);
+                lucide.createIcons();
+                setTimeout(() => toast.remove(), 4000);
+            }
 
-                if (linkPage === currentPage) {
-                    link.classList.add('bg-blue-100', 'text-blue-700', 'font-semibold');
-                    link.classList.remove('hover:bg-slate-100', 'text-slate-600');
-                }
-            });
+            // --- Modal Logic ---
+            const confirmationModal = document.getElementById('confirmationModal');
+            let confirmCallback = null;
 
-            // --- Settings Tab Logic ---
+            function showConfirmationModal({ title, message, onConfirm }) {
+                document.getElementById('confirm-title').textContent = title;
+                document.getElementById('confirm-message').innerHTML = message;
+                confirmCallback = onConfirm;
+                confirmationModal.classList.remove('hidden');
+            }
+            
+            if(confirmationModal) {
+                document.getElementById('confirm-action-btn').addEventListener('click', () => {
+                    if (confirmCallback) confirmCallback();
+                    confirmationModal.classList.add('hidden');
+                });
+            }
+
+            const perProjectModal = document.getElementById('perProjectNotificationModal');
+            let currentNotificationType = '';
+
+            function openPerProjectModal(type, title) {
+                currentNotificationType = type;
+                document.getElementById('per-project-title').textContent = `Configure "${title}" Notifications`;
+                const list = document.getElementById('per-project-list');
+                list.innerHTML = '';
+                Object.keys(initialData.notifications.byProject).forEach(projectName => {
+                    const isChecked = initialData.notifications.byProject[projectName][type];
+                    list.innerHTML += `
+                        <div class="flex items-center justify-between">
+                            <label for="${projectName}-${type}" class="text-sm font-medium text-slate-700">${projectName}</label>
+                            <label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" id="${projectName}-${type}" data-project="${projectName}" ${isChecked ? 'checked' : ''} class="sr-only peer toggle-checkbox"><div class="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border after:border-slate-300 after:rounded-full after:h-5 after:w-5 after:transition-all toggle-label"></div></label>
+                        </div>`;
+                });
+                perProjectModal.classList.remove('hidden');
+            }
+            if(perProjectModal) {
+                document.getElementById('save-per-project-btn').addEventListener('click', () => {
+                    perProjectModal.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                        const projectName = checkbox.dataset.project;
+                        initialData.notifications.byProject[projectName][currentNotificationType] = checkbox.checked;
+                    });
+                    perProjectModal.classList.add('hidden');
+                    renderNotificationsPanel();
+                    showToast('Notification preferences saved!');
+                });
+            }
+            
+            document.querySelectorAll('.cancel-modal-btn').forEach(btn => btn.addEventListener('click', (e) => e.target.closest('.modal-overlay').classList.add('hidden')));
+            
+            const inviteMemberModal = document.getElementById('inviteMemberModal');
+            if(inviteMemberModal){
+                document.getElementById('invite-member-form').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const email = document.getElementById('invite-email').value;
+                    inviteMemberModal.classList.add('hidden');
+                    showToast(`Invitation sent to ${email}`);
+                    e.target.reset();
+                });
+            }
+
+
+            // --- RENDER FUNCTIONS FOR SETTINGS PANELS ---
+            function renderProfilePanel() {
+                panels.profile.innerHTML = `
+                    <div class="bento-box p-6 setting-group">
+                        <h3 class="text-lg font-semibold text-slate-800 border-b pb-3 mb-4 setting-title">Personal Information</h3>
+                        <form id="profile-form" class="space-y-4">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 setting-item">
+                                <div><label class="text-sm font-medium text-slate-700">Full Name</label><input type="text" class="mt-1 w-full border border-slate-300 rounded-md p-2" value="${initialData.profile.name}"></div>
+                                <div><label class="text-sm font-medium text-slate-700">Job Title</label><input type="text" class="mt-1 w-full border border-slate-300 rounded-md p-2" value="${initialData.profile.jobTitle}"></div>
+                            </div>
+                            <div class="setting-item">
+                                <label class="text-sm font-medium text-slate-700">Email Address</label>
+                                <p class="text-xs text-slate-500 mb-1">Used for notifications and account recovery.</p>
+                                <input type="email" class="w-full border border-slate-300 rounded-md p-2" value="${initialData.profile.email}">
+                            </div>
+                            <div class="flex justify-end pt-2"><button type="submit" class="px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 rounded-md text-white">Save Changes</button></div>
+                        </form>
+                    </div>
+                `;
+            }
+
+            function renderNotificationsPanel() {
+                const taskAssignedProjects = Object.values(initialData.notifications.byProject).filter(p => p.taskAssigned).length;
+                const commentMentionProjects = Object.values(initialData.notifications.byProject).filter(p => p.commentMention).length;
+                const totalProjects = Object.keys(initialData.notifications.byProject).length;
+
+                panels.notifications.innerHTML = `
+                    <div class="bento-box p-6 setting-group">
+                         <h3 class="text-lg font-semibold text-slate-800 border-b pb-3 mb-4 setting-title">Project Notifications</h3>
+                         <div class="space-y-4">
+                             <div class="flex items-center justify-between setting-item">
+                                 <div class="flex-1 pr-4">
+                                     <p class="font-medium text-slate-700">New Task Assigned</p>
+                                     <p class="text-xs text-slate-500">Get notified when a task is assigned to you in a project.</p>
+                                 </div>
+                                 <div class="flex-shrink-0">
+                                     <button data-action="configure-notifications" data-type="taskAssigned" data-title="New Task Assigned" class="text-sm font-semibold text-blue-600 hover:underline">Enabled for ${taskAssignedProjects}/${totalProjects} projects</button>
+                                 </div>
+                             </div>
+                             <div class="flex items-center justify-between setting-item">
+                                 <div class="flex-1 pr-4">
+                                     <p class="font-medium text-slate-700">Comment Mention</p>
+                                     <p class="text-xs text-slate-500">Receive a notification when someone @mentions you in a comment.</p>
+                                 </div>
+                                 <div class="flex-shrink-0">
+                                     <button data-action="configure-notifications" data-type="commentMention" data-title="Comment Mention" class="text-sm font-semibold text-blue-600 hover:underline">Enabled for ${commentMentionProjects}/${totalProjects} projects</button>
+                                 </div>
+                             </div>
+                         </div>
+                    </div>
+                     <div class="bento-box p-6 setting-group">
+                         <h3 class="text-lg font-semibold text-slate-800 border-b pb-3 mb-4 setting-title">General Notifications</h3>
+                         <div class="space-y-4">
+                              <div class="flex items-center justify-between setting-item">
+                                 <div class="flex-1 pr-4">
+                                     <p class="font-medium text-slate-700">AI Weekly Digest</p>
+                                     <p class="text-xs text-slate-500">Receive a summary of project activity and AI insights every Monday.</p>
+                                 </div>
+                                 <div class="flex-shrink-0">
+                                     <label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" id="weekly-digest" checked class="sr-only peer toggle-checkbox"><div class="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border after:border-slate-300 after:rounded-full after:h-5 after:w-5 after:transition-all toggle-label"></div></label>
+                                 </div>
+                             </div>
+                         </div>
+                     </div>`;
+            }
+
+            function renderAiPanel() {
+                panels.ai.innerHTML = `
+                     <div class="bento-box p-6 setting-group">
+                         <h3 class="text-lg font-semibold text-slate-800 border-b pb-3 mb-4 setting-title">Intelligence</h3>
+                         <div class="space-y-4">
+                              <div class="setting-item">
+                                 <label for="ai-sensitivity" class="font-medium text-slate-700">AI Risk Sensitivity</label>
+                                 <p class="text-xs text-slate-500 mb-2">Set how aggressively Nexus AI flags potential risks. "High" will surface more potential issues.</p>
+                                 <input type="range" id="ai-sensitivity" min="1" max="3" value="2" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+                                 <div class="flex justify-between text-xs text-slate-500 mt-1"><span>Low</span><span>Medium</span><span>High</span></div>
+                             </div>
+                         </div>
+                    </div>
+                    <div class="bento-box p-6 setting-group">
+                         <h3 class="text-lg font-semibold text-slate-800 border-b pb-3 mb-4 setting-title">Data Sources</h3>
+                         <div class="space-y-4">
+                            ${initialData.integrations.map(integ => `
+                                <div class="flex items-center justify-between setting-item">
+                                    <div class="flex-1 pr-4">
+                                        <p class="font-medium text-slate-700">${integ.name}</p>
+                                        <p class="text-xs text-slate-500">Analyzes data for project context, sentiment, and risks.</p>
+                                    </div>
+                                    <div class="flex-shrink-0 flex items-center space-x-4">
+                                        ${integ.connected ? '<span class="text-xs font-semibold text-green-600 bg-green-100 px-2 py-1 rounded-full">Connected</span>' : '<button class="text-xs font-semibold text-blue-600 hover:underline">Connect</button>'}
+                                        <label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" ${integ.aiEnabled ? 'checked' : ''} ${!integ.connected ? 'disabled' : ''} class="sr-only peer toggle-checkbox"><div class="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border after:border-slate-300 after:rounded-full after:h-5 after:w-5 after:transition-all toggle-label peer-disabled:cursor-not-allowed peer-disabled:opacity-50"></div></label>
+                                    </div>
+                                </div>
+                            `).join('')}
+                         </div>
+                    </div>
+                `;
+            }
+
+            function renderTeamPanel() {
+                panels.team.innerHTML = `
+                    <div class="bento-box p-6 setting-group">
+                        <h3 class="text-lg font-semibold text-slate-800 border-b pb-3 mb-4 setting-title">Manage Team</h3>
+                        <div class="space-y-3">
+                            ${initialData.team.map(member => `
+                                <div class="flex items-center justify-between py-2 setting-item">
+                                    <div class="flex items-center space-x-3">
+                                        <img src="https://i.pravatar.cc/32?u=${member.avatar}" class="h-8 w-8 rounded-full">
+                                        <div>
+                                            <p class="font-medium text-sm text-slate-800">${member.name}</p>
+                                            <p class="text-xs text-slate-500">${member.role}</p>
+                                        </div>
+                                    </div>
+                                    <button data-action="remove-member" data-name="${member.name}" class="text-sm font-medium text-red-600 hover:text-red-800">Remove</button>
+                                </div>
+                            `).join('')}
+                        </div>
+                         <div class="mt-4 pt-4 border-t flex justify-end">
+                             <button data-action="invite-member" class="px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 rounded-md text-white">Invite Member</button>
+                         </div>
+                    </div>
+                `;
+            }
+            
+            function renderWorkspacePanel() {
+                panels.workspace.innerHTML = `
+                    <div class="bento-box p-6 setting-group">
+                        <h3 class="text-lg font-semibold text-slate-800 border-b pb-3 mb-4 setting-title">Workspace Name</h3>
+                        <form id="workspace-name-form">
+                            <div class="setting-item grid grid-cols-1 sm:grid-cols-3 gap-4 items-center">
+                                <label class="text-sm font-medium text-slate-700 sm:col-span-1">Name</label>
+                                <input type="text" class="sm:col-span-2 w-full border border-slate-300 rounded-md p-2" value="Alex Hartman's Workspace">
+                            </div>
+                            <div class="flex justify-end pt-4 mt-4 border-t">
+                                <button type="submit" class="px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 rounded-md text-white">Save Changes</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="bento-box border-red-500 p-6 setting-group">
+                        <h3 class="text-lg font-semibold text-red-800 border-b pb-3 mb-4 setting-title">Danger Zone</h3>
+                         <div class="flex items-center justify-between setting-item">
+                            <div class="flex-1 pr-4">
+                                <p class="font-medium text-slate-800">Delete Workspace</p>
+                                <p class="text-xs text-slate-500">Once you delete your workspace, there is no going back.</p>
+                            </div>
+                            <div class="flex-shrink-0">
+                                <button data-action="delete-workspace" class="px-4 py-2 text-sm font-medium bg-red-600 hover:bg-red-700 rounded-md text-white">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // --- Tab Switching Logic ---
             const settingsNav = document.querySelector('.settings-nav');
-            const settingsPanels = document.querySelectorAll('.settings-panel');
-
             settingsNav.addEventListener('click', (e) => {
                 e.preventDefault();
                 const link = e.target.closest('a');
                 if (!link) return;
-
                 const tabId = link.dataset.tab;
-
-                // Update nav state
                 settingsNav.querySelectorAll('a').forEach(l => l.classList.remove('active'));
                 link.classList.add('active');
+                Object.values(panels).forEach(panel => panel.classList.add('hidden'));
+                panels[tabId].classList.remove('hidden');
+                document.getElementById('settings-search').value = ''; 
+                filterSettings();
+            });
+            
+            // --- Search Logic ---
+            const searchInput = document.getElementById('settings-search');
+            function filterSettings() {
+                const query = searchInput.value.toLowerCase();
+                const activePanel = document.querySelector('.settings-panel:not(.hidden)');
+                if (!activePanel) return;
 
-                // Update panel visibility
-                settingsPanels.forEach(panel => {
-                    if (panel.id === `${tabId}-panel`) {
-                        panel.classList.remove('hidden');
+                activePanel.querySelectorAll('.setting-group').forEach(group => {
+                    let groupVisible = false;
+                    group.querySelectorAll('.setting-item').forEach(item => {
+                        const text = item.textContent.toLowerCase();
+                        if (text.includes(query)) {
+                            item.style.display = 'flex'; // Use flex for consistent display
+                            groupVisible = true;
+                        } else {
+                            item.style.display = 'none';
+                        }
+                    });
+                    
+                    if (groupVisible) {
+                        group.style.display = 'block';
                     } else {
-                        panel.classList.add('hidden');
+                        group.style.display = 'none';
                     }
                 });
+            }
+            searchInput.addEventListener('input', filterSettings);
+            
+            // --- Event Delegation for Dynamic Content ---
+            document.body.addEventListener('click', e => {
+                const actionTarget = e.target.closest('[data-action]');
+                if (!actionTarget) return;
+
+                const action = actionTarget.dataset.action;
+                if (action === 'remove-member') {
+                    const name = actionTarget.dataset.name;
+                    showConfirmationModal({
+                        title: `Remove ${name}?`,
+                        message: `Are you sure you want to remove <strong>${name}</strong> from the team? They will lose all access to this workspace.`,
+                        onConfirm: () => {
+                            initialData.team = initialData.team.filter(m => m.name !== name);
+                            renderTeamPanel();
+                            showToast(`${name} has been removed.`);
+                        }
+                    });
+                } else if (action === 'delete-workspace') {
+                     showConfirmationModal({
+                        title: `Delete Workspace?`,
+                        message: `This action is irreversible and will permanently delete all projects, tasks, and data.`,
+                        onConfirm: () => { showToast(`Workspace deleted.`, 'error'); }
+                    });
+                } else if (action === 'configure-notifications') {
+                    openPerProjectModal(actionTarget.dataset.type, actionTarget.dataset.title);
+                } else if (action === 'invite-member') {
+                    inviteMemberModal.classList.remove('hidden');
+                }
             });
 
+            document.body.addEventListener('submit', e => {
+                if (e.target.id === 'profile-form') {
+                    e.preventDefault();
+                    showToast('Profile saved successfully!');
+                } else if (e.target.id === 'workspace-name-form') {
+                    e.preventDefault();
+                    showToast('Workspace name saved!');
+                }
+            });
+
+            // --- Initial Load ---
+            renderProfilePanel();
+            renderNotificationsPanel();
+            renderAiPanel();
+            renderTeamPanel();
+            renderWorkspacePanel();
         });
     </script>
 </body>
 </html>
-
