@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
@@ -52,7 +53,7 @@
             display: none;
         }
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        .task-checkbox:checked + .task-label {
+        .task-checkbox:checked + .task-text {
             text-decoration: line-through;
             color: #64748b; /* slate-500 */
         }
@@ -63,9 +64,39 @@
         #live-feed .feed-item:last-child .timeline-line {
             display: none;
         }
+        .toast-notification {
+            transition: opacity 0.3s, transform 0.3s;
+        }
+        /* Style for SortableJS ghost element */
+        .draggable-ghost {
+            background-color: #eef2ff; /* indigo-50 */
+            border: 2px dashed #a5b4fc; /* indigo-300 */
+            opacity: 0.5;
+        }
+        .draggable-box {
+            transition: transform 0.2s ease-in-out;
+        }
+        @keyframes shake {
+            0%, 100% { transform: rotate(-0.5deg); }
+            50% { transform: rotate(0.5deg); }
+        }
+        .dashboard-editing .draggable-box {
+            cursor: grab;
+            animation: shake 0.15s linear infinite;
+        }
+        .dashboard-editing .draggable-box:active {
+            cursor: grabbing;
+        }
+        .date-filter-btn.active {
+            background-color: #4f46e5;
+            color: white;
+        }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden">
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed top-5 right-5 z-[100] w-full max-w-xs space-y-2"></div>
 
     <!-- Sidebar -->
     <aside id="sidebar" class="sidebar sidebar-collapsed bg-white border-r border-slate-200 flex flex-col h-full">
@@ -126,42 +157,80 @@
                     <h1 class="text-3xl font-bold text-slate-900">Welcome back, Alex</h1>
                     <p class="text-slate-500 mt-1">Here's your mission control for today.</p>
                 </div>
-                <div class="relative">
-                    <button id="notification-bell" class="p-2 rounded-full hover:bg-slate-200 relative">
-                        <i data-lucide="bell" class="h-6 w-6 text-slate-600"></i>
-                        <span class="absolute top-1 right-1 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white"></span>
+                <div class="flex items-center space-x-2">
+                     <button id="rearrange-btn" class="bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-semibold py-2 px-3 rounded-lg flex items-center space-x-2">
+                        <i data-lucide="move" class="h-4 w-4"></i>
+                        <span>Rearrange</span>
                     </button>
-                    <div id="notification-panel" class="hidden absolute top-full right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border z-10">
-                        <div class="p-3 border-b font-semibold text-sm">Notifications</div>
-                        <div class="max-h-80 overflow-y-auto custom-scrollbar">
-                           <a href="#" class="block p-3 hover:bg-slate-50 border-b"><p class="text-xs font-bold text-yellow-600">RISK DETECTED</p><p class="text-sm">Budget variance increased to +15% on <strong>Phoenix Project</strong>.</p><p class="text-xs text-slate-400 mt-1">2 hours ago</p></a>
-                           <a href="#" class="block p-3 hover:bg-slate-50 border-b"><p class="text-xs font-bold text-blue-600">NEW COMMENT</p><p class="text-sm"><strong>Laura</strong> commented on an issue in <strong>Phoenix Project</strong>.</p><p class="text-xs text-slate-400 mt-1">5 hours ago</p></a>
-                           <a href="#" class="block p-3 hover:bg-slate-50"><p class="text-xs font-bold text-green-600">FILE UPLOADED</p><p class="text-sm"><strong>Samantha</strong> uploaded a new file to <strong>Orion App</strong>.</p><p class="text-xs text-slate-400 mt-1">Yesterday</p></a>
+                    <div class="relative">
+                        <button id="global-new-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold p-2 rounded-lg flex items-center justify-center">
+                            <i data-lucide="plus" class="h-5 w-5"></i>
+                        </button>
+                        <div id="global-new-menu" class="hidden absolute top-full right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border z-10">
+                            <a href="projects.html" class="flex items-center space-x-2 p-3 text-sm hover:bg-slate-50"><i data-lucide="folder-plus" class="h-4 w-4 text-slate-500"></i><span>New Project</span></a>
+                            <a href="goals.html" class="flex items-center space-x-2 p-3 text-sm hover:bg-slate-50"><i data-lucide="target" class="h-4 w-4 text-slate-500"></i><span>New Goal</span></a>
+                            <a href="#" class="flex items-center space-x-2 p-3 text-sm hover:bg-slate-50"><i data-lucide="check-square" class="h-4 w-4 text-slate-500"></i><span>New Task</span></a>
                         </div>
-                        <a href="activity.html" class="block text-center p-2 text-sm font-medium text-blue-600 hover:bg-slate-50 rounded-b-lg">View all activity</a>
+                    </div>
+                    <div class="relative">
+                        <button id="notification-bell" class="p-2 rounded-full hover:bg-slate-200 relative">
+                            <i data-lucide="bell" class="h-6 w-6 text-slate-600"></i>
+                            <span class="absolute top-1 right-1 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white"></span>
+                        </button>
+                        <div id="notification-panel" class="hidden absolute top-full right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border z-10">
+                            <div class="p-3 border-b font-semibold text-sm">Notifications</div>
+                            <div class="max-h-80 overflow-y-auto custom-scrollbar">
+                               <a href="#" class="block p-3 hover:bg-slate-50 border-b"><p class="text-xs font-bold text-yellow-600">RISK DETECTED</p><p class="text-sm">Budget variance increased to +15% on <strong>Phoenix Project</strong>.</p><p class="text-xs text-slate-400 mt-1">2 hours ago</p></a>
+                               <a href="#" class="block p-3 hover:bg-slate-50 border-b"><p class="text-xs font-bold text-blue-600">NEW COMMENT</p><p class="text-sm"><strong>Laura</strong> commented on an issue in <strong>Phoenix Project</strong>.</p><p class="text-xs text-slate-400 mt-1">5 hours ago</p></a>
+                               <a href="#" class="block p-3 hover:bg-slate-50"><p class="text-xs font-bold text-green-600">FILE UPLOADED</p><p class="text-sm"><strong>Samantha</strong> uploaded a new file to <strong>Orion App</strong>.</p><p class="text-xs text-slate-400 mt-1">Yesterday</p></a>
+                            </div>
+                            <a href="activity.html" class="block text-center p-2 text-sm font-medium text-blue-600 hover:bg-slate-50 rounded-b-lg">View all activity</a>
+                        </div>
                     </div>
                 </div>
             </header>
             
-            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <div id="dashboard-grid" class="grid grid-cols-1 lg:grid-cols-4 gap-6">
                 <!-- AI Daily Briefing -->
                 <div class="lg:col-span-4 bento-box bg-blue-50 border-blue-200">
                     <div class="flex items-center space-x-2 mb-2"><i data-lucide="sparkles" class="h-6 w-6 text-blue-500"></i><h2 class="text-xl font-semibold text-slate-900">AI Daily Briefing</h2></div>
-                    <p class="text-sm text-slate-700">Good afternoon, Alex. Your portfolio health is strong at <strong>85/100</strong>, but the overall budget is trending <strong>8% over</strong>. The most critical issue is <strong>Laura's workload</strong>, which is now blocking the Phoenix Project. My top recommendation is to reassign her "Refactor payment gateway" task.</p>
+                    <p class="text-sm text-slate-700">Good afternoon, Alex. Your portfolio health is strong at <strong>85/100</strong>, but the overall budget is trending <strong>8% over</strong>. The most critical issue is <strong>Laura's workload</strong>, which is now blocking the Phoenix Project. My top recommendation is to reassign her "Refactor payment gateway" task. 
+                    <a href="intelligence.html" class="font-bold text-blue-600 hover:underline">Simulate this change →</a>
+                    </p>
+                </div>
+
+                <!-- Portfolio Health Trend -->
+                <div class="lg:col-span-4 draggable-box bento-box">
+                    <div class="flex flex-wrap justify-between items-center mb-4">
+                        <h2 class="text-xl font-semibold text-slate-900">Portfolio Health Trend</h2>
+                        <div class="flex items-center space-x-1 bg-slate-100 p-1 rounded-lg">
+                            <button data-period="7d" class="date-filter-btn px-3 py-1 text-xs font-semibold rounded-md active">7D</button>
+                            <button data-period="30d" class="date-filter-btn px-3 py-1 text-xs font-semibold rounded-md">30D</button>
+                            <button data-period="6m" class="date-filter-btn px-3 py-1 text-xs font-semibold rounded-md">6M</button>
+                            <button data-period="1y" class="date-filter-btn px-3 py-1 text-xs font-semibold rounded-md">1Y</button>
+                            <button data-period="custom" class="date-filter-btn px-3 py-1 text-xs font-semibold rounded-md">Custom</button>
+                        </div>
+                    </div>
+                    <div id="custom-date-range" class="hidden flex-wrap items-center gap-2 mb-4">
+                        <div><label class="text-xs text-slate-500">Start Date</label><input type="date" id="start-date" class="text-sm border-slate-300 rounded-md p-1"></div>
+                        <div><label class="text-xs text-slate-500">End Date</label><input type="date" id="end-date" class="text-sm border-slate-300 rounded-md p-1"></div>
+                    </div>
+                    <div class="h-48">
+                        <canvas id="portfolioHealthChart"></canvas>
+                    </div>
                 </div>
 
                 <!-- Personal Hub -->
-                <div class="lg:col-span-2 row-span-2 bento-box flex flex-col">
+                <div class="lg:col-span-2 row-span-2 draggable-box bento-box flex flex-col">
                      <h2 class="text-xl font-semibold text-slate-900 mb-4">Personal Hub</h2>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 flex-1">
                         <!-- Action Items -->
-                        <div>
-                            <div id="task-list" class="space-y-3">
-                                <p class="text-xs font-semibold text-slate-400 uppercase">ACTION ITEMS</p>
-                                <div class="flex items-center justify-between"><div class="flex items-center"><input type="checkbox" id="task1" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 mr-3 task-checkbox"><label for="task1" class="font-medium text-sm task-label">Review API schema</label></div><span class="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full">Due Today</span></div>
-                                <div class="flex items-center justify-between"><div class="flex items-center"><input type="checkbox" id="task2" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 mr-3 task-checkbox"><label for="task2" class="font-medium text-sm task-label">Sync with stakeholders</label></div><span class="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full">Due Tomorrow</span></div>
+                        <div class="flex flex-col">
+                            <p class="text-xs font-semibold text-slate-400 uppercase mb-2">ACTION ITEMS</p>
+                            <div id="task-list" class="space-y-2 overflow-y-auto custom-scrollbar flex-1 max-h-64 pr-2">
+                                <!-- Tasks will be dynamically injected here -->
                             </div>
-                            <form id="new-task-form" class="mt-4 border-t pt-4"><div class="relative"><input type="text" id="new-task-input" placeholder="Add a new action item..." class="w-full text-sm border-slate-300 rounded-lg py-2 pl-3 pr-10"><button type="submit" class="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-blue-600"><i data-lucide="plus-circle" class="h-5 w-5"></i></button></div></form>
+                            <form id="new-task-form" class="mt-2 border-t pt-2"><div class="relative"><input type="text" id="new-task-input" placeholder="Add a new action item..." class="w-full text-sm border-slate-300 rounded-lg py-2 pl-3 pr-10"><button type="submit" class="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-blue-600"><i data-lucide="plus-circle" class="h-5 w-5"></i></button></div></form>
                         </div>
                         <!-- Quick Notes -->
                         <div class="flex flex-col">
@@ -172,7 +241,7 @@
                 </div>
 
                 <!-- Live Feed -->
-                <div class="lg:col-span-2 row-span-2 bento-box flex flex-col">
+                <div class="lg:col-span-2 row-span-2 draggable-box bento-box flex flex-col">
                      <h2 class="text-xl font-semibold text-slate-900 mb-4">Live Feed from Connected Apps</h2>
                      <div id="live-feed" class="flex-1 -mx-2 space-y-1 overflow-y-auto custom-scrollbar">
                         <!-- Feed items will be injected here -->
@@ -180,37 +249,61 @@
                 </div>
 
                 <!-- AI Driven Recommendations -->
-                <div class="lg:col-span-1 bento-box">
+                <div class="lg:col-span-2 draggable-box bento-box">
                     <h2 class="text-xl font-semibold text-slate-900 mb-4">AI Recommendations</h2>
                     <div class="space-y-3">
-                        <div class="flex items-start bg-slate-50 p-3 rounded-lg"><i data-lucide="users" class="h-5 w-5 text-red-500 mr-3 mt-1 flex-shrink-0"></i><div><p class="font-semibold text-sm text-slate-800">De-risk Laura's Workload</p><p class="text-xs text-slate-600">Laura is at 110% capacity. Reassign her task to David to prevent burnout.</p></div></div>
-                        <div class="flex items-start bg-slate-50 p-3 rounded-lg"><i data-lucide="dollar-sign" class="h-5 w-5 text-yellow-500 mr-3 mt-1 flex-shrink-0"></i><div><p class="font-semibold text-sm text-slate-800">Review Phoenix Budget</p><p class="text-xs text-slate-600">The Phoenix Project is 15% over budget. Review recent software costs.</p></div></div>
+                        <div class="bg-slate-50 p-3 rounded-lg"><div class="flex items-start"><i data-lucide="users" class="h-5 w-5 text-red-500 mr-3 mt-1 flex-shrink-0"></i><div><p class="font-semibold text-sm text-slate-800">De-risk Laura's Workload</p><p class="text-xs text-slate-600">Laura is at 110% capacity. Reassign her task to David to prevent burnout.</p><button id="de-risk-laura-btn" class="text-xs font-semibold text-blue-600 hover:underline mt-1 inline-block">Take Action →</button></div></div></div>
+                        <div class="bg-slate-50 p-3 rounded-lg"><div class="flex items-start"><i data-lucide="dollar-sign" class="h-5 w-5 text-yellow-500 mr-3 mt-1 flex-shrink-0"></i><div><p class="font-semibold text-sm text-slate-800">Review Phoenix Budget</p><p class="text-xs text-slate-600">The Phoenix Project is 15% over budget. Review recent software costs.</p><a href="projects.html" class="text-xs font-semibold text-blue-600 hover:underline mt-1 inline-block">Go to Project →</a></div></div></div>
                     </div>
                 </div>
 
                  <!-- Upcoming Milestones -->
-                <div class="lg:col-span-1 bento-box">
+                <div class="lg:col-span-2 draggable-box bento-box">
                     <h2 class="text-xl font-semibold text-slate-900 mb-4">Upcoming Milestones</h2>
                     <div class="space-y-3">
-                        <div class="flex items-center"><div class="h-2 w-2 rounded-full bg-green-500 mr-3"></div><div><p class="font-medium text-sm">Orion App Launch</p><p class="text-xs text-slate-500">in 2 days</p></div></div>
-                        <div class="flex items-center"><div class="h-2 w-2 rounded-full bg-yellow-500 mr-3"></div><div><p class="font-medium text-sm">Phoenix DB Migration</p><p class="text-xs text-slate-500">in 9 days</p></div></div>
-                        <div class="flex items-center"><div class="h-2 w-2 rounded-full bg-red-500 mr-3"></div><div><p class="font-medium text-sm">Vega Initiative Review</p><p class="text-xs text-slate-500">in 23 days</p></div></div>
+                        <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
+                            <div class="flex justify-between items-start">
+                                <p class="font-medium text-sm text-slate-800">Orion App Launch</p>
+                                <div class="h-2 w-2 rounded-full bg-green-500 mt-1.5 flex-shrink-0" title="On Track"></div>
+                            </div>
+                            <p class="text-xs text-slate-500 mt-1">Project: <span class="font-semibold text-slate-600">Orion App</span> &middot; in 2 days</p>
+                            <a href="projects.html" class="text-xs font-semibold text-blue-600 hover:underline mt-2 inline-block">View Tasks →</a>
+                        </div>
+                        <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
+                             <div class="flex justify-between items-start">
+                                <p class="font-medium text-sm text-slate-800">Phoenix DB Migration</p>
+                                <div class="h-2 w-2 rounded-full bg-yellow-500 mt-1.5 flex-shrink-0" title="At Risk"></div>
+                            </div>
+                            <p class="text-xs text-slate-500 mt-1">Project: <span class="font-semibold text-slate-600">Phoenix Project</span> &middot; in 9 days</p>
+                            <a href="projects.html" class="text-xs font-semibold text-blue-600 hover:underline mt-2 inline-block">View Tasks →</a>
+                        </div>
                     </div>
                 </div>
 
                  <!-- Priority Email -->
-                <div class="lg:col-span-2 bento-box flex flex-col">
+                <div class="lg:col-span-4 draggable-box bento-box flex flex-col">
                     <h2 class="text-xl font-semibold text-slate-900 mb-4">Priority Email</h2>
-                    <div class="flex-1 space-y-3">
-                        <div class="flex items-center"><img src="https://i.pravatar.cc/32?u=stakeholder" class="h-8 w-8 rounded-full mr-3"><div><p class="font-semibold text-sm">Eleanor Vance</p><p class="text-xs text-slate-500">Feedback on latest designs</p></div></div>
-                        <p class="text-xs text-slate-600 bg-slate-50 p-3 rounded-lg border">"Hi Alex, a few points of feedback on the latest designs for the Orion App. Overall it's looking good, but I'm concerned about the complexity of the new user onboarding flow..."</p>
-                        <div id="ai-email-analysis" class="hidden text-xs text-blue-800 bg-blue-50 p-3 rounded-lg"><strong>AI Analysis:</strong> Positive sentiment with a key concern around 'user onboarding complexity'. Recommends acknowledging the feedback and suggesting a brief follow-up meeting.</div>
-                    </div>
-                    <div class="mt-4 border-t pt-4 flex justify-between items-center">
-                        <a href="mailto:eleanor.vance@example.com?subject=Re:%20Feedback%20on%20latest%20designs" class="text-sm font-medium text-blue-600 hover:underline">View Email →</a>
-                        <div class="flex space-x-2">
-                           <button id="analyze-email-btn" title="Analyze with AI" class="p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg"><i data-lucide="brain-circuit" class="h-4 w-4"></i></button>
-                           <button id="draft-reply-btn" title="Reply with Nexus AI" class="p-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg"><i data-lucide="pen-square" class="h-4 w-4"></i></button>
+                    <div class="flex-1 space-y-4 overflow-y-auto max-h-64 custom-scrollbar pr-2">
+                        <!-- Email 1 -->
+                        <div class="space-y-3">
+                             <div class="flex items-center"><img src="https://i.pravatar.cc/32?u=stakeholder" class="h-8 w-8 rounded-full mr-3"><div><p class="font-semibold text-sm">Eleanor Vance</p><p class="text-xs text-slate-500">Feedback on latest designs</p></div></div>
+                            <p class="text-xs text-slate-600 bg-slate-50 p-3 rounded-lg border">"Hi Alex, a few points of feedback on the latest designs for the Orion App. Overall it's looking good, but I'm concerned about the complexity of the new user onboarding flow..."</p>
+                            <div class="text-xs text-blue-800 bg-blue-50 p-3 rounded-lg"><strong>AI Analysis:</strong> Positive sentiment with a key concern around 'user onboarding complexity'. Recommends acknowledging the feedback and suggesting a brief follow-up meeting.</div>
+                            <div class="mt-2 border-t pt-2 flex justify-between items-center">
+                                <a href="mailto:eleanor.vance@example.com?subject=Re:%20Feedback%20on%20latest%20designs" class="text-sm font-medium text-blue-600 hover:underline">View Email →</a>
+                                <div class="flex space-x-2">
+                                   <button title="Reply with Nexus AI" class="p-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg"><i data-lucide="pen-square" class="h-4 w-4"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Email 2 -->
+                        <div class="space-y-3 pt-4 border-t">
+                             <div class="flex items-center"><img src="https://i.pravatar.cc/32?u=finance" class="h-8 w-8 rounded-full mr-3"><div><p class="font-semibold text-sm">Finance Department</p><p class="text-xs text-slate-500">Action Required: Budget Overage</p></div></div>
+                            <p class="text-xs text-slate-600 bg-slate-50 p-3 rounded-lg border">"This is an automated alert. Project P-001 (Phoenix Project) has exceeded its quarterly budget by 15%. Please provide a justification or an updated forecast..."</p>
+                             <div class="text-xs text-blue-800 bg-blue-50 p-3 rounded-lg"><strong>AI Analysis:</strong> This is a high-priority alert. The overage is driven by contingency spending. Immediate review is recommended.</div>
+                            <div class="mt-2 border-t pt-2 flex justify-end items-center">
+                                <button id="view-budget-btn" class="text-sm font-medium text-blue-600 hover:underline">View Budget Details →</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -220,7 +313,7 @@
         <!-- AI Response Container -->
         <div id="ai-response-container" class="bg-white border-t border-slate-200 no-scrollbar flex flex-col max-w-full">
             <div id="ai-response-header" class="px-6 py-4 max-w-4xl w-full mx-auto"></div>
-            <div id="message-list" class="flex-1 overflow-y-auto px-6 space-y-6 max-w-4xl w-full mx-auto pb-6"></div>
+            <div id="message-list" class="flex-1 overflow-y-auto custom-scrollbar px-6 space-y-6 max-w-4xl w-full mx-auto pb-6"></div>
         </div>
 
         <!-- Prompt Bar -->
@@ -240,262 +333,533 @@
             </div>
         </div>
     </main>
+
+    <!-- Workload Risk Modal -->
+    <div id="workloadRiskModal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+            <div class="p-5 border-b flex justify-between items-center flex-shrink-0">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-red-100 p-2 rounded-lg"><i data-lucide="users" class="h-6 w-6 text-red-600"></i></div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-slate-900">High Workload Risk: Laura</h3>
+                        <p class="text-sm text-slate-500">AI analysis of resource bottleneck on Phoenix Project.</p>
+                    </div>
+                </div>
+                <button id="close-workload-modal" class="p-1 rounded-full hover:bg-slate-100"><i data-lucide="x" class="h-5 w-5 text-slate-500"></i></button>
+            </div>
+            <div class="p-6 space-y-4 overflow-y-auto custom-scrollbar">
+                <div class="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                    <h4 class="font-semibold text-blue-800 text-sm mb-1 flex items-center"><i data-lucide="sparkles" class="h-4 w-4 mr-2"></i>Key Insight</h4>
+                    <p class="text-xs text-blue-700">Laura's current workload is a critical path blocker for the project. Resolving this is the highest-impact action you can take to secure the project timeline.</p>
+                </div>
+                <div>
+                    <h4 class="text-base font-semibold text-slate-800 mb-2">Analysis & Justification (Data Points)</h4>
+                    <ul class="list-disc list-inside text-sm text-slate-600 space-y-1">
+                        <li><b>Current Capacity:</b> <span class="font-semibold">110%</span> (10% over sustainable limit).</li>
+                        <li><b>Assigned Story Points:</b> <span class="font-semibold">22</span> (vs. her sprint capacity of 20).</li>
+                        <li><b>Critical Path Blocker:</b> Assigned to "Refactor payment gateway", which blocks 3 other tasks.</li>
+                        <li><b>Slack Sentiment Analysis:</b> Recent messages show a slight increase in terms related to stress and blockers.</li>
+                    </ul>
+                </div>
+                 <div>
+                    <h4 class="text-base font-semibold text-slate-800 mb-2">Recommended Actions</h4>
+                    <div class="space-y-2">
+                        <a id="schedule-meeting-link" href="#" target="_blank" class="flex items-center space-x-3 p-3 bg-white rounded-lg border hover:border-blue-500 hover:bg-blue-50 transition-colors">
+                            <i data-lucide="calendar-plus" class="h-5 w-5 text-blue-600"></i>
+                            <span class="text-sm font-medium text-slate-700">Schedule Handover Meeting (with Laura & David)</span>
+                        </a>
+                        <a id="draft-email-link" href="#" class="flex items-center space-x-3 p-3 bg-white rounded-lg border hover:border-blue-500 hover:bg-blue-50 transition-colors">
+                            <i data-lucide="mail" class="h-5 w-5 text-blue-600"></i>
+                            <span class="text-sm font-medium text-slate-700">Draft Delegation Email</span>
+                        </a>
+                        <a href="intelligence.html" class="flex items-center space-x-3 p-3 bg-white rounded-lg border hover:border-blue-500 hover:bg-blue-50 transition-colors">
+                            <i data-lucide="brain-circuit" class="h-5 w-5 text-blue-600"></i>
+                            <span class="text-sm font-medium text-slate-700">Simulate other reassignment scenarios</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Budget Insights Modal -->
+    <div id="budgetInsightsModal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+            <div class="p-5 border-b flex justify-between items-center flex-shrink-0">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-red-100 p-2 rounded-lg"><i data-lucide="alert-triangle" class="h-6 w-6 text-red-600"></i></div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-slate-900">Budget Alert: Phoenix Project</h3>
+                        <p class="text-sm text-slate-500">AI-powered analysis of the 15% budget overage.</p>
+                    </div>
+                </div>
+                <button id="close-budget-modal" class="p-1 rounded-full hover:bg-slate-100"><i data-lucide="x" class="h-5 w-5 text-slate-500"></i></button>
+            </div>
+            <div class="p-6 space-y-4 overflow-y-auto custom-scrollbar">
+                <div class="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                    <h4 class="font-semibold text-blue-800 text-sm mb-1 flex items-center"><i data-lucide="sparkles" class="h-4 w-4 mr-2"></i>Key Insight</h4>
+                    <p class="text-xs text-blue-700">The project is on track to exceed its total budget by 18-22% if current spending velocity continues. The primary driver is a 50% depletion of contingency funds at only 75% project completion.</p>
+                </div>
+                <div>
+                    <h4 class="text-base font-semibold text-slate-800 mb-2">Data Breakdown & Reasoning</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="text-sm space-y-2">
+                            <p>The AI reached this conclusion based on:</p>
+                            <ul class="list-disc list-inside text-xs space-y-1">
+                                <li><strong>Contingency Spend:</strong> $5k of $10k used.</li>
+                                <li><strong>Software Costs:</strong> $12.5k of $15k used, but 2 unbudgeted licenses are pending.</li>
+                                <li><strong>Historical Data:</strong> Similar projects required 80% of their contingency in the final 25% of the timeline.</li>
+                            </ul>
+                        </div>
+                        <div class="w-full h-40"><canvas id="budget-modal-chart"></canvas></div>
+                    </div>
+                </div>
+                 <div>
+                    <h4 class="text-base font-semibold text-slate-800 mb-2">Recommended Actions</h4>
+                    <div class="space-y-2">
+                        <a href="analytics.html" class="flex items-center space-x-3 p-3 bg-white rounded-lg border hover:border-blue-500 hover:bg-blue-50 transition-colors">
+                            <i data-lucide="brain-circuit" class="h-5 w-5 text-blue-600"></i>
+                            <span class="text-sm font-medium text-slate-700">Simulate cost-saving measures</span>
+                        </a>
+                        <button class="w-full text-left flex items-center space-x-3 p-3 bg-white rounded-lg border hover:border-blue-500 hover:bg-blue-50 transition-colors">
+                            <i data-lucide="file-text" class="h-5 w-5 text-blue-600"></i>
+                            <span class="text-sm font-medium text-slate-700">Generate detailed budget report for stakeholders</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-slate-50 px-6 py-4 rounded-b-lg flex justify-end flex-shrink-0 border-t">
+                <button id="close-budget-modal-footer" class="px-4 py-2 text-sm font-medium bg-white hover:bg-slate-50 border border-slate-300 rounded-md text-slate-700">Close</button>
+            </div>
+        </div>
+    </div>
     
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            lucide.createIcons();
-            
-            // --- Sidebar Logic ---
-            const sidebar = document.getElementById('sidebar');
-            sidebar.addEventListener('mouseenter', () => { 
-                sidebar.classList.remove('sidebar-collapsed'); 
-                sidebar.classList.add('sidebar-expanded'); 
-                document.getElementById('logo-text').innerHTML = 'Nexus<span class="text-blue-600">PM</span>'; 
-                document.querySelectorAll('.nav-text').forEach(text => text.classList.remove('hidden')); 
-            });
-            sidebar.addEventListener('mouseleave', () => { 
-                sidebar.classList.add('sidebar-collapsed'); 
-                sidebar.classList.remove('sidebar-expanded'); 
-                document.getElementById('logo-text').innerHTML = 'N<span class="text-blue-600">P</span>'; 
-                document.querySelectorAll('.nav-text').forEach(text => text.classList.add('hidden')); 
-            });
-
-            // --- Dynamic Sidebar Active State ---
-            const currentPage = window.location.pathname.split('/').pop() || 'index.html';
-            const navLinks = document.querySelectorAll('nav a');
-            navLinks.forEach(link => {
-                const linkPage = link.getAttribute('href');
-                if (linkPage === currentPage || (currentPage === '' && linkPage === 'index.html')) {
-                    link.classList.add('bg-blue-100', 'text-blue-700', 'font-semibold');
-                    link.classList.remove('hover:bg-slate-100', 'text-slate-600');
-                } else {
-                    link.classList.remove('bg-blue-100', 'text-blue-700', 'font-semibold');
-                    link.classList.add('hover:bg-slate-100', 'text-slate-600');
-                }
-            });
-
-            // --- Notification Bell Logic ---
-            const notificationBell = document.getElementById('notification-bell');
-            const notificationPanel = document.getElementById('notification-panel');
-            notificationBell.addEventListener('click', (e) => {
-                e.stopPropagation();
-                notificationPanel.classList.toggle('hidden');
-            });
-            document.addEventListener('click', (e) => {
-                if (!notificationPanel.contains(e.target) && !notificationBell.contains(e.target)) {
-                    notificationPanel.classList.add('hidden');
-                }
-            });
-
-            // --- My Hub Task Logic ---
-            const taskList = document.getElementById('task-list');
-            const newTaskForm = document.getElementById('new-task-form');
-            const newTaskInput = document.getElementById('new-task-input');
-
-            taskList.addEventListener('change', (e) => {
-                if (e.target.classList.contains('task-checkbox')) {
-                    const label = e.target.nextElementSibling;
-                    label.classList.toggle('line-through');
-                    label.classList.toggle('text-slate-500');
-                }
-            });
-            
-            newTaskForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const taskText = newTaskInput.value.trim();
-                if (taskText === '') return;
-                
-                const taskId = `task-${Date.now()}`;
-                const newTaskHTML = `
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center">
-                            <input type="checkbox" id="${taskId}" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 mr-3 task-checkbox">
-                            <label for="${taskId}" class="font-medium text-sm task-label">${taskText}</label>
+       document.addEventListener('DOMContentLoaded', () => {
+    lucide.createIcons();
+    let currentAIProcess = null;
+    let budgetModalChartInstance = null;
+    let portfolioHealthChartInstance = null;
+    let sortable = null;
+    
+    // --- Toast Notification Logic ---
+    const toastContainer = document.getElementById('toast-container');
+    function showToast(message, type = 'success') {
+        const toastId = `toast-${Date.now()}`;
+        const icon = type === 'success' ? '<i data-lucide="check-circle" class="h-5 w-5 text-green-500"></i>' : '<i data-lucide="alert-circle" class="h-5 w-5 text-red-500"></i>';
+        const toastHTML = `
+            <div id="${toastId}" class="toast-notification bg-white shadow-lg rounded-lg pointer-events-auto ring-1 ring-black ring-opacity-5 overflow-hidden translate-x-full opacity-0">
+                <div class="p-4">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0">${icon}</div>
+                        <div class="ml-3 w-0 flex-1 pt-0.5">
+                            <p class="text-sm font-medium text-gray-900">${message}</p>
                         </div>
-                        <span class="text-xs bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full">Pending</span>
-                    </div>`;
-                taskList.insertAdjacentHTML('beforeend', newTaskHTML);
-                newTaskInput.value = '';
-            });
+                    </div>
+                </div>
+            </div>`;
+        toastContainer.insertAdjacentHTML('beforeend', toastHTML);
+        lucide.createIcons();
+        const toastElement = document.getElementById(toastId);
+        setTimeout(() => {
+            toastElement.classList.remove('translate-x-full', 'opacity-0');
+            toastElement.classList.add('translate-x-0', 'opacity-100');
+        }, 10);
+        setTimeout(() => {
+            toastElement.classList.remove('translate-x-0', 'opacity-100');
+            toastElement.classList.add('translate-x-full', 'opacity-0');
+            setTimeout(() => toastElement.remove(), 300);
+        }, 4000);
+    }
 
-            // --- Quick Notes Logic ---
-            const notesTextarea = document.getElementById('quick-notes-textarea');
-            const savedNotes = localStorage.getItem('nexus-pm-quick-notes');
-            if (savedNotes) { notesTextarea.value = savedNotes; }
-            notesTextarea.addEventListener('input', () => {
-                localStorage.setItem('nexus-pm-quick-notes', notesTextarea.value);
-            });
-            
-            // --- Live Feed Logic ---
-            const liveFeedContainer = document.getElementById('live-feed');
-            const liveFeedData = [
-                { source: 'Jira', link: '#', icon: 'check-circle', color: 'text-blue-500', user: 'Laura', userAvatar: 'laura', action: 'completed issue', target: 'PROJ-123', timestamp: new Date(Date.now() - 5 * 60000), aiContext: 'This unblocks the "Refactor payment gateway" task.' },
-                { source: 'Slack', link: '#', icon: 'message-square', color: 'text-purple-500', user: 'Samantha', userAvatar: 'samantha', action: 'mentioned you in', target: '#phoenix-project', timestamp: new Date(Date.now() - 15 * 60000), aiContext: 'A question about the new API schema design.' },
-                { source: 'GitHub', link: '#', icon: 'git-commit', color: 'text-gray-700', user: 'David', userAvatar: 'david', action: 'pushed a commit to', target: 'orion-app', timestamp: new Date(Date.now() - 2 * 3600000), aiContext: 'The new user profile page has been deployed to staging.' },
-                { source: 'Figma', link: '#', icon: 'figma', color: 'text-pink-500', user: 'Samantha', userAvatar: 'samantha', action: 'updated the file', target: 'Orion App Designs', timestamp: new Date(Date.now() - 5 * 3600000), aiContext: 'Changes reflect feedback from the latest stakeholder review.' },
-            ];
-            
-            function timeAgo(date) {
-                const seconds = Math.floor((new Date() - date) / 1000);
-                let interval = seconds / 31536000;
-                if (interval > 1) return Math.floor(interval) + "y ago";
-                interval = seconds / 2592000;
-                if (interval > 1) return Math.floor(interval) + "mo ago";
-                interval = seconds / 86400;
-                if (interval > 1) return Math.floor(interval) + "d ago";
-                interval = seconds / 3600;
-                if (interval > 1) return Math.floor(interval) + "h ago";
-                interval = seconds / 60;
-                if (interval > 1) return Math.floor(interval) + "m ago";
-                return Math.floor(seconds) + "s ago";
-            }
+    // --- Sidebar Logic ---
+    const sidebar = document.getElementById('sidebar');
+    sidebar.addEventListener('mouseenter', () => { 
+        sidebar.classList.remove('sidebar-collapsed'); 
+        sidebar.classList.add('sidebar-expanded'); 
+        document.getElementById('logo-text').innerHTML = 'Nexus<span class="text-blue-600">PM</span>'; 
+        document.querySelectorAll('.nav-text').forEach(text => text.classList.remove('hidden')); 
+    });
+    sidebar.addEventListener('mouseleave', () => { 
+        sidebar.classList.add('sidebar-collapsed'); 
+        sidebar.classList.remove('sidebar-expanded'); 
+        document.getElementById('logo-text').innerHTML = 'N<span class="text-blue-600">P</span>'; 
+        document.querySelectorAll('.nav-text').forEach(text => text.classList.add('hidden')); 
+    });
 
-            liveFeedContainer.innerHTML = '';
-            liveFeedData.forEach(item => {
-                liveFeedContainer.innerHTML += `
-                    <div class="feed-item flex space-x-4 relative">
-                        <div class="absolute left-5 top-5 h-full w-0.5 bg-slate-200 timeline-line"></div>
-                        <div class="flex-shrink-0 z-10">
-                            <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center border-2 border-slate-200">
-                               <i data-lucide="${item.icon}" class="${item.color} h-5 w-5"></i>
-                            </div>
+    // --- Dynamic Sidebar Active State ---
+    const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+    const navLinks = document.querySelectorAll('nav a');
+    navLinks.forEach(link => {
+        const linkPage = link.getAttribute('href');
+        if (linkPage === currentPage || (currentPage === '' && linkPage === 'index.html')) {
+            link.classList.add('bg-blue-100', 'text-blue-700', 'font-semibold');
+            link.classList.remove('hover:bg-slate-100', 'text-slate-600');
+        } else {
+            link.classList.remove('bg-blue-100', 'text-blue-700', 'font-semibold');
+            link.classList.add('hover:bg-slate-100', 'text-slate-600');
+        }
+    });
+    
+    // --- Global New Button Logic ---
+    const globalNewBtn = document.getElementById('global-new-btn');
+    const globalNewMenu = document.getElementById('global-new-menu');
+    globalNewBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        globalNewMenu.classList.toggle('hidden');
+    });
+    document.addEventListener('click', (e) => {
+        if (globalNewMenu && !globalNewMenu.contains(e.target) && !globalNewBtn.contains(e.target)) {
+            globalNewMenu.classList.add('hidden');
+        }
+    });
+
+
+    // --- Notification Bell Logic ---
+    const notificationBell = document.getElementById('notification-bell');
+    const notificationPanel = document.getElementById('notification-panel');
+    notificationBell.addEventListener('click', (e) => {
+        e.stopPropagation();
+        notificationPanel.classList.toggle('hidden');
+    });
+    document.addEventListener('click', (e) => {
+        if (notificationPanel && !notificationPanel.contains(e.target) && !notificationBell.contains(e.target)) {
+            notificationPanel.classList.add('hidden');
+        }
+    });
+
+    // --- My Hub Task Logic ---
+    const taskList = document.getElementById('task-list');
+    const newTaskForm = document.getElementById('new-task-form');
+    const newTaskInput = document.getElementById('new-task-input');
+    
+    function getTodayString() { const today = new Date(); return today.toISOString().split('T')[0]; }
+    function getTomorrowString() { const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1); return tomorrow.toISOString().split('T')[0]; }
+
+    let tasks = [
+        { id: `task-1`, text: "Review API schema", due: getTodayString(), priority: "High", isChecked: false },
+        { id: `task-2`, text: "Sync with stakeholders", due: getTomorrowString(), priority: "Medium", isChecked: false },
+        { id: `task-3`, text: "Prepare Q4 roadmap", due: "2025-09-13", priority: "Medium", isChecked: true },
+        { id: `task-4`, text: "Finalize Orion App copy", due: "2025-09-15", priority: "Low", isChecked: false },
+    ];
+
+    function formatDate(dateString) {
+        if (!dateString) return 'No due date';
+        const today = new Date(getTodayString());
+        const tomorrow = new Date(getTomorrowString());
+        const taskDate = new Date(dateString);
+        
+        if (taskDate.getTime() === today.getTime()) return "Today";
+        if (taskDate.getTime() === tomorrow.getTime()) return "Tomorrow";
+
+        return taskDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+
+    function renderTask(task) {
+        const checkedAttr = task.isChecked ? 'checked' : '';
+        const textClasses = task.isChecked ? 'line-through text-slate-500' : '';
+        const priorityColors = { "High": "bg-red-100 text-red-700", "Medium": "bg-yellow-100 text-yellow-700", "Low": "bg-green-100 text-green-700" };
+        const priorityClass = priorityColors[task.priority] || "bg-slate-100 text-slate-700";
+
+        return `
+            <div class="task-item border-b border-slate-200 pb-2" data-task-id="${task.id}">
+                <div class="task-view">
+                    <div class="flex items-start justify-between">
+                        <div class="flex items-start flex-1 min-w-0">
+                            <input type="checkbox" id="${task.id}" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 mr-3 mt-0.5 task-checkbox flex-shrink-0" ${checkedAttr}>
+                            <p class="font-medium text-sm task-text ${textClasses}">${task.text}</p>
                         </div>
-                        <div class="flex-1 pb-4">
-                             <div class="flex justify-between items-start">
-                                <div>
-                                    <p class="text-sm text-slate-600">
-                                        <img src="https://i.pravatar.cc/24?u=${item.userAvatar}" class="inline-block h-6 w-6 rounded-full mr-1"/>
-                                        <span class="font-semibold">${item.user}</span>
-                                        ${item.action}
-                                        <span class="font-semibold text-blue-600">${item.target}</span>.
-                                    </p>
-                                    <div class="flex items-center mt-1">
-                                        <p class="text-xs text-slate-400 flex-shrink-0">${timeAgo(item.timestamp)}</p>
-                                        <a href="${item.link}" target="_blank" class="ml-3 text-xs font-semibold text-blue-600 hover:underline flex items-center">
-                                            View in ${item.source} <i data-lucide="arrow-up-right" class="h-3 w-3 ml-1"></i>
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="mt-2 text-xs text-slate-500 bg-slate-50 p-2 rounded-md border border-slate-200 flex items-center">
-                                <i data-lucide="sparkles" class="h-3 w-3 text-blue-500 mr-2 flex-shrink-0"></i>
-                                <strong>AI Context:</strong>&nbsp;<span>${item.aiContext}</span>
-                            </div>
-                        </div>
-                    </div>`;
-            });
-            lucide.createIcons();
+                        <button class="edit-task-btn p-1 hover:bg-slate-200 rounded-md"><i data-lucide="edit-2" class="h-4 w-4 text-slate-500"></i></button>
+                    </div>
+                    <div class="pl-7 mt-1">
+                        <span class="text-xs px-2 py-0.5 rounded-full ${priorityClass}">${task.priority}</span>
+                        <span class="text-xs text-slate-500 ml-2">${formatDate(task.due)}</span>
+                    </div>
+                </div>
+                <div class="task-edit hidden space-y-2 mt-2">
+                    <input type="text" class="task-edit-text text-sm border-b-2 border-blue-500 bg-transparent focus:outline-none w-full" value="${task.text}">
+                    <div class="flex items-center space-x-2">
+                        <input type="date" class="task-edit-due text-xs border border-slate-300 rounded-md p-1 w-1/2" value="${task.due}">
+                        <select class="task-edit-priority text-xs border border-slate-300 rounded-md p-1 w-1/2">
+                            <option value="High" ${task.priority === 'High' ? 'selected' : ''}>High Priority</option>
+                            <option value="Medium" ${task.priority === 'Medium' ? 'selected' : ''}>Medium Priority</option>
+                            <option value="Low" ${task.priority === 'Low' ? 'selected' : ''}>Low Priority</option>
+                        </select>
+                    </div>
+                    <div class="flex justify-end space-x-2">
+                        <button class="cancel-edit-btn p-1 hover:bg-slate-100 rounded-md text-xs font-semibold text-slate-600">Cancel</button>
+                        <button class="save-task-btn p-1 bg-blue-600 hover:bg-blue-700 rounded-md text-xs font-semibold text-white px-3">Save</button>
+                    </div>
+                </div>
+            </div>`;
+    }
+    
+    function renderAllTasks() {
+        const container = taskList;
+        container.innerHTML = tasks.map(renderTask).join('');
+        lucide.createIcons();
+    }
+    
+    renderAllTasks();
 
+    taskList.addEventListener('click', (e) => {
+        const taskItem = e.target.closest('.task-item');
+        if (!taskItem) return;
+        
+        const taskId = taskItem.dataset.taskId;
+        const task = tasks.find(t => t.id === taskId);
 
-            // --- Priority Email Logic ---
-            document.getElementById('analyze-email-btn').addEventListener('click', () => {
-                document.getElementById('ai-email-analysis').classList.toggle('hidden');
-            });
+        if (e.target.closest('.edit-task-btn')) {
+            taskItem.querySelector('.task-view').classList.add('hidden');
+            taskItem.querySelector('.task-edit').classList.remove('hidden');
+        }
 
-            document.getElementById('draft-reply-btn').addEventListener('click', () => {
-                const recipient = 'eleanor.vance@example.com';
-                const subject = 'Re: Feedback on latest designs';
-                const body = "Hi Eleanor,\n\nThanks for the feedback on the Orion App designs. I appreciate you highlighting the concern about the onboarding flow complexity.\n\nCould you spare 15 minutes this week to walk me through your specific thoughts? I want to make sure we get it right.\n\nBest,\nAlex";
-                window.location.href = `mailto:${recipient}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-            });
+        if (e.target.closest('.save-task-btn')) {
+            const input = taskItem.querySelector('.task-edit-text');
+            const dateInput = taskItem.querySelector('.task-edit-due');
+            const prioritySelect = taskItem.querySelector('.task-edit-priority');
+            task.text = input.value;
+            task.due = dateInput.value;
+            task.priority = prioritySelect.value;
+            renderAllTasks();
+        }
 
-            // --- AI Prompt Bar Logic ---
-            const promptForm = document.getElementById('prompt-form');
-            const promptTextarea = document.getElementById('prompt-textarea');
-            const promptSuggestions = document.getElementById('prompt-suggestions');
+        if (e.target.closest('.cancel-edit-btn')) {
+            renderAllTasks();
+        }
+         if (e.target.matches('.task-checkbox')) {
+            task.isChecked = e.target.checked;
+            renderAllTasks();
+        }
+    });
+    
+    function addNewTask(taskText, isAI = false) {
+         const dueDate = getTomorrowString();
+         tasks.push({ id: `task-${Date.now()}`, text: taskText, due: dueDate, priority: "Medium", isChecked: false });
+         renderAllTasks();
+         newTaskInput.value = '';
+    }
+    
+    newTaskForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const taskText = newTaskInput.value.trim();
+        if (taskText === '') return;
+        addNewTask(taskText);
+    });
+    
+    // --- Live Feed Logic ---
+    const liveFeedContainer = document.getElementById('live-feed');
+    const liveFeedData = [ { source: 'Jira', link: '#', icon: 'check-circle', color: 'text-blue-500', user: 'Laura', userAvatar: 'laura', action: 'completed issue', target: 'PROJ-123', timestamp: new Date(Date.now() - 5 * 60000), aiContext: 'This unblocks the "Refactor payment gateway" task.' }, { source: 'Slack', link: '#', icon: 'message-square', color: 'text-purple-500', user: 'Samantha', userAvatar: 'samantha', action: 'mentioned you in', target: '#phoenix-project', timestamp: new Date(Date.now() - 15 * 60000), aiContext: 'A question about the new API schema design.' }, { source: 'GitHub', link: '#', icon: 'git-commit', color: 'text-gray-700', user: 'David', userAvatar: 'david', action: 'pushed a commit to', target: 'orion-app', timestamp: new Date(Date.now() - 2 * 3600000), aiContext: 'The new user profile page has been deployed to staging.' }, { source: 'Figma', link: '#', icon: 'figma', color: 'text-pink-500', user: 'Samantha', userAvatar: 'samantha', action: 'updated the file', target: 'Orion App Designs', timestamp: new Date(Date.now() - 5 * 3600000), aiContext: 'Changes reflect feedback from the latest stakeholder review.' }, ];
+    function timeAgo(date) { const seconds = Math.floor((new Date() - date) / 1000); let interval = seconds / 31536000; if (interval > 1) return Math.floor(interval) + "y ago"; interval = seconds / 2592000; if (interval > 1) return Math.floor(interval) + "mo ago"; interval = seconds / 86400; if (interval > 1) return Math.floor(interval) + "d ago"; interval = seconds / 3600; if (interval > 1) return Math.floor(interval) + "h ago"; interval = seconds / 60; if (interval > 1) return Math.floor(interval) + "m ago"; return Math.floor(seconds) + "s ago"; }
+    liveFeedContainer.innerHTML = '';
+    liveFeedData.forEach(item => { liveFeedContainer.innerHTML += `<div class="feed-item flex space-x-4 relative"><div class="absolute left-5 top-5 h-full w-0.5 bg-slate-200 timeline-line"></div><div class="flex-shrink-0 z-10"><div class="w-10 h-10 bg-white rounded-full flex items-center justify-center border-2 border-slate-200"><i data-lucide="${item.icon}" class="${item.color} h-5 w-5"></i></div></div><div class="flex-1 pb-4"><div class="flex justify-between items-start"><div><p class="text-sm text-slate-600"><img src="https://i.pravatar.cc/24?u=${item.userAvatar}" class="inline-block h-6 w-6 rounded-full mr-1"/><span class="font-semibold">${item.user}</span> ${item.action} <span class="font-semibold text-blue-600">${item.target}</span>.</p><div class="flex items-center mt-1"><p class="text-xs text-slate-400 flex-shrink-0">${timeAgo(item.timestamp)}</p><a href="${item.link}" target="_blank" class="ml-3 text-xs font-semibold text-blue-600 hover:underline flex items-center">View in ${item.source} <i data-lucide="arrow-up-right" class="h-3 w-3 ml-1"></i></a></div></div></div><div class="mt-2 text-xs text-slate-500 bg-slate-50 p-2 rounded-md border border-slate-200 flex items-center"><i data-lucide="sparkles" class="h-3 w-3 text-blue-500 mr-2 flex-shrink-0"></i><strong>AI Context:</strong>&nbsp;<span>${item.aiContext}</span></div></div></div>`; });
+    lucide.createIcons();
 
-            promptSuggestions.addEventListener('click', (e) => {
-                if(e.target.tagName === 'BUTTON') {
-                    promptTextarea.value = e.target.textContent;
-                    promptTextarea.focus();
-                    promptForm.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
-                }
-            });
+    // --- Modal Logic ---
+    const budgetModal = document.getElementById('budgetInsightsModal');
+    document.getElementById('view-budget-btn').addEventListener('click', () => {
+        budgetModal.classList.remove('hidden');
+        const budgetCtx = document.getElementById('budget-modal-chart').getContext('2d');
+        if (budgetModalChartInstance) budgetModalChartInstance.destroy();
+        budgetModalChartInstance = new Chart(budgetCtx, { type: 'doughnut', data: { labels: ['Personnel', 'Software', 'Contingency'], datasets: [{ data: [25000, 12500, 5000], backgroundColor: ['#3b82f6', '#818cf8', '#ef4444'], borderColor: '#ffffff', borderWidth: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } }, cutout: '60%' } });
+    });
+    document.getElementById('close-budget-modal').addEventListener('click', () => budgetModal.classList.add('hidden'));
+    document.getElementById('close-budget-modal-footer').addEventListener('click', () => budgetModal.classList.add('hidden'));
 
-            const responseContainer = document.getElementById('ai-response-container');
-            const responseHeader = document.getElementById('ai-response-header');
-            const messageList = document.getElementById('message-list');
-            let lastUserQuery = '';
-            let isConversationActive = false;
-
-            if (promptForm) {
-                promptForm.addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    const userQuery = promptTextarea.value.trim();
-                    if (!userQuery) return;
-                    lastUserQuery = userQuery;
-                    if (!isConversationActive) { isConversationActive = true; renderExpandedHeader(); }
-                    messageList.insertAdjacentHTML('beforeend', `<div class="flex items-start gap-3 justify-end"><div class="bg-slate-200 p-3 rounded-lg max-w-xl"><p class="text-sm text-slate-800">${userQuery}</p></div><img class="w-8 h-8 rounded-full" src="https://i.pravatar.cc/40?u=nexus-user" alt="User avatar"></div>`);
-                    const thinkingId = `thinking-${Date.now()}`;
-                    messageList.insertAdjacentHTML('beforeend', `<div id="${thinkingId}" class="flex items-start gap-3"><div class="bg-blue-100 p-2 rounded-full h-8 w-8 flex items-center justify-center animate-pulse flex-shrink-0"><i data-lucide="bot" class="h-5 w-5 text-blue-600"></i></div><div class="bg-slate-100 p-3 rounded-lg"><p class="text-sm text-slate-500">Nexus is thinking...</p></div></div>`);
-                    lucide.createIcons();
-                    responseContainer.classList.remove('minimized');
-                    responseContainer.classList.add('expanded');
-                    setTimeout(() => { messageList.scrollTop = messageList.scrollHeight; }, 10);
-                    promptTextarea.value = '';
-                    promptTextarea.style.height = 'auto';
-
-                    setTimeout(() => {
-                        const aiResult = getAIResponse(userQuery);
-                        const thinkingElement = document.getElementById(thinkingId);
-                        if (thinkingElement) {
-                            thinkingElement.outerHTML = `<div class="flex items-start gap-3"><div class="bg-blue-100 p-2 rounded-full h-8 w-8 flex items-center justify-center flex-shrink-0"><i data-lucide="bot" class="h-5 w-5 text-blue-600"></i></div><div class="text-sm text-slate-700 space-y-2 prose prose-sm max-w-none bg-slate-100 p-3 rounded-lg">${aiResult.message}</div></div>`;
-                            lucide.createIcons();
-                            messageList.scrollTop = messageList.scrollHeight;
-                        }
-                    }, 1500);
-                });
-            }
-             const renderExpandedHeader = () => {
-                responseHeader.innerHTML = `<div class="flex justify-between items-start"><h3 class="text-lg font-semibold text-slate-900">Nexus AI Response</h3><div class="flex items-center"><button id="minimize-ai-response" class="p-1 rounded-full hover:bg-slate-100 mr-2"><i data-lucide="chevrons-down" class="h-5 w-5 text-slate-500"></i></button><button id="close-ai-response" class="p-1 rounded-full hover:bg-slate-100"><i data-lucide="x" class="h-5 w-5 text-slate-500"></i></button></div></div>`;
-                lucide.createIcons();
-            }
-            const renderMinimizedHeader = () => {
-                responseHeader.innerHTML = `<div class="flex items-center justify-between h-full"><p class="text-sm text-slate-600 truncate"><span class="font-semibold text-slate-800">AI Response:</span> ${lastUserQuery}</p><button id="expand-ai-response" class="p-1 rounded-full hover:bg-slate-100"><i data-lucide="chevrons-up" class="h-5 w-5 text-slate-500"></i></button></div>`;
-                lucide.createIcons();
-            }
-
-            if(responseContainer) {
-                responseContainer.addEventListener('click', (e) => {
-                    const button = e.target.closest('button');
-                    if (!button) return;
-                    if (button.id === 'close-ai-response') {
-                        responseContainer.classList.remove('expanded', 'minimized');
-                        messageList.innerHTML = '';
-                        responseHeader.innerHTML = '';
-                        isConversationActive = false;
-                    } else if (button.id === 'minimize-ai-response') {
-                        responseContainer.classList.remove('expanded');
-                        responseContainer.classList.add('minimized');
-                        renderMinimizedHeader();
-                    } else if (button.id === 'expand-ai-response') {
-                        responseContainer.classList.remove('minimized');
-                        responseContainer.classList.add('expanded');
-                        renderExpandedHeader();
-                        setTimeout(() => { messageList.scrollTop = messageList.scrollHeight; }, 10);
-                    }
-                });
-            }
-
-            function getAIResponse(message) {
-                const lowerMessage = message.toLowerCase();
-                if (lowerMessage.includes('summarize my day')) {
-                    return { message: `<p>Good afternoon, Alex. Today, your top priority is to <strong>Review the API schema</strong>. You also have a meeting with stakeholders tomorrow. Your current workload is at a healthy 75%.</p>` };
-                }
-                if (lowerMessage.includes('biggest risks')) {
-                    return { message: `<p>The biggest risk right now is the <strong>resource overload on Laura (110%)</strong>, which threatens the Phoenix Project timeline. The second is the <strong>Phoenix Project's budget overage (15%)</strong>.</p>` };
-                }
-                 if (lowerMessage.includes('under-utilized')) {
-                    return { message: `<p><strong>David</strong> currently has the most available capacity with a workload of only <strong>40%</strong>. He is a good candidate to take on additional tasks to help balance the team's effort.</p>` };
-                }
-                 if (lowerMessage.includes('major deadlines')) {
-                    return { message: `<p>Your next major deadline is the <strong>Orion App Launch</strong>, which is due in 2 days. After that, the <strong>Phoenix DB Migration</strong> is due in 9 days.</p>` };
-                }
-                else {
-                    return { message: `<p>I can summarize your day, explain risks, or provide details on any project. What would you like to know?</p>` };
+    const workloadModal = document.getElementById('workloadRiskModal');
+    document.getElementById('de-risk-laura-btn').addEventListener('click', () => {
+        const scheduleLink = document.getElementById('schedule-meeting-link');
+        const draftLink = document.getElementById('draft-email-link');
+        const calendarUrl = `https://www.google.com/calendar/render?action=TEMPLATE&text=Task%20Handover:%20Alex,%20Laura,%20David&details=Discussing%20handover%20of%20'Refactor%20payment%20gateway'%20task%20to%20de-risk%20Phoenix%20Project%20timeline.&add=laura@example.com&add=david@example.com`;
+        const mailUrl = `mailto:laura@example.com?cc=david@example.com&subject=Task%20Handover:%20Refactor%20payment%20gateway&body=Hi%20Laura%20and%20David,%0A%0AAs%20per%20our%20AI's%20recommendation%20to%20de-risk%20the%20timeline,%20we'll%20be%20reassigning%20the%20'Refactor%20payment%20gateway'%20task%20to%20David.%0A%0ALet's%20use%20this%20meeting%20to%20ensure%20a%20smooth%20handover.%0A%0ABest,%0AAlex`;
+        scheduleLink.href = calendarUrl;
+        draftLink.href = mailUrl;
+        workloadModal.classList.remove('hidden');
+    });
+    document.getElementById('close-workload-modal').addEventListener('click', () => workloadModal.classList.add('hidden'));
+    
+    // --- Portfolio Health Chart ---
+    const healthCtx = document.getElementById('portfolioHealthChart').getContext('2d');
+    if (healthCtx) {
+        const gradient = healthCtx.createLinearGradient(0, 0, 0, 150);
+        gradient.addColorStop(0, 'rgba(79, 70, 229, 0.2)');
+        gradient.addColorStop(1, 'rgba(79, 70, 229, 0)');
+        portfolioHealthChartInstance = new Chart(healthCtx, {
+            type: 'line',
+            data: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                datasets: [{
+                    label: 'Portfolio Health',
+                    data: [82, 85, 84, 86, 88, 87, 85],
+                    borderColor: '#4f46e5',
+                    backgroundColor: gradient,
+                    tension: 0.3,
+                    fill: true,
+                    pointBackgroundColor: '#ffffff',
+                    pointBorderColor: '#4f46e5',
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: false, min: 75, max: 90, grid: { drawBorder: false } },
+                    x: { grid: { display: false } }
                 }
             }
         });
+    }
+    
+    // --- Dashboard Customization (SortableJS) ---
+    const grid = document.getElementById('dashboard-grid');
+    if (grid) {
+        sortable = new Sortable(grid, {
+            animation: 150,
+            ghostClass: 'draggable-ghost',
+            handle: '.draggable-box',
+            disabled: true, // Initially disabled
+        });
+    }
+    
+    const rearrangeBtn = document.getElementById('rearrange-btn');
+    let isEditMode = false;
+    rearrangeBtn.addEventListener('click', () => {
+        isEditMode = !isEditMode;
+        if (isEditMode) {
+            rearrangeBtn.innerHTML = '<i data-lucide="check" class="h-4 w-4"></i><span>Done</span>';
+            grid.classList.add('dashboard-editing');
+            sortable.option('disabled', false);
+        } else {
+            rearrangeBtn.innerHTML = '<i data-lucide="move" class="h-4 w-4"></i><span>Rearrange</span>';
+            grid.classList.remove('dashboard-editing');
+            sortable.option('disabled', true);
+        }
+        lucide.createIcons();
+    });
+
+
+    // --- AI Prompt Bar Logic ---
+    const promptForm = document.getElementById('prompt-form');
+    const promptTextarea = document.getElementById('prompt-textarea');
+    const promptSuggestions = document.getElementById('prompt-suggestions');
+
+    promptSuggestions.addEventListener('click', (e) => { if(e.target.tagName === 'BUTTON') { promptTextarea.value = e.target.textContent; promptTextarea.focus(); promptForm.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true })); } });
+    function updatePromptSuggestions() { const suggestions = document.querySelectorAll('#prompt-suggestions button'); if (document.querySelector('.text-red-500')) { suggestions[0].textContent = 'Tell me more about the Phoenix Project risk'; } else { suggestions[0].textContent = 'What are my biggest risks?'; } }
+    setInterval(updatePromptSuggestions, 5000); 
+
+    const responseContainer = document.getElementById('ai-response-container');
+    const responseHeader = document.getElementById('ai-response-header');
+    const messageList = document.getElementById('message-list');
+    let lastUserQuery = '';
+    let isConversationActive = false;
+
+    if (promptForm) {
+        promptForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if(currentAIProcess) { clearInterval(currentAIProcess.interval); clearTimeout(currentAIProcess.timeout); currentAIProcess = null; const thinkingElement = document.getElementById(currentAIProcess?.thinkingId); if (thinkingElement) thinkingElement.remove(); }
+            const userQuery = promptTextarea.value.trim();
+            if (!userQuery) return;
+            lastUserQuery = userQuery;
+            if (!isConversationActive) { isConversationActive = true; renderExpandedHeader(); }
+            
+            messageList.insertAdjacentHTML('beforeend', `<div class="flex items-start gap-3 justify-end"><div class="bg-slate-200 p-3 rounded-lg max-w-xl"><p class="text-sm text-slate-800">${userQuery}</p></div><img class="w-8 h-8 rounded-full" src="https://i.pravatar.cc/40?u=nexus-user" alt="User avatar"></div>`);
+            
+            const thinkingId = `thinking-${Date.now()}`;
+            const thinkingHTML = `<div id="${thinkingId}" class="flex items-start gap-3"><div class="bg-blue-100 p-2 rounded-full h-8 w-8 flex items-center justify-center flex-shrink-0"><i data-lucide="bot" class="h-5 w-5 text-blue-600 animate-pulse"></i></div><div class="bg-slate-100 p-3 rounded-lg w-full max-w-lg"><div class="flex justify-between items-center"><p class="font-semibold text-sm text-slate-700 mb-2">Nexus is thinking...</p><button class="stop-generating-btn text-xs font-semibold text-slate-500 hover:text-slate-800">Stop</button></div><ul class="text-xs space-y-1"><li class="flex items-center text-slate-500 transition-colors duration-300"><i data-lucide="circle" class="h-3 w-3 mr-2"></i><span>Parsing user intent...</span></li><li class="flex items-center text-slate-500 transition-colors duration-300"><i data-lucide="circle" class="h-3 w-3 mr-2"></i><span>Scanning project data & tasks...</span></li><li class="flex items-center text-slate-500 transition-colors duration-300"><i data-lucide="circle" class="h-3 w-3 mr-2"></i><span>Analyzing team workload & capacity...</span></li><li class="flex items-center text-slate-500 transition-colors duration-300"><i data-lucide="circle" class="h-3 w-3 mr-2"></i><span>Formulating recommendation...</span></li></ul></div></div>`;
+            messageList.insertAdjacentHTML('beforeend', thinkingHTML);
+            
+            lucide.createIcons();
+            responseContainer.classList.remove('minimized');
+            responseContainer.classList.add('expanded');
+            setTimeout(() => { messageList.scrollTop = messageList.scrollHeight; }, 10);
+            promptTextarea.value = '';
+            promptTextarea.style.height = 'auto';
+
+            const thinkingElement = document.getElementById(thinkingId);
+            const thinkingSteps = thinkingElement.querySelectorAll('li');
+            
+            let step = 0;
+            const animateThinking = setInterval(() => {
+                if (step < thinkingSteps.length) {
+                    const currentStep = thinkingSteps[step];
+                    currentStep.classList.remove('text-slate-500');
+                    currentStep.classList.add('text-green-600');
+                    const icon = currentStep.querySelector('i');
+                    icon.outerHTML = '<i data-lucide="check-circle-2" class="h-3 w-3 mr-2 text-green-600"></i>';
+                    lucide.createIcons();
+                    step++;
+                } else { clearInterval(animateThinking); }
+            }, 500);
+
+            const finalResponseTimeout = setTimeout(() => {
+                const aiResult = getAIResponse(userQuery);
+                if (thinkingElement) {
+                    thinkingElement.outerHTML = `<div class="flex items-start gap-3"><div class="bg-blue-100 p-2 rounded-full h-8 w-8 flex items-center justify-center flex-shrink-0"><i data-lucide="bot" class="h-5 w-5 text-blue-600"></i></div><div class="text-sm text-slate-700 space-y-3 bg-slate-100 p-3 rounded-lg max-w-2xl"><div class="ai-response-content">${aiResult.html}</div><div class="pt-2 mt-2 border-t border-slate-200"><button class="show-thinking-btn text-xs font-semibold text-slate-500 hover:text-slate-800 flex items-center"><i data-lucide="history" class="h-3 w-3 mr-1.5"></i>Show thought process</button><div class="thinking-process-details hidden mt-2 text-xs bg-white p-2 rounded-md"><ul class="text-xs space-y-1">${aiResult.thinking}</ul></div></div></div></div>`;
+                    lucide.createIcons();
+                    messageList.scrollTop = messageList.scrollHeight;
+                }
+                currentAIProcess = null;
+            }, 2500);
+
+            currentAIProcess = { interval: animateThinking, timeout: finalResponseTimeout, thinkingId: thinkingId };
+        });
+    }
+     const renderExpandedHeader = () => { responseHeader.innerHTML = `<div class="flex justify-between items-start"><h3 class="text-lg font-semibold text-slate-900">Nexus AI Response</h3><div class="flex items-center"><button id="minimize-ai-response" class="p-1 rounded-full hover:bg-slate-100 mr-2"><i data-lucide="chevrons-down" class="h-5 w-5 text-slate-500"></i></button><button id="close-ai-response" class="p-1 rounded-full hover:bg-slate-100"><i data-lucide="x" class="h-5 w-5 text-slate-500"></i></button></div></div>`; lucide.createIcons(); }
+     const renderMinimizedHeader = () => { responseHeader.innerHTML = `<div class="flex items-center justify-between h-full"><p class="text-sm text-slate-600 truncate"><span class="font-semibold text-slate-800">AI Response:</span> ${lastUserQuery}</p><button id="expand-ai-response" class="p-1 rounded-full hover:bg-slate-100"><i data-lucide="chevrons-up" class="h-5 w-5 text-slate-500"></i></button></div>`; lucide.createIcons(); }
+
+    if(responseContainer) {
+        responseContainer.addEventListener('click', (e) => {
+            const button = e.target.closest('button');
+            if (!button) return;
+            if (button.id === 'close-ai-response') { responseContainer.classList.remove('expanded', 'minimized'); messageList.innerHTML = ''; responseHeader.innerHTML = ''; isConversationActive = false; }
+            else if (button.id === 'minimize-ai-response') { responseContainer.classList.remove('expanded'); responseContainer.classList.add('minimized'); renderMinimizedHeader(); }
+            else if (button.id === 'expand-ai-response') { responseContainer.classList.remove('minimized'); responseContainer.classList.add('expanded'); renderExpandedHeader(); setTimeout(() => { messageList.scrollTop = messageList.scrollHeight; }, 10); }
+            else if (button.matches('[data-action="ai-create-task"]')) { const taskText = button.dataset.taskText; addNewTask(taskText, 'Today', true); showToast(`Task '${taskText}' added to your list.`); button.textContent = 'Task Created!'; button.disabled = true; }
+            else if (button.matches('.show-thinking-btn')) { const details = button.nextElementSibling; details.classList.toggle('hidden'); button.innerHTML = details.classList.contains('hidden') ? '<i data-lucide="history" class="h-3 w-3 mr-1.5"></i>Show thought process' : '<i data-lucide="history" class="h-3 w-3 mr-1.5"></i>Hide thought process'; lucide.createIcons(); }
+            else if (button.matches('.stop-generating-btn')) { if(currentAIProcess) { clearInterval(currentAIProcess.interval); clearTimeout(currentAIProcess.timeout); const thinkingElement = document.getElementById(currentAIProcess.thinkingId); if (thinkingElement) thinkingElement.remove(); currentAIProcess = null; } }
+        });
+    }
+
+    function getAIResponse(message) {
+        const lowerMessage = message.toLowerCase();
+        let intent = "General Inquiry";
+        if (lowerMessage.includes('risk')) intent = "Risk Assessment";
+        if (lowerMessage.includes('under-utilized')) intent = "Resource Analysis";
+        
+        const thinkingHtml = `<li class="flex items-center text-green-600"><i data-lucide="check-circle-2" class="h-3 w-3 mr-2"></i><span>Parsed user intent: '${intent}'.</span></li><li class="flex items-center text-green-600"><i data-lucide="check-circle-2" class="h-3 w-3 mr-2"></i><span>Scanned 3 active projects for team member assignments.</span></li><li class="flex items-center text-green-600"><i data-lucide="check-circle-2" class="h-3 w-3 mr-2"></i><span>Analyzed workload data for Laura (110%), Samantha (85%), and David (40%).</span></li><li class="flex items-center text-green-600"><i data-lucide="check-circle-2" class="h-3 w-3 mr-2"></i><span>Formulated recommendation based on findings.</span></li>`;
+
+        if (lowerMessage.includes('biggest risks') || lowerMessage.includes('phoenix project risk')) {
+            return {
+                intent: "Risk Assessment",
+                html: `<div><p class="font-semibold text-slate-800">Observation:</p><p>The biggest risk to your portfolio is the <strong>resource overload on Laura (110% workload)</strong>, which directly threatens the Phoenix Project timeline.</p></div><div class="border-t pt-3 mt-3"><p class="font-semibold text-slate-800">Analysis & Justification (Data Points):</p><ul class="list-disc list-inside text-xs space-y-1"><li><b>Assigned Story Points:</b> 22 (vs. her sprint capacity of 20)</li><li><b>Active Tasks:</b> 5 (vs. team average of 4)</li><li><b>Critical Path Blocker:</b> She is assigned to "Refactor payment gateway", a critical dependency for 3 other tasks.</li><li><b>Recent Slack Sentiment:</b> Analysis of recent messages shows a slight increase in terms related to stress and blockers.</li></ul></div><div class="border-t pt-3 mt-3"><p class="font-semibold text-slate-800">Recommendation:</p><p>Address the resource bottleneck first. The most direct path is to reassign Laura's critical task.</p><div class="mt-2 flex space-x-2"><a href="intelligence.html" class="flex items-center text-xs bg-blue-100 text-blue-700 font-semibold px-3 py-1.5 rounded-md hover:bg-blue-200"><i data-lucide="brain-circuit" class="h-3 w-3 mr-1.5"></i>Simulate this change</a><a href="projects.html" class="flex items-center text-xs bg-white border border-slate-300 text-slate-600 font-semibold px-3 py-1.5 rounded-md hover:bg-slate-100"><i data-lucide="folder-kanban" class="h-3 w-3 mr-1.5"></i>Go to Project</a></div></div>`,
+                thinking: thinkingHtml
+            };
+        }
+         if (lowerMessage.includes('under-utilized')) {
+            return {
+                intent: "Resource Analysis",
+                html: `<div><p class="font-semibold text-slate-800">Observation:</p><p><strong>David</strong> currently has the most available capacity on the team.</p></div><div class="border-t pt-3 mt-3"><p class="font-semibold text-slate-800">Analysis & Justification (Data Points):</p><ul class="list-disc list-inside text-xs space-y-1"><li><b>Current Workload:</b> <strong>40% capacity</strong>.</li><li><b>Tasks Completed (Sprint):</b> <strong>2 tasks</strong> (Team average: 4).</li><li><b>Active Tasks:</b> 1 Medium, 1 Low priority. No critical path dependencies.</li></ul><div class="mt-2 text-xs"><p>Workload Distribution:</p><div class="w-full h-4 bg-slate-200 rounded mt-1 flex"><div style="width: 40%" class="bg-green-500 rounded-l" title="David: 40%"></div><div style="width: 45%" class="bg-yellow-400" title="Samantha: 85%"></div><div style="width: 15%" class="bg-red-500 rounded-r" title="Laura: 110%"></div></div></div></div><div class="border-t pt-3 mt-3"><p class="font-semibold text-slate-800">Recommendation:</p><p>David is the best candidate to take on a high-priority task from an overloaded team member like Laura to balance the workload.</p><div class="mt-2 flex space-x-2"><button data-action="ai-create-task" data-task-text="Draft task reassignment from Laura to David" class="flex items-center text-xs bg-blue-600 text-white font-semibold px-3 py-1.5 rounded-md hover:bg-blue-700"><i data-lucide="zap" class="h-3 w-3 mr-1.5"></i>Take Action for Me</button></div></div>`,
+                thinking: thinkingHtml
+            };
+        }
+        return { 
+            intent: "General Inquiry",
+            html: `<p>I can summarize your day, explain risks, or provide details on any project. What would you like to know?</p>`,
+            thinking: `<li class="flex items-center text-green-600"><i data-lucide="check-circle-2" class="h-3 w-3 mr-2"></i><span>Parsed user intent: '${intent}'.</span></li><li class="flex items-center text-green-600"><i data-lucide="check-circle-2" class="h-3 w-3 mr-2"></i><span>No specific data analysis was required.</span></li><li class="flex items-center text-green-600"><i data-lucide="check-circle-2" class="h-3 w-3 mr-2"></i><span>Formulated a general response.</span></li>`
+        };
+    }
+
+    // --- Keyboard Shortcuts ---
+    document.addEventListener('keydown', (e) => {
+        if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+            e.preventDefault();
+            document.getElementById('prompt-textarea').focus();
+        }
+    });
+});
     </script>
 </body>
 </html>
