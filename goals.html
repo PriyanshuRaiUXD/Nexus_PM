@@ -66,22 +66,44 @@
         }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        #message-list::-webkit-scrollbar { width: 6px; }
-        #message-list::-webkit-scrollbar-track { background: #f1f5f9; }
-        #message-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-        #message-list::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        #message-list::-webkit-scrollbar, .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        #message-list::-webkit-scrollbar-track, .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+        #message-list::-webkit-scrollbar-thumb, .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        #message-list::-webkit-scrollbar-thumb:hover, .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .view-toggle button.active {
+            background-color: #eef2ff;
+            color: #4338ca;
+            font-weight: 600;
+        }
+        /* Notes Modal Styles */
+        .note-color-picker .color-dot {
+            transition: transform 0.2s;
+        }
+        .note-color-picker .color-dot:hover {
+            transform: scale(1.2);
+        }
+        .checklist-item input:checked + span {
+            text-decoration: line-through;
+            color: #64748b;
+        }
+        #notes-modal-body textarea, #notes-modal-body .checklist-item-text {
+             background-color: transparent;
+             border: none;
+             outline: none;
+             resize: none;
+             width: 100%;
+             font-size: 1rem;
+             color: #1e293b;
+        }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden">
 
-    <!-- Sidebar -->
     <aside id="sidebar" class="sidebar sidebar-collapsed bg-white border-r border-slate-200 flex flex-col h-full">
-        <!-- Logo -->
         <div class="flex items-center justify-center p-4 h-16 border-b border-slate-200">
             <h1 id="logo-text" class="text-2xl font-bold text-slate-800 transition-opacity duration-300">N<span class="text-blue-600">P</span></h1>
         </div>
 
-        <!-- Navigation -->
         <nav class="flex-1 px-4 py-4 space-y-2">
             <a href="index.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600">
                 <i data-lucide="home" class="h-6 w-6"></i>
@@ -91,7 +113,6 @@
                 <i data-lucide="folder-kanban" class="h-6 w-6"></i>
                 <span class="ml-4 nav-text hidden">Projects</span>
             </a>
-            <!-- Active Link -->
             <a href="goals.html" class="flex items-center p-3 rounded-lg bg-blue-100 text-blue-700 font-semibold">
                 <i data-lucide="target" class="h-6 w-6"></i>
                 <span class="ml-4 nav-text hidden">Goals</span>
@@ -114,7 +135,6 @@
             </a>
         </nav>
 
-        <!-- User Profile -->
         <div class="p-4 border-t border-slate-200">
              <div id="user-profile-container" class="flex items-center">
                 <img src="https://i.pravatar.cc/40?u=nexus-user" alt="User Avatar" class="rounded-full h-10 w-10">
@@ -126,7 +146,6 @@
         </div>
     </aside>
 
-    <!-- Main Content -->
     <main class="flex-1 bg-slate-50 flex flex-col">
         <div id="main-content" class="flex-1 overflow-y-auto overflow-x-hidden p-8">
             <header class="mb-8">
@@ -142,24 +161,23 @@
                 </div>
             </header>
 
-            <!-- Strategic Metrics Bento Box -->
             <div class="bento-box mb-6">
                 <h3 class="text-xl font-semibold text-slate-900 mb-4">Strategic Metrics (Q3 2025)</h3>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-center md:text-left">
                     <div class="p-4 bg-slate-50 rounded-lg">
-                        <p class="text-sm text-slate-500">Goal Achievement</p>
-                        <p class="text-3xl font-bold text-slate-800 mt-1">72%</p>
+                        <p class="text-sm text-slate-500" title="Calculated as the average of all objective progress below.">Goal Achievement <i data-lucide="info" class="inline h-3 w-3"></i></p>
+                        <p id="metric-goal-achievement" class="text-3xl font-bold text-slate-800 mt-1">0%</p>
                         <p class="text-xs text-green-600 flex items-center justify-center md:justify-start"><i data-lucide="arrow-up" class="h-3 w-3 mr-1"></i>+5% from last quarter</p>
                     </div>
                     <div class="p-4 bg-slate-50 rounded-lg">
-                        <p class="text-sm text-slate-500">Project Alignment</p>
-                        <p class="text-3xl font-bold text-slate-800 mt-1">95%</p>
+                        <p class="text-sm text-slate-500" title="Percentage of active projects linked to a Key Result.">Project Alignment <i data-lucide="info" class="inline h-3 w-3"></i></p>
+                        <p id="metric-project-alignment" class="text-3xl font-bold text-slate-800 mt-1">100%</p>
                         <p class="text-xs text-slate-500 flex items-center justify-center md:justify-start"><i data-lucide="check-circle" class="h-3 w-3 mr-1"></i>Strongly Aligned</p>
                     </div>
                     <div class="p-4 bg-slate-50 rounded-lg">
-                        <p class="text-sm text-slate-500">Team Health</p>
-                        <p class="text-3xl font-bold text-slate-800 mt-1">88%</p>
-                        <p class="text-xs text-yellow-600 flex items-center justify-center md:justify-start"><i data-lucide="trending-down" class="h-3 w-3 mr-1"></i>Burnout risk detected</p>
+                        <p class="text-sm text-slate-500">On Track / At Risk</p>
+                        <p id="metric-on-track" class="text-3xl font-bold text-slate-800 mt-1">1 / 1</p>
+                        <p class="text-xs text-yellow-600 flex items-center justify-center md:justify-start"><i data-lucide="trending-down" class="h-3 w-3 mr-1"></i>1 objective is At Risk</p>
                     </div>
                     <div class="p-4 bg-blue-50 rounded-lg">
                         <p class="text-sm text-blue-700">AI Forecasted Rate</p>
@@ -169,150 +187,217 @@
                 </div>
             </div>
 
-            <!-- AI Summary Bento Box -->
-            <div class="bento-box mb-6">
-                <div class="flex justify-between items-center">
-                    <div class="flex items-center space-x-2"><h3 class="text-xl font-semibold text-slate-900">AI Strategy Summary</h3><i data-lucide="info" class="h-4 w-4 text-slate-400 cursor-pointer" title="This summary is generated by Nexus AI based on goal progress and linked project data."></i></div>
-                    <button class="text-blue-600 hover:text-blue-500 p-1 rounded-md hover:bg-blue-100"><i data-lucide="refresh-cw" class="h-4 w-4"></i></button>
+            <div class="flex justify-between items-center mb-6">
+                <div class="flex items-center space-x-2">
+                    <select id="filter-status" class="text-sm border border-slate-300 rounded-lg py-2 px-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                        <option value="all">Status: All</option>
+                        <option value="On Track">On Track</option>
+                        <option value="At Risk">At Risk</option>
+                        <option value="Off Track">Off Track</option>
+                    </select>
+                    <select id="filter-timeframe" class="text-sm border border-slate-300 rounded-lg py-2 px-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                        <option value="all">Timeframe: All</option>
+                        <option value="Q3 2025">Q3 2025</option>
+                        <option value="Q4 2025">Q4 2025</option>
+                    </select>
                 </div>
-                <p class="text-sm text-slate-600 mt-2">With <strong>95% of projects aligned</strong> to strategic goals, overall progress is trending positively. However, the <strong>"Enhance Backend Scalability"</strong> objective is <span class="font-bold text-red-600">at risk</span>, pulling the forecasted achievement rate down to <strong>78%</strong>. This is primarily due to resource contention impacting the Phoenix Project.</p>
-            </div>
-
-            <!-- Objectives Container -->
-            <div id="objectives-container" class="space-y-6">
-                
-                <!-- Objective 1: User Engagement -->
-                <div class="bento-box">
-                    <div class="objective-header flex justify-between items-center cursor-pointer">
-                        <div class="flex-1">
-                            <div class="flex items-center mb-2">
-                                <h3 class="text-lg font-semibold text-slate-800">Increase User Engagement by 20% in Q3</h3>
-                                <span class="text-xs font-semibold px-2 py-1 rounded-full ml-3 status-on-track">On Track</span>
-                            </div>
-                            <div class="flex items-center space-x-4 text-xs text-slate-500 mb-3">
-                                <div class="flex items-center"><i data-lucide="folder-kanban" class="h-3.5 w-3.5 mr-1.5"></i>1 Contributing Project</div>
-                                <div class="flex items-center text-green-600 font-medium"><i data-lucide="trending-up" class="h-3.5 w-3.5 mr-1.5"></i>Trending Positively</div>
-                            </div>
-                            <div class="flex justify-between text-sm text-slate-500 mb-1"><span>Overall Progress</span><span>85%</span></div>
-                            <div class="w-full bg-slate-200 rounded-full h-2.5"><div class="bg-green-500 h-2.5 rounded-full" style="width: 85%"></div></div>
-                        </div>
-                        <i data-lucide="chevron-down" class="ml-4 h-5 w-5 toggle-icon transition-transform"></i>
-                    </div>
-                    <div class="key-results-container">
-                        <hr class="my-4">
-                        <div class="space-y-4">
-                            <!-- KR 1.1 -->
-                            <div class="p-4 bg-slate-50 rounded-lg">
-                                <p class="font-semibold text-sm text-slate-700">KR: Launch Orion App to achieve 10k downloads</p>
-                                <div class="flex items-center justify-between text-xs text-slate-500 mt-2">
-                                    <span>Progress: 9,500 / 10,000</span>
-                                    <span>95%</span>
-                                </div>
-                                <div class="w-full bg-slate-200 rounded-full h-1.5 mt-1"><div class="bg-blue-500 h-1.5 rounded-full" style="width: 95%"></div></div>
-                                <div class="mt-3 flex items-center justify-between">
-                                    <div class="flex items-center space-x-2">
-                                        <i data-lucide="link" class="h-4 w-4 text-slate-400"></i>
-                                        <p class="text-xs font-medium text-slate-600">Linked Project: <a href="projects.html" class="text-blue-600 hover:underline">Orion App</a></p>
-                                    </div>
-                                    <div class="bg-green-100 text-green-700 p-2 rounded-md text-xs">
-                                        <i data-lucide="lightbulb" class="inline h-3 w-3 mr-1"></i><strong>AI Insight:</strong> Download velocity exceeds forecast by 8%.
-                                    </div>
-                                </div>
-                            </div>
-                            <!-- KR 1.2 -->
-                            <div class="p-4 bg-slate-50 rounded-lg">
-                                <p class="font-semibold text-sm text-slate-700">KR: Reduce user churn from 15% to 10%</p>
-                                <div class="flex items-center justify-between text-xs text-slate-500 mt-2">
-                                    <span>Progress: 11% Current Churn</span>
-                                    <span>80%</span>
-                                </div>
-                                <div class="w-full bg-slate-200 rounded-full h-1.5 mt-1"><div class="bg-blue-500 h-1.5 rounded-full" style="width: 80%"></div></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Objective 2: Backend Scalability -->
-                <div class="bento-box">
-                    <div class="objective-header flex justify-between items-center cursor-pointer">
-                        <div class="flex-1">
-                            <div class="flex items-center mb-2">
-                                <h3 class="text-lg font-semibold text-slate-800">Enhance Backend Scalability for 50k Concurrent Users</h3>
-                                <span class="text-xs font-semibold px-2 py-1 rounded-full ml-3 status-at-risk">At Risk</span>
-                            </div>
-                            <div class="flex items-center space-x-4 text-xs text-slate-500 mb-3">
-                                <div class="flex items-center"><i data-lucide="folder-kanban" class="h-3.5 w-3.5 mr-1.5"></i>1 Contributing Project</div>
-                                <div class="flex items-center text-yellow-600 font-medium"><i data-lucide="trending-down" class="h-3.5 w-3.5 mr-1.5"></i>Trending Negatively</div>
-                            </div>
-                            <div class="flex justify-between text-sm text-slate-500 mb-1"><span>Overall Progress</span><span>40%</span></div>
-                            <div class="w-full bg-slate-200 rounded-full h-2.5"><div class="bg-yellow-500 h-2.5 rounded-full" style="width: 40%"></div></div>
-                        </div>
-                        <i data-lucide="chevron-down" class="ml-4 h-5 w-5 toggle-icon transition-transform"></i>
-                    </div>
-                    <div class="key-results-container">
-                        <hr class="my-4">
-                        <div class="space-y-4">
-                            <!-- KR 2.1 -->
-                            <div class="p-4 bg-slate-50 rounded-lg">
-                                <p class="font-semibold text-sm text-slate-700">KR: Complete Phase 1 of backend refactoring</p>
-                                <div class="flex items-center justify-between text-xs text-slate-500 mt-2">
-                                    <span>Progress: 2 of 5 services migrated</span>
-                                    <span>40%</span>
-                                </div>
-                                <div class="w-full bg-slate-200 rounded-full h-1.5 mt-1"><div class="bg-yellow-500 h-1.5 rounded-full" style="width: 40%"></div></div>
-                                <div class="mt-3 flex items-center justify-between">
-                                    <div class="flex items-center space-x-2">
-                                        <i data-lucide="link" class="h-4 w-4 text-slate-400"></i>
-                                        <p class="text-xs font-medium text-slate-600">Linked Project: <a href="projects.html" class="text-blue-600 hover:underline">Phoenix Project</a></p>
-                                    </div>
-                                    <div class="bg-yellow-100 text-yellow-700 p-2 rounded-md text-xs">
-                                        <i data-lucide="alert-triangle" class="inline h-3 w-3 mr-1"></i><strong>AI Insight:</strong> Resource overload on Laura is delaying this KR by a predicted 8 days.
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                <div class="flex items-center p-1 bg-slate-200 rounded-lg view-toggle">
+                    <button data-view="list" class="px-3 py-1 text-sm rounded-md active">List View</button>
+                    <button data-view="alignment" class="px-3 py-1 text-sm rounded-md">Alignment View</button>
                 </div>
             </div>
+
+            <div id="list-view-container" class="space-y-6">
+                <div id="objectives-container" class="space-y-6">
+                    </div>
+                 <p id="no-objectives-msg" class="text-center text-slate-500 p-8 bg-white rounded-lg border border-dashed hidden">No objectives match the current filters.</p>
+            </div>
+            
+            <div id="alignment-view-container" class="hidden space-y-6">
+                 </div>
+
         </div>
 
-        <!-- AI Response Container -->
         <div id="ai-response-container" class="bg-white border-t border-slate-200 no-scrollbar flex flex-col max-w-full">
             <div id="ai-response-header" class="px-6 py-4 max-w-4xl w-full mx-auto"></div>
             <div id="message-list" class="flex-1 overflow-y-auto px-6 space-y-6 max-w-4xl w-full mx-auto pb-6"></div>
         </div>
 
-        <!-- Prompt Bar -->
         <div class="p-4 bg-white border-t border-slate-200 shadow-[0_-2px_5px_rgba(0,0,0,0.05)]">
             <div class="max-w-4xl mx-auto">
                  <form id="prompt-form" class="relative">
                     <textarea id="prompt-textarea" rows="1" placeholder="Ask Nexus AI about your goals..." class="w-full py-3 pl-5 pr-14 text-sm text-slate-800 bg-slate-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 border border-transparent focus:border-blue-500 transition-all duration-200 max-h-40 overflow-y-auto no-scrollbar"></textarea>
                     <button type="submit" class="absolute bottom-3.5 right-0 flex items-center justify-center w-14 text-slate-500 hover:text-blue-600"><i data-lucide="send" class="h-5 w-5"></i></button>
                 </form>
+                <div id="prompt-suggestions" class="mt-2 flex items-center gap-2">
+                    <button class="text-xs bg-slate-200 hover:bg-slate-300 text-slate-600 px-2 py-1 rounded-full">Suggest a new Q4 objective based on current risks</button>
+                 </div>
             </div>
         </div>
     </main>
 
-    <!-- Modals -->
-    <div id="newObjectiveModal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+    <div id="objectiveModal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-lg shadow-xl w-full max-w-lg">
-            <div class="p-6 border-b"><h3 class="text-lg font-semibold text-slate-900">Create New Objective</h3></div>
-            <div class="p-6 space-y-4">
-                <div><label class="text-sm font-medium text-slate-700">Objective Title</label><input type="text" class="mt-1 w-full border border-slate-300 rounded-md p-2" placeholder="e.g., Enhance Backend Scalability..."></div>
-                <div><label class="text-sm font-medium text-slate-700">Timeframe</label><select class="mt-1 w-full border border-slate-300 rounded-md p-2"><option>Q3 2025</option><option>Q4 2025</option><option>H1 2026</option></select></div>
+            <form id="objective-form">
+                <div class="p-6 border-b"><h3 id="objective-modal-title" class="text-lg font-semibold text-slate-900">Create New Objective</h3></div>
+                <div class="p-6 space-y-4">
+                    <input type="hidden" id="objective-id">
+                    <div><label class="text-sm font-medium text-slate-700">Objective Title</label><input type="text" id="objective-title" class="mt-1 w-full border border-slate-300 rounded-md p-2" placeholder="e.g., Enhance Backend Scalability..." required></div>
+                    <div><label class="text-sm font-medium text-slate-700">Timeframe</label><select id="objective-timeframe" class="mt-1 w-full border border-slate-300 rounded-md p-2"><option>Q3 2025</option><option>Q4 2025</option><option>H1 2026</option></select></div>
+                </div>
+                <div class="bg-slate-50 px-6 py-4 rounded-b-lg flex justify-end space-x-3">
+                    <button type="button" class="cancel-modal-btn px-4 py-2 text-sm font-medium bg-white hover:bg-slate-50 border border-slate-300 rounded-md text-slate-700">Cancel</button>
+                    <button type="submit" class="px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 rounded-md text-white">Save Objective</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="krModal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg">
+            <form id="kr-form">
+                <div class="p-6 border-b"><h3 id="kr-modal-title" class="text-lg font-semibold text-slate-900">Add New Key Result</h3></div>
+                <div class="p-6 space-y-4">
+                    <input type="hidden" id="kr-objective-id">
+                    <input type="hidden" id="kr-id">
+                    <div><label class="text-sm font-medium text-slate-700">Key Result Title</label><input type="text" id="kr-title" class="mt-1 w-full border border-slate-300 rounded-md p-2" placeholder="e.g., Launch Orion App..." required></div>
+                    <div class="grid grid-cols-3 gap-4">
+                         <div><label class="text-sm font-medium text-slate-700">Start Value</label><input type="number" id="kr-start-value" class="mt-1 w-full border border-slate-300 rounded-md p-2" value="0" required></div>
+                         <div><label class="text-sm font-medium text-slate-700">Current Value</label><input type="number" id="kr-current-value" class="mt-1 w-full border border-slate-300 rounded-md p-2" value="0" required></div>
+                         <div><label class="text-sm font-medium text-slate-700">Target Value</label><input type="number" id="kr-target-value" class="mt-1 w-full border border-slate-300 rounded-md p-2" value="100" required></div>
+                    </div>
+                     <div><label class="text-sm font-medium text-slate-700">Unit</label><input type="text" id="kr-unit" class="mt-1 w-full border border-slate-300 rounded-md p-2" placeholder="e.g., downloads, %, users"></div>
+                    <div><label class="text-sm font-medium text-slate-700">Link to Project</label><select id="kr-linked-project" class="mt-1 w-full border border-slate-300 rounded-md p-2"><option value="">None</option><option value="Phoenix Project">Phoenix Project</option><option value="Orion App">Orion App</option><option value="Vega Initiative">Vega Initiative</option></select></div>
+                </div>
+                <div class="bg-slate-50 px-6 py-4 rounded-b-lg flex justify-end space-x-3">
+                    <button type="button" class="cancel-modal-btn px-4 py-2 text-sm font-medium bg-white hover:bg-slate-50 border border-slate-300 rounded-md text-slate-700">Cancel</button>
+                    <button type="submit" class="px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 rounded-md text-white">Save Key Result</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div id="logProgressModal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg">
+            <form id="log-progress-form">
+                <div class="p-6 border-b"><h3 class="text-lg font-semibold text-slate-900">Log Progress Manually</h3><p id="log-progress-kr-title" class="text-sm text-slate-500"></p></div>
+                <div class="p-6 space-y-4">
+                    <input type="hidden" id="log-progress-objective-id">
+                    <input type="hidden" id="log-progress-kr-id">
+                    <div><label class="text-sm font-medium text-slate-700">New Current Value</label><input type="number" id="log-progress-new-value" class="mt-1 w-full border border-slate-300 rounded-md p-2" required></div>
+                    <div><label class="text-sm font-medium text-slate-700">Update Note (Optional)</label><textarea id="log-progress-note" class="mt-1 w-full border border-slate-300 rounded-md p-2" rows="3" placeholder="e.g., Hit 9.8k downloads after the marketing push."></textarea></div>
+                </div>
+                <div class="bg-slate-50 px-6 py-4 rounded-b-lg flex justify-end space-x-3">
+                    <button type="button" class="cancel-modal-btn px-4 py-2 text-sm font-medium bg-white hover:bg-slate-50 border border-slate-300 rounded-md text-slate-700">Cancel</button>
+                    <button type="submit" class="px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 rounded-md text-white">Save Progress</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div id="aiLogProgressModal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg">
+             <div class="p-6 border-b"><h3 class="text-lg font-semibold text-slate-900">Log Progress with Nexus AI</h3><p id="ai-log-progress-kr-title" class="text-sm text-slate-500"></p></div>
+             <div class="p-6 space-y-4">
+                <input type="hidden" id="ai-log-progress-objective-id">
+                <input type="hidden" id="ai-log-progress-kr-id">
+                <div id="ai-analysis-container" class="bg-slate-50 p-4 rounded-lg min-h-[150px] flex items-center justify-center">
+                    </div>
             </div>
             <div class="bg-slate-50 px-6 py-4 rounded-b-lg flex justify-end space-x-3">
-                <button id="cancel-new-objective" class="px-4 py-2 text-sm font-medium bg-white hover:bg-slate-50 border border-slate-300 rounded-md text-slate-700">Cancel</button>
-                <button class="px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 rounded-md text-white">Create Objective</button>
+                <button type="button" class="cancel-modal-btn px-4 py-2 text-sm font-medium bg-white hover:bg-slate-50 border border-slate-300 rounded-md text-slate-700">Cancel</button>
+                <button id="accept-ai-progress-btn" type="button" class="px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 rounded-md text-white hidden">Accept and Log Progress</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="goalRiskAnalysisModal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl">
+            <div class="p-6 border-b flex justify-between items-center">
+                <div>
+                    <h3 class="text-lg font-semibold text-slate-900">AI Risk Analysis</h3>
+                    <p id="risk-analysis-title" class="text-sm text-slate-500"></p>
+                </div>
+                <button data-action="close-modal" class="p-1 rounded-full hover:bg-slate-100"><i data-lucide="x" class="h-5 w-5 text-slate-500"></i></button>
+            </div>
+            <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50">
+                <div>
+                    <h4 class="font-semibold text-slate-800 mb-2">The "Why": Root Cause Data Points</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li class="p-2 bg-white rounded-md border">
+                            <span class="font-semibold text-slate-600">Objective Status:</span>
+                            <span class="font-bold text-yellow-600">At Risk (40% Progress)</span>
+                        </li>
+                        <li class="p-2 bg-white rounded-md border">
+                            <span class="font-semibold text-slate-600">Blocking Key Result:</span>
+                            <span class="font-medium text-slate-800">Complete Phase 1 of backend refactoring</span>
+                        </li>
+                         <li class="p-2 bg-white rounded-md border">
+                            <span class="font-semibold text-slate-600">Linked Project Status:</span>
+                            <a href="projects.html" class="font-bold text-blue-600 hover:underline">Phoenix Project (At Risk)</a>
+                        </li>
+                        <li class="p-2 bg-white rounded-md border">
+                            <span class="font-semibold text-slate-600">Key Blocker Identified:</span>
+                            <span class="font-medium text-slate-800">Resource Overload</span>
+                        </li>
+                        <li class="p-2 bg-red-50 rounded-md border border-red-200">
+                            <span class="font-semibold text-red-700">Exact Data Point:</span>
+                            <span class="font-bold text-red-800">Laura's workload is at 110%.</span>
+                        </li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-slate-800 mb-2">The "Impact": Forecast & Recommendation</h4>
+                    <div class="space-y-3">
+                        <div class="p-3 bg-white rounded-lg border">
+                            <p class="text-sm font-semibold">Current Forecast</p>
+                            <p class="text-base font-bold text-red-600">Objective completion delayed by 8 days.</p>
+                        </div>
+                         <div class="p-3 bg-white rounded-lg border">
+                            <p class="text-sm font-semibold">AI Recommendation</p>
+                            <p class="text-sm text-slate-600">Reassign the critical-path task "Refactor payment gateway" from Laura (110% load) to David (40% load).</p>
+                        </div>
+                         <div class="p-3 bg-green-50 rounded-lg border border-green-200">
+                            <p class="text-sm font-semibold text-green-800">Simulated Outcome</p>
+                            <p class="text-base font-bold text-green-700">Objective gets back on track to meet Q3 deadline.</p>
+                        </div>
+                        <a href="intelligence.html" class="inline-block w-full text-center text-sm font-semibold bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700">
+                            Run Full Simulation
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="notesModal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+        <div id="notes-modal-content" class="bg-white rounded-lg shadow-xl w-full max-w-2xl flex flex-col transition-colors">
+            <div class="p-4 border-b flex justify-between items-center">
+                <h3 id="notes-modal-title" class="text-lg font-semibold text-slate-900"></h3>
+                 <button data-action="close-modal" class="p-1 rounded-full hover:bg-slate-100"><i data-lucide="x" class="h-5 w-5 text-slate-500"></i></button>
+            </div>
+            <div id="notes-modal-body" class="p-4 flex-1 h-96 overflow-y-auto custom-scrollbar">
+                </div>
+            <div class="bg-slate-50 p-2 border-t rounded-b-lg flex justify-between items-center">
+                <div class="flex items-center space-x-2 note-color-picker">
+                    <button data-color="white" class="color-dot h-6 w-6 rounded-full bg-white border ring-2 ring-transparent hover:ring-blue-500"></button>
+                    <button data-color="bg-red-100" class="color-dot h-6 w-6 rounded-full bg-red-100 border hover:ring-2 hover:ring-red-400"></button>
+                    <button data-color="bg-yellow-100" class="color-dot h-6 w-6 rounded-full bg-yellow-100 border hover:ring-2 hover:ring-yellow-400"></button>
+                    <button data-color="bg-green-100" class="color-dot h-6 w-6 rounded-full bg-green-100 border hover:ring-2 hover:ring-green-400"></button>
+                    <button data-color="bg-blue-100" class="color-dot h-6 w-6 rounded-full bg-blue-100 border hover:ring-2 hover:ring-blue-400"></button>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button id="notes-checklist-toggle" title="Toggle Checklist" class="p-2 rounded-md hover:bg-slate-200"><i data-lucide="check-square" class="h-5 w-5 text-slate-600"></i></button>
+                    <button data-action="close-modal" class="px-4 py-2 text-sm font-medium bg-slate-600 hover:bg-slate-700 rounded-md text-white">Done</button>
+                </div>
             </div>
         </div>
     </div>
     
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // --- Standard page setup ---
             lucide.createIcons();
-
-            // --- Sidebar Logic ---
             const sidebar = document.getElementById('sidebar');
             sidebar.addEventListener('mouseenter', () => { 
                 sidebar.classList.remove('sidebar-collapsed'); 
@@ -327,39 +412,556 @@
                 document.querySelectorAll('.nav-text').forEach(text => text.classList.add('hidden')); 
             });
 
-            // --- Modal Logic ---
-            const newObjectiveModal = document.getElementById('newObjectiveModal');
-            document.getElementById('new-objective-btn').addEventListener('click', () => newObjectiveModal.classList.remove('hidden'));
-            document.getElementById('cancel-new-objective').addEventListener('click', () => newObjectiveModal.classList.add('hidden'));
+            // --- GOALS PAGE LOGIC (COMPLETE SCRIPT) ---
 
-            // --- OKR Expansion Logic ---
-            document.querySelectorAll('.objective-header').forEach(header => {
-                header.addEventListener('click', () => {
-                    const krContainer = header.nextElementSibling;
-                    const icon = header.querySelector('.toggle-icon');
-                    krContainer.classList.toggle('expanded');
-                    icon.classList.toggle('rotate-180');
-                });
-            });
+            // --- DATA ---
+            let objectivesData = [
+                {
+                    id: 'obj1',
+                    title: 'Increase User Engagement by 20% in Q3',
+                    timeframe: 'Q3 2025',
+                    note: { content: "- Follow up with marketing on ad spend\n- Check App Store Connect analytics weekly", color: "bg-yellow-100", isChecklist: false },
+                    keyResults: [
+                        { id: 'kr1', title: 'Launch Orion App to achieve 10k downloads', start: 0, current: 9500, target: 10000, unit: 'downloads', linkedProject: 'Orion App' },
+                        { id: 'kr2', title: 'Reduce user churn from 15% to 10%', start: 15, current: 11, target: 10, unit: '%', linkedProject: '' }
+                    ]
+                },
+                {
+                    id: 'obj2',
+                    title: 'Enhance Backend Scalability for 50k Concurrent Users',
+                    timeframe: 'Q3 2025',
+                    note: { content: "[x] Initial server audit complete\n[ ] Schedule load testing for next sprint\n[ ] Define monitoring dashboards", color: "white", isChecklist: true },
+                    keyResults: [
+                        { id: 'kr3', title: 'Complete Phase 1 of backend refactoring', start: 0, current: 2, target: 5, unit: 'services migrated', linkedProject: 'Phoenix Project' }
+                    ]
+                }
+            ];
 
-            // --- AI Prompt Bar Logic ---
+            // --- DOM ELEMENTS ---
+            const objectivesContainer = document.getElementById('objectives-container');
+            const objectiveModal = document.getElementById('objectiveModal');
+            const krModal = document.getElementById('krModal');
+            const logProgressModal = document.getElementById('logProgressModal');
+            const aiLogProgressModal = document.getElementById('aiLogProgressModal');
+            const goalRiskAnalysisModal = document.getElementById('goalRiskAnalysisModal');
+            const notesModal = document.getElementById('notesModal');
+            const filterStatus = document.getElementById('filter-status');
+            const filterTimeframe = document.getElementById('filter-timeframe');
+            const listViewContainer = document.getElementById('list-view-container');
+            const alignmentViewContainer = document.getElementById('alignment-view-container');
             const promptForm = document.getElementById('prompt-form');
+            const promptTextarea = document.getElementById('prompt-textarea');
+            const promptSuggestions = document.getElementById('prompt-suggestions');
             const responseContainer = document.getElementById('ai-response-container');
             const responseHeader = document.getElementById('ai-response-header');
             const messageList = document.getElementById('message-list');
             let lastUserQuery = '';
             let isConversationActive = false;
+            
+            // --- UTILITY FUNCTIONS ---
+            const calculateKRProgress = (kr) => {
+                if (kr.target === kr.start) return 100;
+                const progress = Math.abs((kr.current - kr.start) / (kr.target - kr.start)) * 100;
+                return Math.min(Math.max(progress, 0), 100);
+            };
 
+            const calculateObjectiveProgress = (obj) => {
+                if (obj.keyResults.length === 0) return 0;
+                const totalProgress = obj.keyResults.reduce((sum, kr) => sum + calculateKRProgress(kr), 0);
+                return totalProgress / obj.keyResults.length;
+            };
+
+            const getObjectiveStatus = (progress) => {
+                if (progress >= 70) return { text: 'On Track', class: 'status-on-track' };
+                if (progress >= 40) return { text: 'At Risk', class: 'status-at-risk' };
+                return { text: 'Off Track', class: 'status-off-track' };
+            };
+
+            // --- RENDER FUNCTIONS ---
+            function renderAll() {
+                const statusFilter = filterStatus.value;
+                const timeframeFilter = filterTimeframe.value;
+
+                const filteredObjectives = objectivesData.filter(obj => {
+                    const status = getObjectiveStatus(calculateObjectiveProgress(obj)).text;
+                    const statusMatch = statusFilter === 'all' || status === statusFilter;
+                    const timeframeMatch = timeframeFilter === 'all' || obj.timeframe === timeframeFilter;
+                    return statusMatch && timeframeMatch;
+                });
+
+                renderObjectives(filteredObjectives);
+                renderAlignmentView(objectivesData);
+                updateMetrics();
+            }
+
+            function renderObjectives(data) {
+                objectivesContainer.innerHTML = '';
+                if (data.length === 0) {
+                    document.getElementById('no-objectives-msg').classList.remove('hidden');
+                    return;
+                }
+                document.getElementById('no-objectives-msg').classList.add('hidden');
+
+                data.forEach(obj => {
+                    const progress = calculateObjectiveProgress(obj);
+                    const status = getObjectiveStatus(progress);
+                    const contributingProjects = new Set(obj.keyResults.map(kr => kr.linkedProject).filter(Boolean)).size;
+
+                    const objectiveHTML = `
+                    <div class="bento-box" data-objective-id="${obj.id}">
+                        <div class="objective-header flex justify-between items-start cursor-pointer">
+                            <div class="flex-1">
+                                <div class="flex items-start justify-between mb-2">
+                                    <h3 class="text-lg font-semibold text-slate-800 pr-4">${obj.title}</h3>
+                                    <div class="relative flex-shrink-0 flex items-center space-x-1">
+                                        <button data-action="open-notes" title="Open Notes" class="p-1 rounded-md hover:bg-slate-200"><i data-lucide="notebook" class="h-5 w-5 text-slate-500 pointer-events-none"></i></button>
+                                        <div class="relative">
+                                            <button data-action="toggle-menu" class="p-1 rounded-md hover:bg-slate-200"><i data-lucide="more-horizontal" class="h-5 w-5 pointer-events-none"></i></button>
+                                            <div class="menu absolute right-0 mt-2 w-32 bg-white rounded-md shadow-lg z-10 hidden">
+                                                <a href="#" data-action="edit-objective" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100">Edit</a>
+                                                <a href="#" data-action="delete-objective" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50">Delete</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-4 text-xs text-slate-500 mb-3">
+                                    <div><span class="font-semibold px-2 py-1 rounded-full ${status.class}">${status.text}</span></div>
+                                    <div class="flex items-center"><i data-lucide="folder-kanban" class="h-3.5 w-3.5 mr-1.5"></i>${contributingProjects} Contributing Project(s)</div>
+                                </div>
+                                <div class="flex justify-between text-sm text-slate-500 mb-1" title="Calculated from the average progress of its Key Results."><span>Overall Progress</span><span>${progress.toFixed(0)}%</span></div>
+                                <div class="w-full bg-slate-200 rounded-full h-2.5"><div class="bg-${status.class.includes('on-track') ? 'green' : status.class.includes('at-risk') ? 'yellow' : 'red'}-500 h-2.5 rounded-full" style="width: ${progress}%"></div></div>
+                            </div>
+                            <i data-lucide="chevron-down" class="ml-4 h-5 w-5 toggle-icon transition-transform self-start mt-2 flex-shrink-0"></i>
+                        </div>
+                        <div class="key-results-container">
+                            <hr class="my-4">
+                            <div class="space-y-4">
+                                ${obj.keyResults.map(kr => renderKR(kr)).join('')}
+                            </div>
+                            <button data-action="add-kr" class="mt-4 text-sm font-semibold text-blue-600 hover:text-blue-500 flex items-center"><i data-lucide="plus" class="h-4 w-4 mr-1"></i>Add Key Result</button>
+                        </div>
+                    </div>`;
+                    objectivesContainer.insertAdjacentHTML('beforeend', objectiveHTML);
+                });
+                lucide.createIcons();
+            }
+
+            function renderKR(kr) {
+                const progress = calculateKRProgress(kr);
+                let aiInsightHTML = '';
+                if (kr.linkedProject === 'Phoenix Project') {
+                     aiInsightHTML = `
+                     <div class="bg-yellow-100 text-yellow-800 p-2 rounded-md text-xs flex justify-between items-center">
+                        <div>
+                            <i data-lucide="alert-triangle" class="inline h-3 w-3 mr-1"></i>
+                            <strong>AI Insight:</strong> Resource overload is delaying this KR.
+                        </div>
+                        <button data-action="show-risk-analysis" data-kr-id="${kr.id}" class="font-semibold text-yellow-900 hover:underline text-xs">Show Analysis</button>
+                    </div>`;
+                }
+
+                return `
+                <div class="p-4 bg-slate-50 rounded-lg" data-kr-id="${kr.id}">
+                    <div class="flex justify-between items-start">
+                        <p class="font-semibold text-sm text-slate-700">${kr.title}</p>
+                        <div class="relative flex-shrink-0">
+                            <button data-action="toggle-menu" class="p-1 rounded-md hover:bg-slate-100"><i data-lucide="more-horizontal" class="h-4 w-4 pointer-events-none"></i></button>
+                            <div class="menu absolute right-0 mt-2 w-32 bg-white rounded-md shadow-lg z-10 hidden">
+                                <a href="#" data-action="edit-kr" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100">Edit</a>
+                                <a href="#" data-action="delete-kr" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50">Delete</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="kr-progress-view mt-2">
+                        <div class="flex items-center justify-between text-xs text-slate-500">
+                            <span>Progress: ${kr.current} / ${kr.target} ${kr.unit || ''}</span>
+                            <span>${progress.toFixed(0)}%</span>
+                        </div>
+                        <div class="w-full bg-slate-200 rounded-full h-1.5 mt-1"><div class="bg-blue-500 h-1.5 rounded-full" style="width: ${progress}%"></div></div>
+                    </div>
+                    <div class="mt-3 flex items-center justify-between">
+                        ${kr.linkedProject ? `<div class="flex items-center space-x-2"><i data-lucide="link" class="h-4 w-4 text-slate-400"></i><p class="text-xs font-medium text-slate-600">Linked Project: <a href="projects.html" class="text-blue-600 hover:underline">${kr.linkedProject}</a></p></div>` : '<div></div>'}
+                        <div class="relative">
+                            <button data-action="toggle-log-menu" class="text-xs font-semibold text-blue-600 bg-blue-100 hover:bg-blue-200 px-3 py-1 rounded-md flex items-center">Log Progress <i data-lucide="chevron-down" class="h-4 w-4 ml-1 pointer-events-none"></i></button>
+                            <div class="menu absolute right-0 bottom-full mb-2 w-40 bg-white rounded-md shadow-lg z-10 hidden">
+                                <a href="#" data-action="log-progress-manual" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100">Log Manually</a>
+                                <a href="#" data-action="log-progress-ai" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100">Log with Nexus AI</a>
+                            </div>
+                        </div>
+                    </div>
+                    ${aiInsightHTML ? `<div class="mt-3">${aiInsightHTML}</div>` : ''}
+                </div>`;
+            }
+
+            function renderAlignmentView(data) {
+                const projects = {};
+                data.forEach(obj => {
+                    obj.keyResults.forEach(kr => {
+                        if (kr.linkedProject) {
+                            if (!projects[kr.linkedProject]) {
+                                projects[kr.linkedProject] = [];
+                            }
+                            projects[kr.linkedProject].push({ objective: obj, kr: kr });
+                        }
+                    });
+                });
+
+                alignmentViewContainer.innerHTML = '';
+                if (Object.keys(projects).length === 0) {
+                    alignmentViewContainer.innerHTML = `<p class="text-center text-slate-500 p-8 bg-white rounded-lg border border-dashed">No projects are currently linked to any Key Results.</p>`;
+                    return;
+                }
+
+                for (const projectName in projects) {
+                    const alignments = projects[projectName];
+                    const projectHTML = `
+                    <div class="bento-box">
+                        <div class="flex items-center mb-4">
+                            <i data-lucide="folder-kanban" class="h-6 w-6 text-blue-600 mr-3"></i>
+                            <h3 class="text-xl font-semibold text-slate-900">${projectName}</h3>
+                        </div>
+                        <div class="space-y-3">
+                            ${alignments.map(item => `
+                                <div class="pl-4 border-l-2">
+                                    <p class="text-sm text-slate-500">Contributes to Objective:</p>
+                                    <p class="font-semibold text-base text-slate-800">${item.objective.title}</p>
+                                    <div class="mt-2 pl-4 border-l-2 border-slate-200 border-dashed">
+                                        <p class="text-xs text-slate-500">Via Key Result:</p>
+                                        <p class="font-medium text-sm text-slate-700">${item.kr.title}</p>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>`;
+                    alignmentViewContainer.innerHTML += projectHTML;
+                }
+                lucide.createIcons();
+            }
+
+            function updateMetrics() {
+                const totalProgress = objectivesData.reduce((sum, obj) => sum + calculateObjectiveProgress(obj), 0);
+                const avgProgress = objectivesData.length > 0 ? totalProgress / objectivesData.length : 0;
+                document.getElementById('metric-goal-achievement').textContent = `${avgProgress.toFixed(0)}%`;
+
+                const onTrackCount = objectivesData.filter(obj => getObjectiveStatus(calculateObjectiveProgress(obj)).text === 'On Track').length;
+                const atRiskCount = objectivesData.filter(obj => getObjectiveStatus(calculateObjectiveProgress(obj)).text === 'At Risk').length;
+                document.getElementById('metric-on-track').textContent = `${onTrackCount} / ${atRiskCount}`;
+            }
+
+            // --- NOTES MODAL LOGIC ---
+            function openNotesModal(objectiveId) {
+                const objective = objectivesData.find(o => o.id === objectiveId);
+                if (!objective) return;
+                const modal = document.getElementById('notesModal');
+                const modalTitle = document.getElementById('notes-modal-title');
+                modal.dataset.objectiveId = objectiveId;
+                modalTitle.textContent = `Notes for: ${objective.title}`;
+                renderNoteContent(objectiveId);
+                modal.classList.remove('hidden');
+                const modalBody = document.getElementById('notes-modal-body');
+                modalBody.addEventListener('input', handleNoteAutosave);
+                modal.querySelector('.note-color-picker').addEventListener('click', handleColorChange);
+                modal.querySelector('#notes-checklist-toggle').addEventListener('click', handleChecklistToggle);
+            }
+
+            function closeNotesModal() {
+                 const modal = document.getElementById('notesModal');
+                 const modalBody = document.getElementById('notes-modal-body');
+                 modalBody.removeEventListener('input', handleNoteAutosave);
+                 modal.querySelector('.note-color-picker').removeEventListener('click', handleColorChange);
+                 modal.querySelector('#notes-checklist-toggle').removeEventListener('click', handleChecklistToggle);
+                 modal.classList.add('hidden');
+            }
+
+            function handleNoteAutosave(e) {
+                const objectiveId = e.target.closest('#notesModal').dataset.objectiveId;
+                saveNoteData(objectiveId);
+            }
+
+            function handleColorChange(e) {
+                const colorButton = e.target.closest('.color-dot');
+                if (!colorButton) return;
+                const objectiveId = e.target.closest('#notesModal').dataset.objectiveId;
+                const objective = objectivesData.find(o => o.id === objectiveId);
+                objective.note.color = colorButton.dataset.color;
+                renderNoteContent(objectiveId); 
+            }
+
+            function handleChecklistToggle(e) {
+                const objectiveId = e.target.closest('#notesModal').dataset.objectiveId;
+                const objective = objectivesData.find(o => o.id === objectiveId);
+                saveNoteData(objectiveId);
+                objective.note.isChecklist = !objective.note.isChecklist;
+                renderNoteContent(objectiveId);
+            }
+
+            function saveNoteData(objectiveId) {
+                const objective = objectivesData.find(o => o.id === objectiveId);
+                const modalBody = document.getElementById('notes-modal-body');
+                if (objective.note.isChecklist) {
+                    const items = [];
+                    modalBody.querySelectorAll('.checklist-item').forEach(item => {
+                        const checkbox = item.querySelector('input[type="checkbox"]');
+                        const text = item.querySelector('.checklist-item-text').value;
+                        items.push(`[${checkbox.checked ? 'x' : ' '}] ${text}`);
+                    });
+                    objective.note.content = items.join('\n');
+                } else {
+                    const textarea = modalBody.querySelector('textarea');
+                    objective.note.content = textarea.value;
+                }
+            }
+
+            function renderNoteContent(objectiveId) {
+                const objective = objectivesData.find(o => o.id === objectiveId);
+                const modalContent = document.getElementById('notes-modal-content');
+                const modalBody = document.getElementById('notes-modal-body');
+                modalContent.className = 'bg-white rounded-lg shadow-xl w-full max-w-2xl flex flex-col transition-colors';
+                if(objective.note.color !== 'white') {
+                    modalContent.classList.remove('bg-white');
+                    modalContent.classList.add(objective.note.color);
+                }
+                modalBody.innerHTML = ''; 
+                if (objective.note.isChecklist) {
+                    const lines = objective.note.content.split('\n');
+                    lines.forEach(line => {
+                        if (line.trim() === '') return;
+                        const checked = line.startsWith('[x]');
+                        const text = line.replace(/^\[[x ]\]\s?/, '');
+                        const itemHTML = `
+                            <div class="checklist-item flex items-center gap-3 mb-2">
+                                <input type="checkbox" ${checked ? 'checked' : ''} class="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 flex-shrink-0">
+                                <input type="text" class="checklist-item-text text-sm" value="${text}">
+                            </div>`;
+                        modalBody.insertAdjacentHTML('beforeend', itemHTML);
+                    });
+                } else {
+                    modalBody.innerHTML = `<textarea class="w-full h-full no-scrollbar text-sm" placeholder="Start typing your notes...">${objective.note.content}</textarea>`;
+                }
+            }
+
+            // --- EVENT LISTENERS & HANDLERS ---
+            document.getElementById('new-objective-btn').addEventListener('click', () => {
+                objectiveModal.querySelector('form').reset();
+                document.getElementById('objective-modal-title').textContent = 'Create New Objective';
+                document.getElementById('objective-id').value = '';
+                objectiveModal.classList.remove('hidden');
+            });
+
+            document.querySelectorAll('.cancel-modal-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.target.closest('.modal-overlay').classList.add('hidden');
+                });
+            });
+
+            document.getElementById('objective-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const id = document.getElementById('objective-id').value;
+                const title = document.getElementById('objective-title').value;
+                const timeframe = document.getElementById('objective-timeframe').value;
+                if (id) {
+                    const obj = objectivesData.find(o => o.id === id);
+                    obj.title = title;
+                    obj.timeframe = timeframe;
+                } else {
+                    objectivesData.push({ id: `obj${Date.now()}`, title, timeframe, note: { content: "", color: "white", isChecklist: false }, keyResults: [] });
+                }
+                objectiveModal.classList.add('hidden');
+                renderAll();
+            });
+            
+            document.getElementById('kr-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const objectiveId = document.getElementById('kr-objective-id').value;
+                const krId = document.getElementById('kr-id').value;
+                const krData = {
+                    title: document.getElementById('kr-title').value,
+                    start: parseFloat(document.getElementById('kr-start-value').value),
+                    current: parseFloat(document.getElementById('kr-current-value').value),
+                    target: parseFloat(document.getElementById('kr-target-value').value),
+                    unit: document.getElementById('kr-unit').value,
+                    linkedProject: document.getElementById('kr-linked-project').value,
+                };
+                const objective = objectivesData.find(o => o.id === objectiveId);
+                if (krId) {
+                    const krIndex = objective.keyResults.findIndex(kr => kr.id === krId);
+                    objective.keyResults[krIndex] = { ...objective.keyResults[krIndex], ...krData };
+                } else {
+                    objective.keyResults.push({ id: `kr${Date.now()}`, ...krData });
+                }
+                krModal.classList.add('hidden');
+                renderAll();
+            });
+            
+            document.getElementById('log-progress-form').addEventListener('submit', e => {
+                e.preventDefault();
+                const objectiveId = document.getElementById('log-progress-objective-id').value;
+                const krId = document.getElementById('log-progress-kr-id').value;
+                const newValue = document.getElementById('log-progress-new-value').value;
+                const obj = objectivesData.find(o => o.id === objectiveId);
+                const kr = obj.keyResults.find(k => k.id === krId);
+                kr.current = parseFloat(newValue);
+                logProgressModal.classList.add('hidden');
+                renderAll();
+            });
+
+            document.getElementById('accept-ai-progress-btn').addEventListener('click', e => {
+                const objectiveId = document.getElementById('ai-log-progress-objective-id').value;
+                const krId = document.getElementById('ai-log-progress-kr-id').value;
+                const newValue = e.target.dataset.newValue;
+                const obj = objectivesData.find(o => o.id === objectiveId);
+                const kr = obj.keyResults.find(k => k.id === krId);
+                kr.current = parseFloat(newValue);
+                aiLogProgressModal.classList.add('hidden');
+                renderAll();
+            });
+
+            notesModal.addEventListener('click', (e) => {
+                 if (e.target.closest('[data-action="close-modal"]')) {
+                    closeNotesModal();
+                }
+            });
+
+            goalRiskAnalysisModal.addEventListener('click', e => {
+                if (e.target.closest('[data-action="close-modal"]')) {
+                    goalRiskAnalysisModal.classList.add('hidden');
+                }
+            });
+
+            objectivesContainer.addEventListener('click', (e) => {
+                const actionTarget = e.target.closest('[data-action]');
+                if (!actionTarget) return;
+
+                const action = actionTarget.dataset.action;
+                const objectiveDiv = e.target.closest('[data-objective-id]');
+                const krDiv = e.target.closest('[data-kr-id]');
+                const objectiveId = objectiveDiv?.dataset.objectiveId;
+                const obj = objectivesData.find(o => o.id === objectiveId);
+
+                if (action === 'toggle-menu' || action === 'toggle-log-menu') {
+                    const menuToToggle = actionTarget.nextElementSibling;
+                    const isHidden = menuToToggle.classList.contains('hidden');
+                    document.querySelectorAll('.menu').forEach(menu => menu.classList.add('hidden'));
+                    if (isHidden) menuToToggle.classList.remove('hidden');
+                } else if (action === 'open-notes') {
+                    openNotesModal(objectiveId);
+                } else if (action === 'edit-objective') {
+                    document.getElementById('objective-modal-title').textContent = 'Edit Objective';
+                    document.getElementById('objective-id').value = obj.id;
+                    document.getElementById('objective-title').value = obj.title;
+                    document.getElementById('objective-timeframe').value = obj.timeframe;
+                    objectiveModal.classList.remove('hidden');
+                } else if (action === 'delete-objective') {
+                    if (confirm('Are you sure you want to delete this objective?')) {
+                        objectivesData = objectivesData.filter(o => o.id !== objectiveId);
+                        renderAll();
+                    }
+                } else if (action === 'add-kr') {
+                    krModal.querySelector('form').reset();
+                    document.getElementById('kr-modal-title').textContent = 'Add New Key Result';
+                    document.getElementById('kr-objective-id').value = objectiveId;
+                    document.getElementById('kr-id').value = '';
+                    krModal.classList.remove('hidden');
+                }
+
+                if (!krDiv) return;
+                const krId = krDiv.dataset.krId;
+                const kr = obj.keyResults.find(k => k.id === krId);
+
+                if (action === 'edit-kr') {
+                    document.getElementById('kr-modal-title').textContent = 'Edit Key Result';
+                    document.getElementById('kr-objective-id').value = objectiveId;
+                    document.getElementById('kr-id').value = kr.id;
+                    document.getElementById('kr-title').value = kr.title;
+                    document.getElementById('kr-start-value').value = kr.start;
+                    document.getElementById('kr-current-value').value = kr.current;
+                    document.getElementById('kr-target-value').value = kr.target;
+                    document.getElementById('kr-unit').value = kr.unit || '';
+                    document.getElementById('kr-linked-project').value = kr.linkedProject;
+                    krModal.classList.remove('hidden');
+                } else if (action === 'delete-kr') {
+                     if (confirm('Are you sure you want to delete this key result?')) {
+                        obj.keyResults = obj.keyResults.filter(k => k.id !== krId);
+                        renderAll();
+                    }
+                } else if (action === 'log-progress-manual') {
+                    document.getElementById('log-progress-kr-title').textContent = kr.title;
+                    document.getElementById('log-progress-new-value').value = kr.current;
+                    document.getElementById('log-progress-objective-id').value = objectiveId;
+                    document.getElementById('log-progress-kr-id').value = krId;
+                    logProgressModal.classList.remove('hidden');
+                } else if (action === 'log-progress-ai') {
+                    document.getElementById('ai-log-progress-kr-title').textContent = kr.title;
+                    document.getElementById('ai-log-progress-objective-id').value = objectiveId;
+                    document.getElementById('ai-log-progress-kr-id').value = krId;
+                    
+                    const analysisContainer = document.getElementById('ai-analysis-container');
+                    const acceptBtn = document.getElementById('accept-ai-progress-btn');
+                    acceptBtn.classList.add('hidden');
+                    analysisContainer.innerHTML = `<div class="flex items-center text-slate-500"><i data-lucide="loader-2" class="animate-spin h-5 w-5 mr-3"></i>Nexus AI is analyzing recent activity...</div>`;
+                    lucide.createIcons();
+                    aiLogProgressModal.classList.remove('hidden');
+
+                    setTimeout(() => {
+                        const newValue = kr.current + (kr.target - kr.current) * Math.random() * 0.4;
+                        acceptBtn.dataset.newValue = Math.min(newValue.toFixed(0), kr.target);
+                        analysisContainer.innerHTML = `<div class="text-left w-full"><p class="font-semibold text-slate-800">AI Analysis Complete</p><div class="text-center my-4"><p class="text-sm text-slate-500">Proposed New Value</p><p class="text-4xl font-bold text-blue-600">${acceptBtn.dataset.newValue}</p></div><p class="text-xs font-semibold text-slate-600">Evidence Found:</p><ul class="list-disc list-inside text-xs text-slate-500 mt-1"><li>Activity detected in linked project: <strong>${kr.linkedProject || 'General Workspace'}</strong>.</li><li>Recent task completions related to "${kr.title.split(' ').slice(0, 2).join(' ')}" were found.</li><li>User sentiment analysis shows positive momentum.</li></ul></div>`;
+                        acceptBtn.classList.remove('hidden');
+                    }, 2000);
+                } else if (action === 'show-risk-analysis') {
+                    document.getElementById('risk-analysis-title').textContent = `Objective: ${obj.title}`;
+                    goalRiskAnalysisModal.classList.remove('hidden');
+                }
+            });
+
+            document.body.addEventListener('click', (e) => {
+                if (!e.target.closest('[data-action*="menu"]')) {
+                    document.querySelectorAll('.menu').forEach(menu => menu.classList.add('hidden'));
+                }
+                 if (e.target.closest('.objective-header') && !e.target.closest('[data-action]')) {
+                    const objectiveDiv = e.target.closest('[data-objective-id]');
+                    if(objectiveDiv){
+                        const krContainer = objectiveDiv.querySelector('.key-results-container');
+                        const icon = objectiveDiv.querySelector('.toggle-icon');
+                        krContainer.classList.toggle('expanded');
+                        icon.classList.toggle('rotate-180');
+                    }
+                }
+            });
+
+            document.querySelector('.view-toggle').addEventListener('click', (e) => {
+                const button = e.target.closest('button');
+                if (!button) return;
+                document.querySelectorAll('.view-toggle button').forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                if (button.dataset.view === 'alignment') {
+                    listViewContainer.classList.add('hidden');
+                    alignmentViewContainer.classList.remove('hidden');
+                } else {
+                    listViewContainer.classList.remove('hidden');
+                    alignmentViewContainer.classList.add('hidden');
+                }
+            });
+
+            filterStatus.addEventListener('change', renderAll);
+            filterTimeframe.addEventListener('change', renderAll);
+            
+            // --- AI PROMPT BAR LOGIC ---
             if (promptForm) {
+                promptSuggestions.addEventListener('click', (e) => {
+                    if (e.target.tagName === 'BUTTON') {
+                        promptTextarea.value = e.target.textContent;
+                        promptTextarea.focus();
+                        promptForm.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+                    }
+                });
+
                 promptForm.addEventListener('submit', (e) => {
                     e.preventDefault();
-                    const userQuery = document.getElementById('prompt-textarea').value.trim();
+                    const userQuery = promptTextarea.value.trim();
                     if (!userQuery) return;
                     lastUserQuery = userQuery;
-                    if (!isConversationActive) {
-                        isConversationActive = true;
-                        renderExpandedHeader();
-                    }
+                    if (!isConversationActive) { isConversationActive = true; renderExpandedHeader(); }
                     messageList.insertAdjacentHTML('beforeend', `<div class="flex items-start gap-3 justify-end"><div class="bg-slate-200 p-3 rounded-lg max-w-xl"><p class="text-sm text-slate-800">${userQuery}</p></div><img class="w-8 h-8 rounded-full" src="https://i.pravatar.cc/40?u=nexus-user" alt="User avatar"></div>`);
                     const thinkingId = `thinking-${Date.now()}`;
                     messageList.insertAdjacentHTML('beforeend', `<div id="${thinkingId}" class="flex items-start gap-3"><div class="bg-blue-100 p-2 rounded-full h-8 w-8 flex items-center justify-center animate-pulse flex-shrink-0"><i data-lucide="bot" class="h-5 w-5 text-blue-600"></i></div><div class="bg-slate-100 p-3 rounded-lg"><p class="text-sm text-slate-500">Nexus is thinking...</p></div></div>`);
@@ -367,14 +969,13 @@
                     responseContainer.classList.remove('minimized');
                     responseContainer.classList.add('expanded');
                     setTimeout(() => { messageList.scrollTop = messageList.scrollHeight; }, 10);
-                    document.getElementById('prompt-textarea').value = '';
-                    document.getElementById('prompt-textarea').style.height = 'auto';
+                    promptTextarea.value = '';
 
                     setTimeout(() => {
                         const aiResult = getAIResponse(userQuery);
                         const thinkingElement = document.getElementById(thinkingId);
                         if (thinkingElement) {
-                            thinkingElement.outerHTML = `<div class="flex items-start gap-3"><div class="bg-blue-100 p-2 rounded-full h-8 w-8 flex items-center justify-center flex-shrink-0"><i data-lucide="bot" class="h-5 w-5 text-blue-600"></i></div><div class="text-sm text-slate-700 space-y-2 prose prose-sm max-w-none bg-slate-100 p-3 rounded-lg">${aiResult.message}</div></div>`;
+                            thinkingElement.outerHTML = `<div class="flex items-start gap-3"><div class="bg-blue-100 p-2 rounded-full h-8 w-8 flex items-center justify-center flex-shrink-0"><i data-lucide="bot" class="h-5 w-5 text-blue-600"></i></div><div class="text-sm text-slate-700 space-y-3 prose prose-sm max-w-none bg-slate-100 p-3 rounded-lg">${aiResult.message}</div></div>`;
                             lucide.createIcons();
                             messageList.scrollTop = messageList.scrollHeight;
                         }
@@ -382,62 +983,83 @@
                 });
             }
 
-            const renderExpandedHeader = () => {
-                responseHeader.innerHTML = `<div class="flex justify-between items-start"><h3 class="text-lg font-semibold text-slate-900">Nexus AI Response</h3><div class="flex items-center"><button id="minimize-ai-response" class="p-1 rounded-full hover:bg-slate-100 mr-2"><i data-lucide="chevrons-down" class="h-5 w-5 text-slate-500"></i></button><button id="close-ai-response" class="p-1 rounded-full hover:bg-slate-100"><i data-lucide="x" class="h-5 w-5 text-slate-500"></i></button></div></div>`;
-                lucide.createIcons();
-            }
-            const renderMinimizedHeader = () => {
-                responseHeader.innerHTML = `<div class="flex items-center justify-between h-full"><p class="text-sm text-slate-600 truncate"><span class="font-semibold text-slate-800">AI Response:</span> ${lastUserQuery}</p><button id="expand-ai-response" class="p-1 rounded-full hover:bg-slate-100"><i data-lucide="chevrons-up" class="h-5 w-5 text-slate-500"></i></button></div>`;
-                lucide.createIcons();
-            }
+            const renderExpandedHeader = () => { responseHeader.innerHTML = `<div class="flex justify-between items-start"><h3 class="text-lg font-semibold text-slate-900">Nexus AI Response</h3><div class="flex items-center"><button id="minimize-ai-response" class="p-1 rounded-full hover:bg-slate-100 mr-2"><i data-lucide="chevrons-down" class="h-5 w-5 text-slate-500"></i></button><button id="close-ai-response" class="p-1 rounded-full hover:bg-slate-100"><i data-lucide="x" class="h-5 w-5 text-slate-500"></i></button></div></div>`; lucide.createIcons(); }
+            const renderMinimizedHeader = () => { responseHeader.innerHTML = `<div class="flex items-center justify-between h-full"><p class="text-sm text-slate-600 truncate"><span class="font-semibold text-slate-800">AI Response:</span> ${lastUserQuery}</p><button id="expand-ai-response" class="p-1 rounded-full hover:bg-slate-100"><i data-lucide="chevrons-up" class="h-5 w-5 text-slate-500"></i></button></div>`; lucide.createIcons(); }
 
-            if(responseContainer) {
-                responseContainer.addEventListener('click', (e) => {
-                    const button = e.target.closest('button');
-                    if (!button) return;
-                    if (button.id === 'close-ai-response') {
-                        responseContainer.classList.remove('expanded', 'minimized');
-                        messageList.innerHTML = '';
-                        responseHeader.innerHTML = '';
-                        isConversationActive = false;
-                    } else if (button.id === 'minimize-ai-response') {
-                        responseContainer.classList.remove('expanded');
-                        responseContainer.classList.add('minimized');
-                        renderMinimizedHeader();
-                    } else if (button.id === 'expand-ai-response') {
-                        responseContainer.classList.remove('minimized');
-                        responseContainer.classList.add('expanded');
-                        renderExpandedHeader();
-                        setTimeout(() => { messageList.scrollTop = messageList.scrollHeight; }, 10);
-                    }
-                });
-            }
+            responseContainer.addEventListener('click', (e) => {
+                const button = e.target.closest('button');
+                if (!button) return;
+                if (button.id === 'close-ai-response') { responseContainer.classList.remove('expanded', 'minimized'); messageList.innerHTML = ''; responseHeader.innerHTML = ''; isConversationActive = false; }
+                else if (button.id === 'minimize-ai-response') { responseContainer.classList.remove('expanded'); responseContainer.classList.add('minimized'); renderMinimizedHeader(); }
+                else if (button.id === 'expand-ai-response') { responseContainer.classList.remove('minimized'); responseContainer.classList.add('expanded'); renderExpandedHeader(); setTimeout(() => { messageList.scrollTop = messageList.scrollHeight; }, 10); }
+                
+                const aiActionButton = e.target.closest('[data-action="ai-create-objective"]');
+                if (aiActionButton) {
+                    aiActionButton.disabled = true;
+                    aiActionButton.innerHTML = `<i data-lucide="loader-2" class="animate-spin h-4 w-4"></i><span>Creating...</span>`;
+                    lucide.createIcons();
+                    
+                    setTimeout(() => {
+                        const title = aiActionButton.dataset.title;
+                        const timeframe = aiActionButton.dataset.timeframe;
+                        const krs = JSON.parse(aiActionButton.dataset.krs);
+                        const newObjective = {
+                            id: `obj${Date.now()}`,
+                            title: title,
+                            timeframe: timeframe,
+                            note: { content: "", color: "white", isChecklist: false },
+                            keyResults: krs.map((kr, index) => ({ ...kr, id: `kr${Date.now() + index}` }))
+                        };
+                        objectivesData.push(newObjective);
+                        renderAll();
+                        aiActionButton.innerHTML = `<i data-lucide="check" class="h-4 w-4"></i><span>Objective Created!</span>`;
+                        lucide.createIcons();
+                    }, 1000);
+                }
+            });
 
             function getAIResponse(message) {
                 const lowerMessage = message.toLowerCase();
-                if (lowerMessage.includes('risk')) {
+                if (lowerMessage.includes('suggest a new q4 objective')) {
+                    const newObjectiveData = {
+                        title: 'De-risk and Complete Backend Scalability Initiative in Q4',
+                        timeframe: 'Q4 2025',
+                        keyResults: [
+                            { title: 'Increase backend refactoring from 2/5 to 5/5 services migrated', start: 2, current: 2, target: 5, unit: 'services', linkedProject: 'Phoenix Project' },
+                            { title: 'Reduce API latency by 15% under simulated peak load', start: 0, current: 0, target: 15, unit: '%', linkedProject: 'Phoenix Project' },
+                            { title: 'Achieve 100% test coverage for all new microservices', start: 0, current: 0, target: 100, unit: '%', linkedProject: 'Phoenix Project' }
+                        ]
+                    };
+                    const krsJsonString = JSON.stringify(newObjectiveData.keyResults).replace(/'/g, "&apos;");
+
                     return {
-                        message: `<p>The objective <strong>"Enhance Backend Scalability for 50k Concurrent Users"</strong> is currently flagged as 'At Risk'. This is due to a 40% completion rate on its key result, which is blocked by resource contention in the linked Phoenix Project. The AI predicts an 8-day delay if no action is taken.</p>`
+                        message: `<p class="font-semibold">Here is a suggested Q4 objective based on current risks:</p>
+                        <div class="mt-2 p-3 bg-white rounded-md border text-xs">
+                            <p><strong>Objective Title:</strong> ${newObjectiveData.title}</p>
+                            <p class="mt-2"><strong>Rationale:</strong> This directly addresses the "At Risk" Q3 objective, focusing efforts on completing the unfinished work and mitigating the primary source of project delay.</p>
+                            <p class="mt-2"><strong>Sample Key Results:</strong></p>
+                            <ul class="list-disc list-inside mt-1">
+                                ${newObjectiveData.keyResults.map(kr => `<li>${kr.title}</li>`).join('')}
+                            </ul>
+                        </div>
+                        <div class="mt-4">
+                            <button data-action="ai-create-objective"
+                                    data-title="${newObjectiveData.title}"
+                                    data-timeframe="${newObjectiveData.timeframe}"
+                                    data-krs='${krsJsonString}'
+                                    class="w-full text-sm font-semibold bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 flex items-center justify-center space-x-2">
+                                <i data-lucide="zap" class="h-4 w-4"></i>
+                                <span>Create this Objective for Me</span>
+                            </button>
+                        </div>`
                     };
                 }
-                if (lowerMessage.includes('user engagement')) {
-                    return {
-                        message: `<p>The "Increase User Engagement" objective is primarily supported by the <strong>Orion App</strong> project. Its key results are:</p><ul class="list-disc list-inside mt-2 text-sm"><li>Launch Orion App to achieve 10k downloads (95% complete)</li><li>Reduce user churn from 15% to 10% (80% complete)</li></ul>`
-                    };
-                }
-                if (lowerMessage.includes('scalability')) {
-                    return {
-                        message: `<p>Progress on the scalability objective is at <strong>40%</strong>. The main Key Result is to complete Phase 1 of the backend refactoring. Currently, 2 of the 5 required microservices have been migrated. The linked <strong>Phoenix Project</strong> is driving this work.</p>`
-                    };
-                }
-                else {
-                    return {
-                        message: `<p>I can provide summaries on goal progress, identify risks, and show project alignment. How can I help you with your strategic goals today?</p>`
-                    };
-                }
+                return { message: `<p>I can provide summaries on goal progress, identify risks, and help you draft new objectives. How can I help?</p>` };
             }
+            
+            // --- INITIAL RENDER ---
+            renderAll();
         });
     </script>
 </body>
 </html>
-
