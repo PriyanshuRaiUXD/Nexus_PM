@@ -26,29 +26,6 @@
         #sidebar.sidebar-collapsed nav a, #sidebar.sidebar-collapsed #user-profile-container {
             justify-content: center;
         }
-        .bento-box {
-            background-color: #ffffff; /* white */
-            border-radius: 0.75rem; /* rounded-xl */
-            padding: 1.5rem;
-            border: 1px solid #e2e8f0; /* slate-200 */
-            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-        }
-        #ai-response-container {
-            transition: all 0.5s ease-in-out;
-            max-height: 0;
-            overflow: hidden;
-        }
-        #ai-response-container.expanded {
-            max-height: 50vh;
-        }
-        #ai-response-container.minimized {
-            max-height: 4rem;
-        }
-        #ai-response-container.minimized #message-list {
-            display: none;
-        }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
@@ -57,54 +34,27 @@
         #conversation-list a.active {
             background-color: #eef2ff; /* indigo-50 */
         }
-        .project-group-content .conversation-item.active {
-             border-left-color: #4f46e5; /* indigo-600 */
+        .modal-overlay {
+            background-color: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(4px);
         }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden">
 
-    <!-- Sidebar -->
     <aside id="sidebar" class="sidebar sidebar-collapsed bg-white border-r border-slate-200 flex flex-col h-full">
-        <!-- Logo -->
         <div class="flex items-center justify-center p-4 h-16 border-b border-slate-200">
             <h1 id="logo-text" class="text-2xl font-bold text-slate-800 transition-opacity duration-300">N<span class="text-blue-600">P</span></h1>
         </div>
-
-        <!-- Navigation -->
         <nav class="flex-1 px-4 py-4 space-y-2">
-            <a href="index.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600">
-                <i data-lucide="home" class="h-6 w-6"></i>
-                <span class="ml-4 nav-text hidden">Home</span>
-            </a>
-            <a href="projects.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600">
-                <i data-lucide="folder-kanban" class="h-6 w-6"></i>
-                <span class="ml-4 nav-text hidden">Projects</span>
-            </a>
-            <a href="goals.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600">
-                <i data-lucide="target" class="h-6 w-6"></i>
-                <span class="ml-4 nav-text hidden">Goals</span>
-            </a>
-            <a href="intelligence.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600">
-                <i data-lucide="bar-chart-big" class="h-6 w-6"></i>
-                <span class="ml-4 nav-text hidden">Intelligence</span>
-            </a>
-            <!-- Active Link -->
-             <a href="chat-history.html" class="flex items-center p-3 rounded-lg bg-blue-100 text-blue-700 font-semibold">
-                <i data-lucide="message-square" class="h-6 w-6"></i>
-                <span class="ml-4 nav-text hidden">Chat History</span>
-            </a>
-            <a href="activity.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600">
-                <i data-lucide="activity" class="h-6 w-6"></i>
-                <span class="ml-4 nav-text hidden">Activity</span>
-            </a>
-            <a href="settings.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600">
-                <i data-lucide="settings" class="h-6 w-6"></i>
-                <span class="ml-4 nav-text hidden">Settings</span>
-            </a>
+            <a href="index.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600"><i data-lucide="home" class="h-6 w-6"></i><span class="ml-4 nav-text hidden">Home</span></a>
+            <a href="projects.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600"><i data-lucide="folder-kanban" class="h-6 w-6"></i><span class="ml-4 nav-text hidden">Projects</span></a>
+            <a href="goals.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600"><i data-lucide="target" class="h-6 w-6"></i><span class="ml-4 nav-text hidden">Goals</span></a>
+            <a href="intelligence.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600"><i data-lucide="bar-chart-big" class="h-6 w-6"></i><span class="ml-4 nav-text hidden">Intelligence</span></a>
+            <a href="chat-history.html" class="flex items-center p-3 rounded-lg bg-blue-100 text-blue-700 font-semibold"><i data-lucide="message-square" class="h-6 w-6"></i><span class="ml-4 nav-text hidden">Chat History</span></a>
+            <a href="activity.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600"><i data-lucide="activity" class="h-6 w-6"></i><span class="ml-4 nav-text hidden">Activity</span></a>
+            <a href="settings.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600"><i data-lucide="settings" class="h-6 w-6"></i><span class="ml-4 nav-text hidden">Settings</span></a>
         </nav>
-
-        <!-- User Profile -->
         <div class="p-4 border-t border-slate-200">
              <div id="user-profile-container" class="flex items-center">
                 <img src="https://i.pravatar.cc/40?u=nexus-user" alt="User Avatar" class="rounded-full h-10 w-10">
@@ -116,13 +66,11 @@
         </div>
     </aside>
 
-    <!-- Main Content -->
     <main class="flex-1 bg-slate-50 flex flex-col overflow-hidden">
         <div id="main-content" class="flex-1 flex overflow-hidden">
-            <!-- Left Panel: Conversation List -->
             <div id="conversation-list-panel" class="w-full md:w-2/5 lg:w-1/3 xl:w-1/4 bg-white border-r border-slate-200 flex flex-col">
                 <div class="p-4 border-b">
-                    <div class="flex justify-between items-center mb-2">
+                    <div class="flex justify-between items-center mb-4">
                         <h1 class="text-xl font-bold text-slate-900">Chat History</h1>
                         <button title="Start New Chat" class="p-2 rounded-lg hover:bg-slate-100">
                             <i data-lucide="plus-square" class="h-5 w-5 text-blue-600"></i>
@@ -130,30 +78,49 @@
                     </div>
                     <div class="relative">
                         <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400"></i>
-                        <input type="text" placeholder="Search conversations..." class="pl-9 pr-4 py-2 w-full text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                        <input type="text" id="search-conversations" placeholder="Search conversations..." class="pl-9 pr-4 py-2 w-full text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                    </div>
+                    <div class="mt-2">
+                        <select id="filter-sort" class="w-full text-sm border border-slate-300 rounded-lg py-2 px-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                            <option value="newest">Sort by Newest</option>
+                            <option value="oldest">Sort by Oldest</option>
+                            <option value="actions">Show Actions Only</option>
+                        </select>
                     </div>
                 </div>
                 <div id="conversation-list" class="flex-1 overflow-y-auto custom-scrollbar">
-                    <!-- Conversations will be dynamically inserted here -->
-                </div>
+                    </div>
             </div>
             
-            <!-- Right Panel: Chat Transcript -->
             <div id="chat-transcript-panel" class="flex-1 flex flex-col">
-                <div class="p-4 border-b flex justify-between items-center flex-shrink-0">
-                    <div>
-                        <h2 id="transcript-title" class="text-lg font-semibold text-slate-800"></h2>
-                        <p id="transcript-date" class="text-xs text-slate-500"></p>
+                <div id="transcript-view" class="flex-1 flex flex-col">
+                    <div class="p-4 border-b flex justify-between items-center flex-shrink-0">
+                        <div>
+                            <h2 id="transcript-title" class="text-lg font-semibold text-slate-800"></h2>
+                            <p id="transcript-date" class="text-xs text-slate-500"></p>
+                        </div>
+                        <button class="flex items-center space-x-2 text-sm font-medium text-slate-600 hover:text-slate-900">
+                            <i data-lucide="download" class="h-4 w-4"></i>
+                            <span>Export</span>
+                        </button>
                     </div>
-                    <button class="flex items-center space-x-2 text-sm font-medium text-slate-600 hover:text-slate-900">
-                        <i data-lucide="download" class="h-4 w-4"></i>
-                        <span>Export</span>
-                    </button>
+                    <div id="ai-context-header" class="p-4 border-b border-slate-200 hidden">
+                        <div class="bg-blue-50 text-blue-800 p-3 rounded-lg text-sm flex items-start">
+                            <i data-lucide="sparkles" class="h-4 w-4 mr-3 flex-shrink-0 mt-1"></i>
+                            <div>
+                                <strong class="font-semibold">AI Summary of this Conversation:</strong>
+                                <p id="ai-context-text" class="text-xs mt-1"></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="message-list-history" class="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6">
+                        </div>
                 </div>
-                <div id="message-list-history" class="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6">
-                    <!-- Messages will be dynamically inserted here -->
-                </div>
-                <!-- Prompt Bar -->
+                 <div id="no-conversation-view" class="hidden flex-1 flex-col items-center justify-center text-center p-8">
+                     <i data-lucide="messages-square" class="h-16 w-16 text-slate-300"></i>
+                     <h3 class="mt-4 text-lg font-semibold text-slate-700">No Conversation Selected</h3>
+                     <p class="mt-1 text-sm text-slate-500">Select a conversation from the left panel to view its contents.</p>
+                 </div>
                 <div class="p-4 bg-white border-t border-slate-200 shadow-[0_-2px_5px_rgba(0,0,0,0.05)] flex-shrink-0">
                     <div class="max-w-4xl mx-auto">
                          <form id="prompt-form" class="relative">
@@ -166,6 +133,17 @@
         </div>
     </main>
     
+    <div id="fileViewerModal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md">
+            <div class="p-4 border-b flex justify-between items-center">
+                <h3 class="text-lg font-semibold text-slate-900">Files in Conversation</h3>
+                <button id="close-file-viewer" class="p-1 rounded-full hover:bg-slate-100"><i data-lucide="x" class="h-5 w-5 text-slate-500"></i></button>
+            </div>
+            <div id="file-viewer-list" class="p-6 space-y-3 max-h-96 overflow-y-auto custom-scrollbar">
+                </div>
+        </div>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
@@ -186,12 +164,15 @@
             });
 
             // --- Chat History Data & Logic ---
-            const chatHistoryData = [
+            let chatHistoryData = [
                 {
                     id: 'conv1',
                     project: 'Phoenix Project',
                     title: 'Phoenix Project Risk Analysis',
                     date: '2025-09-04T14:30:00Z',
+                    action: false,
+                    aiContext: "Identified budget and resource risks for the Phoenix Project based on current data.",
+                    files: [],
                     messages: [
                         { sender: 'user', text: 'What are the biggest risks for the Phoenix Project?' },
                         { sender: 'ai', text: `The primary risk for the <strong>Phoenix Project</strong> is the budget, which is currently trending 15% over. This is mainly due to unforeseen software licensing costs. A secondary risk is a potential bottleneck with Laura, whose workload is at 110%.` }
@@ -203,6 +184,8 @@
                     title: 'Progress Watcher for David',
                     date: '2025-09-02T11:15:00Z',
                     action: true,
+                    aiContext: "An action was taken to create a new progress watcher for David in the project view.",
+                    files: [],
                     messages: [
                         { sender: 'user', text: 'Create a progress watcher for David' },
                         { sender: 'ai', text: `Okay, I've created a progress watcher for <strong>David</strong> on your project detail view.` }
@@ -213,6 +196,9 @@
                     project: 'Orion App',
                     title: 'User Engagement Goal',
                     date: '2025-09-01T10:00:00Z',
+                    action: false,
+                    aiContext: "Clarified how the Orion App project impacts the company's user engagement goal.",
+                    files: [{ name: "Orion_App_Metrics.pdf", type: "PDF" }],
                     messages: [
                         { sender: 'user', text: 'How is the Orion App affecting the user engagement goal?' },
                         { sender: 'ai', text: `The <strong>Orion App</strong> is the primary driver for the "Increase User Engagement" objective. Its "10k downloads" Key Result is 95% complete, which is positively impacting the overall goal.`}
@@ -223,6 +209,12 @@
                     project: 'Phoenix Project',
                     title: 'Scalability Goal Inquiry',
                     date: '2025-08-28T09:00:00Z',
+                    action: false,
+                    aiContext: "Provided a status update on a key result for the backend scalability objective.",
+                    files: [
+                        { name: "Backend_Architecture.png", type: "Image" },
+                        { name: "Migration_Plan.docx", type: "DOC" }
+                    ],
                     messages: [
                         { sender: 'user', text: 'How is the backend scalability objective progressing?' },
                         { sender: 'ai', text: `Progress on the scalability objective is at <strong>40%</strong>. The main Key Result is to complete Phase 1 of the backend refactoring. Currently, 2 of the 5 required microservices have been migrated.` },
@@ -233,49 +225,94 @@
             ];
 
             const conversationList = document.getElementById('conversation-list');
+            const transcriptView = document.getElementById('transcript-view');
+            const noConversationView = document.getElementById('no-conversation-view');
             const transcriptTitle = document.getElementById('transcript-title');
             const transcriptDate = document.getElementById('transcript-date');
+            const aiContextHeader = document.getElementById('ai-context-header');
+            const aiContextText = document.getElementById('ai-context-text');
             const messageListHistory = document.getElementById('message-list-history');
+            const searchInput = document.getElementById('search-conversations');
+            const filterSort = document.getElementById('filter-sort');
+            const fileViewerModal = document.getElementById('fileViewerModal');
+
+            let activeConversationId = null;
 
             function displayConversation(conversationId) {
                 const conversation = chatHistoryData.find(c => c.id === conversationId);
-                if (!conversation) return;
+                if (!conversation) {
+                    transcriptView.classList.add('hidden');
+                    noConversationView.classList.remove('hidden');
+                    activeConversationId = null;
+                    return;
+                }
 
-                // Update header
+                activeConversationId = conversationId;
+                transcriptView.classList.remove('hidden');
+                noConversationView.classList.add('hidden');
+                
                 transcriptTitle.textContent = conversation.title;
                 transcriptDate.textContent = `Conversation from ${new Date(conversation.date).toLocaleString()}`;
                 
-                // Update active item in list
+                if (conversation.aiContext) {
+                    aiContextText.textContent = conversation.aiContext;
+                    aiContextHeader.classList.remove('hidden');
+                } else {
+                    aiContextHeader.classList.add('hidden');
+                }
+                
                 conversationList.querySelectorAll('a').forEach(a => a.classList.remove('active'));
-                conversationList.querySelector(`a[data-id="${conversationId}"]`).classList.add('active');
+                const activeLink = conversationList.querySelector(`a[data-id="${conversationId}"]`);
+                if(activeLink) activeLink.classList.add('active');
 
-                // Render messages
                 messageListHistory.innerHTML = '';
                 conversation.messages.forEach(msg => {
                     if (msg.sender === 'user') {
-                        messageListHistory.innerHTML += `
-                            <div class="flex items-start gap-3 justify-end">
-                                <div class="bg-slate-200 p-3 rounded-lg max-w-xl">
-                                    <p class="text-sm text-slate-800">${msg.text}</p>
-                                </div>
-                                <img class="w-8 h-8 rounded-full" src="https://i.pravatar.cc/40?u=nexus-user" alt="User avatar">
-                            </div>`;
+                        messageListHistory.innerHTML += `<div class="flex items-start gap-3 justify-end"><div class="bg-slate-200 p-3 rounded-lg max-w-xl"><p class="text-sm text-slate-800">${msg.text}</p></div><img class="w-8 h-8 rounded-full" src="https://i.pravatar.cc/40?u=nexus-user" alt="User avatar"></div>`;
                     } else {
-                        messageListHistory.innerHTML += `
-                            <div class="flex items-start gap-3">
-                                <div class="bg-blue-100 p-2 rounded-full h-8 w-8 flex items-center justify-center flex-shrink-0">
-                                    <i data-lucide="bot" class="h-5 w-5 text-blue-600"></i>
-                                </div>
-                                <div class="text-sm text-slate-700 space-y-2 prose prose-sm max-w-none bg-slate-100 p-3 rounded-lg">${msg.text}</div>
-                            </div>`;
+                        messageListHistory.innerHTML += `<div class="flex items-start gap-3"><div class="bg-blue-100 p-2 rounded-full h-8 w-8 flex items-center justify-center flex-shrink-0"><i data-lucide="bot" class="h-5 w-5 text-blue-600"></i></div><div class="text-sm text-slate-700 space-y-2 prose prose-sm max-w-none bg-slate-100 p-3 rounded-lg">${msg.text}</div></div>`;
                     }
                 });
                 lucide.createIcons();
                 messageListHistory.scrollTop = messageListHistory.scrollHeight;
             }
 
-            function loadConversationList() {
-                const groupedConversations = chatHistoryData.reduce((acc, conv) => {
+            function filterAndRenderConversations() {
+                const searchTerm = searchInput.value.toLowerCase();
+                const filterValue = filterSort.value;
+
+                let processedData = [...chatHistoryData];
+
+                if (filterValue === 'newest') {
+                    processedData.sort((a, b) => new Date(b.date) - new Date(a.date));
+                } else if (filterValue === 'oldest') {
+                    processedData.sort((a, b) => new Date(a.date) - new Date(b.date));
+                }
+
+                if (filterValue === 'actions') {
+                    processedData = processedData.filter(c => c.action);
+                }
+                if (searchTerm) {
+                    processedData = processedData.filter(c => 
+                        c.title.toLowerCase().includes(searchTerm) || 
+                        c.messages.some(m => m.text.toLowerCase().includes(searchTerm))
+                    );
+                }
+                
+                renderConversationList(processedData);
+            }
+
+            function getFileIcon(fileType) {
+                const type = fileType.toLowerCase();
+                if (type === 'pdf') return 'file-text';
+                if (type === 'image') return 'image';
+                if (type === 'doc' || type === 'docx') return 'file-text';
+                if (type === 'figma') return 'figma';
+                return 'file';
+            }
+
+            function renderConversationList(data) {
+                const groupedConversations = data.reduce((acc, conv) => {
                     const project = conv.project || 'General';
                     if (!acc[project]) acc[project] = [];
                     acc[project].push(conv);
@@ -292,49 +329,126 @@
                                 <span class="font-semibold text-sm text-slate-600">${project}</span>
                                 <i data-lucide="chevron-down" class="h-4 w-4 transition-transform"></i>
                             </button>
-                            <div class="project-group-content pl-2 hidden">
-                                ${conversations.map(conv => `
-                                    <a href="#" data-id="${conv.id}" class="block p-4 border-b border-l-4 border-transparent hover:bg-slate-50 conversation-item">
-                                        <div class="flex justify-between items-center">
-                                            <p class="font-semibold text-sm text-slate-800 truncate">${conv.title}</p>
-                                            ${conv.action ? '<i data-lucide="zap" class="h-4 w-4 text-blue-500 flex-shrink-0" title="This conversation resulted in an action."></i>' : ''}
+                            <div class="project-group-content pl-2">
+                                ${conversations.map(conv => {
+                                    const previewText = conv.messages[0].text.replace(/<[^>]*>?/gm, '');
+                                    const fileCount = conv.files ? conv.files.length : 0;
+                                    return `
+                                    <a href="#" data-id="${conv.id}" class="block p-3 border-l-4 border-transparent hover:bg-slate-50 conversation-item">
+                                        <div class="flex justify-between items-start">
+                                            <div class="flex-1 min-w-0">
+                                                <div class="flex justify-between items-center">
+                                                    <p class="font-semibold text-sm text-slate-800 truncate">${conv.title}</p>
+                                                    ${conv.action ? '<i data-lucide="zap" class="h-4 w-4 text-blue-500 flex-shrink-0 ml-2" title="This conversation resulted in an action."></i>' : ''}
+                                                </div>
+                                                <p class="text-xs text-slate-500 mt-1 truncate">${previewText}</p>
+                                            </div>
+                                            <div class="relative ml-2 flex-shrink-0">
+                                                <button data-action="toggle-menu" class="p-1 rounded-md hover:bg-slate-200"><i data-lucide="more-horizontal" class="h-4 w-4 pointer-events-none"></i></button>
+                                                <div class="menu absolute right-0 mt-1 w-32 bg-white rounded-md shadow-lg z-10 hidden">
+                                                    <a href="#" data-action="rename" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100">Rename</a>
+                                                    <a href="#" data-action="delete" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50">Delete</a>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <p class="text-xs text-slate-500 mt-1">${new Date(conv.date).toLocaleDateString()}</p>
-                                    </a>
-                                `).join('')}
+                                        <div class="flex justify-between items-center mt-2">
+                                            <p class="text-xs text-slate-400">${new Date(conv.date).toLocaleDateString()}</p>
+                                            ${fileCount > 0 ? `<button data-action="view-files" class="text-xs flex items-center space-x-1 text-slate-500 hover:text-slate-800"><i data-lucide="paperclip" class="h-3 w-3"></i><span>${fileCount}</span></button>` : ''}
+                                        </div>
+                                    </a>`
+                                }).join('')}
                             </div>
-                        </div>
-                    `;
+                        </div>`;
                     conversationList.insertAdjacentHTML('beforeend', projectGroupHTML);
                 });
-
-                conversationList.querySelectorAll('.project-group-header').forEach(header => {
-                    header.addEventListener('click', () => {
-                        const content = header.nextElementSibling;
-                        const icon = header.querySelector('i');
-                        content.classList.toggle('hidden');
-                        icon.classList.toggle('rotate-180');
-                    });
-                });
-
-                conversationList.querySelectorAll('.conversation-item').forEach(item => {
-                    item.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        const id = e.currentTarget.dataset.id;
-                        displayConversation(id);
-                    });
-                });
-
+                
+                if (activeConversationId) {
+                    const activeLink = conversationList.querySelector(`a[data-id="${activeConversationId}"]`);
+                    if (activeLink) activeLink.classList.add('active');
+                }
+                
                 lucide.createIcons();
             }
             
-            // Initial Load
-            loadConversationList();
+            // --- Event Listeners ---
+            searchInput.addEventListener('input', filterAndRenderConversations);
+            filterSort.addEventListener('change', filterAndRenderConversations);
+            document.getElementById('close-file-viewer').addEventListener('click', () => fileViewerModal.classList.add('hidden'));
+
+            conversationList.addEventListener('click', (e) => {
+                const conversationLink = e.target.closest('.conversation-item');
+                const actionButton = e.target.closest('[data-action]');
+                const groupHeader = e.target.closest('.project-group-header');
+
+                if (!actionButton || actionButton.dataset.action !== 'toggle-menu') {
+                    document.querySelectorAll('.menu').forEach(m => m.classList.add('hidden'));
+                }
+
+                if (actionButton) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const conversationId = actionButton.closest('.conversation-item').dataset.id;
+                    const action = actionButton.dataset.action;
+                    const conversation = chatHistoryData.find(c => c.id === conversationId);
+
+                    if (action === 'toggle-menu') {
+                        const menu = actionButton.nextElementSibling;
+                        const isHidden = menu.classList.contains('hidden');
+                        document.querySelectorAll('.menu').forEach(m => m.classList.add('hidden'));
+                        if (isHidden) menu.classList.remove('hidden');
+                    } else if (action === 'rename') {
+                        const newTitle = prompt('Enter a new name for the conversation:', conversation.title);
+                        if (newTitle && newTitle.trim() !== '') {
+                            conversation.title = newTitle.trim();
+                            filterAndRenderConversations();
+                            if (activeConversationId === conversationId) {
+                                transcriptTitle.textContent = newTitle.trim();
+                            }
+                        }
+                    } else if (action === 'delete') {
+                        if (confirm('Are you sure you want to delete this conversation?')) {
+                            chatHistoryData = chatHistoryData.filter(c => c.id !== conversationId);
+                            filterAndRenderConversations();
+                            if (activeConversationId === conversationId) {
+                                displayConversation(null);
+                            }
+                        }
+                    } else if (action === 'view-files') {
+                        const fileListContainer = document.getElementById('file-viewer-list');
+                        fileListContainer.innerHTML = '';
+                        conversation.files.forEach(file => {
+                            fileListContainer.innerHTML += `
+                                <div class="flex items-center p-2 bg-slate-50 rounded-md">
+                                    <i data-lucide="${getFileIcon(file.type)}" class="h-5 w-5 text-slate-600 mr-3"></i>
+                                    <span class="text-sm text-slate-800">${file.name}</span>
+                                </div>
+                            `;
+                        });
+                        lucide.createIcons();
+                        fileViewerModal.classList.remove('hidden');
+                    }
+                } else if (conversationLink) {
+                    e.preventDefault();
+                    const id = conversationLink.dataset.id;
+                    displayConversation(id);
+                } else if (groupHeader) {
+                    const content = groupHeader.nextElementSibling;
+                    const icon = groupHeader.querySelector('i[data-lucide="chevron-down"]');
+                    content.classList.toggle('hidden');
+                    icon.classList.toggle('rotate-180');
+                }
+            });
+            
+            // --- Initial Load ---
+            filterAndRenderConversations();
             if (chatHistoryData.length > 0) {
-                displayConversation(chatHistoryData[0].id);
+                // Find the newest conversation to display first
+                const newestFirst = [...chatHistoryData].sort((a, b) => new Date(b.date) - new Date(a.date));
+                displayConversation(newestFirst[0].id);
+            } else {
+                displayConversation(null);
             }
         });
     </script>
 </body>
 </html>
-
