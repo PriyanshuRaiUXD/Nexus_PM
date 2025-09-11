@@ -33,6 +33,39 @@
             border: 1px solid #e2e8f0; /* slate-200 */
             box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
         }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        .health-score-high { background-color: #16a34a; }
+        .health-score-medium { background-color: #f59e0b; }
+        .health-score-low { background-color: #ef4444; }
+
+        .modal-overlay {
+            background-color: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(4px);
+        }
+        th.sortable {
+            cursor: pointer;
+        }
+        th.sortable:hover {
+            background-color: #f1f5f9;
+        }
+        #riskMatrixChart, #budgetChart {
+            cursor: pointer;
+        }
+        .date-filter-btn.active {
+            background-color: #4f46e5;
+            color: white;
+        }
+        .sim-tab-btn.active {
+            border-bottom-color: #4f46e5;
+            color: #4f46e5;
+            font-weight: 600;
+        }
         #ai-response-container {
             transition: all 0.5s ease-in-out;
             max-height: 0;
@@ -47,66 +80,23 @@
         #ai-response-container.minimized #message-list {
             display: none;
         }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        #message-list::-webkit-scrollbar { width: 6px; }
-        #message-list::-webkit-scrollbar-track { background: #f1f5f9; }
-        #message-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-        #message-list::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        
-        .health-score-high { background-color: #16a34a; }
-        .health-score-medium { background-color: #f59e0b; }
-        .health-score-low { background-color: #ef4444; }
-
-        .modal-overlay {
-            background-color: rgba(30, 41, 59, 0.6);
-            backdrop-filter: blur(4px);
-        }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden">
 
-    <!-- Sidebar -->
     <aside id="sidebar" class="sidebar sidebar-collapsed bg-white border-r border-slate-200 flex flex-col h-full">
-        <!-- Logo -->
         <div class="flex items-center justify-center p-4 h-16 border-b border-slate-200">
             <h1 id="logo-text" class="text-2xl font-bold text-slate-800 transition-opacity duration-300">N<span class="text-blue-600">P</span></h1>
         </div>
-
-        <!-- Navigation -->
         <nav class="flex-1 px-4 py-4 space-y-2">
-            <a href="index.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600">
-                <i data-lucide="home" class="h-6 w-6"></i>
-                <span class="ml-4 nav-text hidden">Home</span>
-            </a>
-            <a href="projects.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600">
-                <i data-lucide="folder-kanban" class="h-6 w-6"></i>
-                <span class="ml-4 nav-text hidden">Projects</span>
-            </a>
-            <a href="goals.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600">
-                <i data-lucide="target" class="h-6 w-6"></i>
-                <span class="ml-4 nav-text hidden">Goals</span>
-            </a>
-            <!-- Active Link -->
-            <a href="intelligence.html" class="flex items-center p-3 rounded-lg bg-blue-100 text-blue-700 font-semibold">
-                <i data-lucide="bar-chart-big" class="h-6 w-6"></i>
-                <span class="ml-4 nav-text hidden">Intelligence</span>
-            </a>
-             <a href="chat-history.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600">
-                <i data-lucide="message-square" class="h-6 w-6"></i>
-                <span class="ml-4 nav-text hidden">Chat History</span>
-            </a>
-            <a href="activity.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600">
-                <i data-lucide="activity" class="h-6 w-6"></i>
-                <span class="ml-4 nav-text hidden">Activity</span>
-            </a>
-            <a href="settings.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600">
-                <i data-lucide="settings" class="h-6 w-6"></i>
-                <span class="ml-4 nav-text hidden">Settings</span>
-            </a>
+            <a href="index.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600"><i data-lucide="home" class="h-6 w-6"></i><span class="ml-4 nav-text hidden">Home</span></a>
+            <a href="projects.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600"><i data-lucide="folder-kanban" class="h-6 w-6"></i><span class="ml-4 nav-text hidden">Projects</span></a>
+            <a href="goals.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600"><i data-lucide="target" class="h-6 w-6"></i><span class="ml-4 nav-text hidden">Goals</span></a>
+            <a href="intelligence.html" class="flex items-center p-3 rounded-lg bg-blue-100 text-blue-700 font-semibold"><i data-lucide="bar-chart-big" class="h-6 w-6"></i><span class="ml-4 nav-text hidden">Intelligence</span></a>
+            <a href="chat-history.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600"><i data-lucide="message-square" class="h-6 w-6"></i><span class="ml-4 nav-text hidden">Chat History</span></a>
+            <a href="activity.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600"><i data-lucide="activity" class="h-6 w-6"></i><span class="ml-4 nav-text hidden">Activity</span></a>
+            <a href="settings.html" class="flex items-center p-3 rounded-lg hover:bg-slate-100 text-slate-600"><i data-lucide="settings" class="h-6 w-6"></i><span class="ml-4 nav-text hidden">Settings</span></a>
         </nav>
-
-        <!-- User Profile -->
         <div class="p-4 border-t border-slate-200">
              <div id="user-profile-container" class="flex items-center">
                 <img src="https://i.pravatar.cc/40?u=nexus-user" alt="User Avatar" class="rounded-full h-10 w-10">
@@ -118,7 +108,6 @@
         </div>
     </aside>
 
-    <!-- Main Content -->
     <main class="flex-1 bg-slate-50 flex flex-col">
         <div id="main-content" class="flex-1 overflow-y-auto overflow-x-hidden p-8">
             <header class="mb-8">
@@ -129,151 +118,187 @@
             </header>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Project Health & Forecast -->
+                <div class="lg:col-span-3 bento-box">
+                     <h3 class="text-xl font-semibold text-slate-900 mb-4">Portfolio At a Glance</h3>
+                     <div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+                        <div class="p-2 bg-slate-50 rounded-lg">
+                            <p class="text-sm text-slate-500">Active Projects</p>
+                            <p id="glance-active-projects" class="text-3xl font-bold text-slate-800 mt-1">...</p>
+                        </div>
+                        <div class="p-2 bg-slate-50 rounded-lg">
+                            <p class="text-sm text-slate-500">Needing Attention</p>
+                            <p id="glance-attention-projects" class="text-3xl font-bold text-red-600 mt-1">...</p>
+                        </div>
+                        <div class="p-2 bg-slate-50 rounded-lg">
+                            <p class="text-sm text-slate-500">Overall Budget</p>
+                            <p id="glance-budget-variance" class="text-3xl font-bold text-red-600 mt-1">...</p>
+                        </div>
+                         <div class="p-2 bg-slate-50 rounded-lg">
+                            <p class="text-sm text-slate-500">Team Members Overloaded</p>
+                            <p id="glance-overloaded" class="text-3xl font-bold text-red-600 mt-1">...</p>
+                        </div>
+                     </div>
+                </div>
+
                 <div class="lg:col-span-3 bento-box">
                     <h3 class="text-xl font-semibold text-slate-900 mb-4">Project Health & Forecast</h3>
                     <table class="w-full text-sm text-left">
                         <thead class="text-xs text-slate-500 uppercase bg-slate-50">
                             <tr>
                                 <th scope="col" class="px-6 py-3">Project Name</th>
-                                <th scope="col" class="px-6 py-3">Health Score</th>
-                                <th scope="col" class="px-6 py-3">Budget Variance</th>
-                                <th scope="col" class="px-6 py-3">AI Completion Forecast</th>
+                                <th scope="col" class="px-6 py-3 sortable" data-sort="health" title="Calculated from budget variance, timeline forecast, task velocity, and team sentiment.">Health Score <i data-lucide="chevrons-up-down" class="inline h-3 w-3 ml-1 pointer-events-none"></i></th>
+                                <th scope="col" class="px-6 py-3 sortable" data-sort="budget">Budget Variance <i data-lucide="chevrons-up-down" class="inline h-3 w-3 ml-1 pointer-events-none"></i></th>
+                                <th scope="col" class="px-6 py-3 sortable" data-sort="forecast">AI Completion Forecast <i data-lucide="chevrons-up-down" class="inline h-3 w-3 ml-1 pointer-events-none"></i></th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <tr class="bg-white border-b hover:bg-slate-50">
-                                <th scope="row" class="px-6 py-4 font-semibold text-slate-900 whitespace-nowrap">Phoenix Project</th>
-                                <td class="px-6 py-4"><div class="flex items-center"><div class="h-2.5 w-2.5 rounded-full health-score-medium mr-2"></div> 78/100</div></td>
-                                <td class="px-6 py-4 font-medium text-red-600">+15%</td>
-                                <td class="px-6 py-4"><span class="font-medium">Dec 20, 2025</span> <span class="text-xs text-yellow-600">(5 days late)</span></td>
-                            </tr>
-                            <tr class="bg-white border-b hover:bg-slate-50">
-                                <th scope="row" class="px-6 py-4 font-semibold text-slate-900 whitespace-nowrap">Orion App</th>
-                                <td class="px-6 py-4"><div class="flex items-center"><div class="h-2.5 w-2.5 rounded-full health-score-high mr-2"></div> 92/100</div></td>
-                                <td class="px-6 py-4 font-medium text-green-600">-2%</td>
-                                <td class="px-6 py-4"><span class="font-medium">Sep 05, 2025</span> <span class="text-xs text-green-600">(3 days early)</span></td>
-                            </tr>
-                             <tr class="bg-white hover:bg-slate-50">
-                                <th scope="row" class="px-6 py-4 font-semibold text-slate-900 whitespace-nowrap">Vega Initiative</th>
-                                <td class="px-6 py-4"><div class="flex items-center"><div class="h-2.5 w-2.5 rounded-full health-score-low mr-2"></div> 45/100</div></td>
-                                <td class="px-6 py-4 font-medium text-slate-600">+1%</td>
-                                <td class="px-6 py-4"><span class="font-medium">Nov 15, 2025</span> <span class="text-xs text-red-600">(15 days late)</span></td>
-                            </tr>
-                        </tbody>
+                        <tbody id="health-table-body"></tbody>
                     </table>
                 </div>
 
-                <!-- Portfolio Risk Matrix -->
-                <div class="bento-box lg:col-span-1">
-                    <h3 class="text-xl font-semibold text-slate-900 mb-4">Portfolio Risk Matrix</h3>
-                    <p class="text-xs text-slate-500 mb-4 -mt-2">Projects by AI-assessed risk vs. strategic impact.</p>
-                    <canvas id="riskMatrixChart"></canvas>
+                <div class="lg:col-span-3 bento-box">
+                    <div class="flex flex-wrap justify-between items-center mb-4 gap-2">
+                        <h2 class="text-xl font-semibold text-slate-900">Portfolio Health Trend</h2>
+                        <div id="health-chart-filters" class="flex items-center space-x-1 bg-slate-100 p-1 rounded-lg">
+                            <button data-period="7d" class="date-filter-btn px-3 py-1 text-xs font-semibold rounded-md active">7D</button>
+                            <button data-period="30d" class="date-filter-btn px-3 py-1 text-xs font-semibold rounded-md">30D</button>
+                            <button data-period="6m" class="date-filter-btn px-3 py-1 text-xs font-semibold rounded-md">6M</button>
+                            <button data-period="1y" class="date-filter-btn px-3 py-1 text-xs font-semibold rounded-md">1Y</button>
+                        </div>
+                    </div>
+                    <div class="h-48">
+                        <canvas id="portfolioHealthChart"></canvas>
+                    </div>
                 </div>
 
-                <!-- Portfolio Budget Tracker -->
+                <div class="bento-box lg:col-span-1">
+                    <h3 class="text-xl font-semibold text-slate-900 mb-4">Portfolio Risk Matrix</h3>
+                    <p class="text-xs text-slate-500 mb-4 -mt-2" title="Risk is calculated based on project complexity, dependencies, and current issues. Impact is based on alignment with strategic company goals.">Projects by AI-assessed risk vs. strategic impact <i data-lucide="info" class="inline h-3 w-3"></i></p>
+                    <canvas id="riskMatrixChart"></canvas>
+                </div>
                 <div class="bento-box lg:col-span-1">
                     <h3 class="text-xl font-semibold text-slate-900 mb-4">Portfolio Budget Tracker</h3>
                     <p class="text-xs text-slate-500 mb-4 -mt-2">Aggregated budget performance across all projects.</p>
                     <canvas id="budgetChart"></canvas>
                 </div>
-
-                <!-- Anomaly Detection -->
                 <div class="bento-box lg:col-span-1">
                      <h3 class="text-xl font-semibold text-slate-900 mb-4">Anomaly Detection Feed</h3>
                      <p class="text-xs text-slate-500 mb-4 -mt-2">Unusual activity detected by Nexus AI.</p>
                      <div class="space-y-3">
-                        <div class="flex items-start bg-slate-50 p-3 rounded-lg">
-                            <i data-lucide="zap" class="h-5 w-5 text-yellow-500 mr-3 mt-1 flex-shrink-0"></i>
-                            <div>
-                                <p class="font-semibold text-sm text-slate-800">Velocity Drop</p>
-                                <p class="text-xs text-slate-600">The <strong>Phoenix Project</strong> team's task completion rate dropped by 30% this week.</p>
+                        <div class="bg-slate-50 p-3 rounded-lg">
+                            <div class="flex items-start"><i data-lucide="zap" class="h-5 w-5 text-yellow-500 mr-3 mt-1 flex-shrink-0"></i>
+                                <div class="flex-1"><p class="font-semibold text-sm text-slate-800">Velocity Drop</p><p class="text-xs text-slate-600">The <strong>Phoenix Project</strong> team's task completion rate dropped by 30% this week.</p><button data-anomaly-id="velocity" class="anomaly-action-btn text-xs font-semibold text-blue-600 hover:underline mt-1">Take Action →</button></div>
                             </div>
                         </div>
-                        <div class="flex items-start bg-slate-50 p-3 rounded-lg">
-                            <i data-lucide="file-clock" class="h-5 w-5 text-red-500 mr-3 mt-1 flex-shrink-0"></i>
-                            <div>
-                                <p class="font-semibold text-sm text-slate-800">Stalled Task</p>
-                                <p class="text-xs text-slate-600">A task in <strong>Phoenix Project</strong> has been 'In Progress' for 9 days, 200% longer than average.</p>
+                        <div class="bg-slate-50 p-3 rounded-lg">
+                            <div class="flex items-start"><i data-lucide="file-clock" class="h-5 w-5 text-red-500 mr-3 mt-1 flex-shrink-0"></i>
+                                <div class="flex-1"><p class="font-semibold text-sm text-slate-800">Stalled Task</p><p class="text-xs text-slate-600">Task "<strong>Refactor payment gateway</strong>" in <strong>Phoenix Project</strong> has been 'In Progress' for 9 days, 200% longer than average.</p><button data-anomaly-id="stalled" class="anomaly-action-btn text-xs font-semibold text-blue-600 hover:underline mt-1">Take Action →</button></div>
                             </div>
                         </div>
                      </div>
                 </div>
-
-                <!-- Resource Allocation Simulator -->
+                
                 <div class="lg:col-span-3 bento-box">
-                    <h3 class="text-xl font-semibold text-slate-900 mb-2">Resource Allocation Simulator</h3>
-                     <div class="flex justify-between items-center mb-4">
-                        <p class="text-xs text-slate-500">Select a scenario to see the AI-predicted impact on team workload and project timelines.</p>
-                        <select id="scenario-selector" class="text-sm border border-slate-300 rounded-lg py-1 px-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
-                            <option value="current">Current State</option>
-                            <option value="reassign">Reassign Gateway Task to David</option>
-                            <option value="add_designer">Add Designer to Orion</option>
-                            <option value="custom">Create Custom Scenario...</option>
-                        </select>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <h4 class="font-semibold text-center text-sm mb-2">Predicted Team Workload</h4>
-                            <canvas id="workloadChart" class="max-h-60"></canvas>
-                        </div>
-                        <div class="bg-slate-50 p-4 rounded-lg">
-                            <h4 id="impact-analysis-title" class="font-semibold text-sm mb-2">AI Impact Analysis: Current State</h4>
-                            <div id="impact-analysis-text" class="text-xs text-slate-600 space-y-2">
-                                <p>This is the current resource allocation. Laura is significantly overloaded at 110%, posing a major risk to the Phoenix Project. David has available capacity.</p>
-                                <p class="font-semibold">Phoenix Project Forecast: <span class="text-yellow-600">5 days late.</span></p>
-                                <p class="font-semibold">Orion App Forecast: <span class="text-green-600">3 days early.</span></p>
+                    <h3 class="text-xl font-semibold text-slate-900 mb-2">AI Simulation & Action Center</h3>
+                    <p class="text-xs text-slate-500 mb-4">Describe a change to see the AI-predicted impact on your portfolio.</p>
+                    <div class="bg-slate-100 p-3 rounded-lg">
+                        <textarea id="simulation-prompt" rows="2" class="w-full text-sm bg-transparent focus:outline-none p-1" placeholder="e.g., What if we reassign the payment gateway task to David?"></textarea>
+                        <div class="flex justify-between items-center mt-2">
+                            <div id="simulation-suggestions" class="flex items-center gap-2">
+                                <button data-prompt="Reassign payment gateway task to David" class="text-xs bg-slate-200 hover:bg-slate-300 text-slate-600 px-2 py-1 rounded-full">Reassign Task...</button>
+                                <button data-prompt="Delay Orion App launch by 1 week" class="text-xs bg-slate-200 hover:bg-slate-300 text-slate-600 px-2 py-1 rounded-full">Delay Project...</button>
                             </div>
+                            <button id="run-simulation-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-3 rounded-lg flex items-center space-x-2"><i data-lucide="play" class="h-4 w-4"></i><span>Run Simulation</span></button>
                         </div>
                     </div>
+                    <div id="simulation-results-container" class="mt-4 hidden">
+                        </div>
                 </div>
             </div>
         </div>
 
-        <!-- AI Response Container -->
         <div id="ai-response-container" class="bg-white border-t border-slate-200 no-scrollbar flex flex-col max-w-full">
             <div id="ai-response-header" class="px-6 py-4 max-w-4xl w-full mx-auto"></div>
-            <div id="message-list" class="flex-1 overflow-y-auto px-6 space-y-6 max-w-4xl w-full mx-auto pb-6"></div>
+            <div id="message-list" class="flex-1 overflow-y-auto custom-scrollbar px-6 space-y-6 max-w-4xl w-full mx-auto pb-6"></div>
         </div>
 
-        <!-- Prompt Bar -->
         <div class="p-4 bg-white border-t border-slate-200 shadow-[0_-2px_5px_rgba(0,0,0,0.05)]">
             <div class="max-w-4xl mx-auto">
                  <form id="prompt-form" class="relative">
-                    <textarea id="prompt-textarea" rows="1" placeholder="Ask Nexus AI about forecasts and simulations..." class="w-full py-3 pl-5 pr-14 text-sm text-slate-800 bg-slate-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 border border-transparent focus:border-blue-500 transition-all duration-200 max-h-40 overflow-y-auto no-scrollbar"></textarea>
+                    <textarea id="prompt-textarea" rows="1" placeholder="Ask Nexus AI about your portfolio..." class="w-full py-3 pl-5 pr-14 text-sm text-slate-800 bg-slate-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 border border-transparent focus:border-blue-500 transition-all duration-200 max-h-40 overflow-y-auto no-scrollbar"></textarea>
                     <button type="submit" class="absolute bottom-3.5 right-0 flex items-center justify-center w-14 text-slate-500 hover:text-blue-600"><i data-lucide="send" class="h-5 w-5"></i></button>
                 </form>
+                <div id="prompt-suggestions" class="mt-2 flex items-center gap-2">
+                    <button class="text-xs bg-slate-200 hover:bg-slate-300 text-slate-600 px-2 py-1 rounded-full">What is our portfolio's biggest risk?</button>
+                    <button class="text-xs bg-slate-200 hover:bg-slate-300 text-slate-600 px-2 py-1 rounded-full">Which project is most likely to be delayed?</button>
+                    <button class="text-xs bg-slate-200 hover:bg-slate-300 text-slate-600 px-2 py-1 rounded-full">Summarize the budget status for all projects.</button>
+                 </div>
             </div>
         </div>
     </main>
 
-    <!-- Custom Scenario Modal -->
-    <div id="customScenarioModal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-md">
-            <form id="custom-scenario-form">
-                <div class="p-6 border-b"><h3 class="text-lg font-semibold text-slate-900">Create Custom Scenario</h3></div>
-                <div class="p-6 space-y-4">
-                    <div><label class="text-sm font-medium text-slate-700">Scenario Name</label><input type="text" id="scenario-name" class="mt-1 w-full border border-slate-300 rounded-md p-2" value="Custom Scenario" required></div>
-                    <div id="workload-sliders" class="space-y-3">
-                        <!-- Sliders will be dynamically inserted here -->
+    <div id="projectDrilldownModal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+             <div class="p-4 border-b flex justify-between items-center flex-shrink-0">
+                <div>
+                    <h3 id="drilldown-title" class="text-lg font-semibold text-slate-900"></h3>
+                    <p id="drilldown-subtitle" class="text-sm text-slate-500"></p>
+                </div>
+                <button id="close-drilldown-modal" class="p-1 rounded-full hover:bg-slate-100"><i data-lucide="x" class="h-5 w-5 text-slate-500"></i></button>
+            </div>
+            <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 overflow-y-auto custom-scrollbar">
+                <div class="space-y-4">
+                    <h4 class="font-semibold text-slate-800">Key Metrics</h4>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="p-3 bg-slate-50 rounded-lg"><p class="text-xs text-slate-500">Health Score</p><p id="drilldown-health" class="text-2xl font-bold"></p></div>
+                        <div class="p-3 bg-slate-50 rounded-lg"><p class="text-xs text-slate-500">Forecast</p><p id="drilldown-forecast" class="text-2xl font-bold"></p></div>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-slate-800 mb-2">Budget Breakdown</h4>
+                        <canvas id="drilldown-budget-chart" class="max-h-48"></canvas>
                     </div>
                 </div>
-                <div class="bg-slate-50 px-6 py-4 rounded-b-lg flex justify-end space-x-3">
-                    <button type="button" id="cancel-custom-scenario" class="px-4 py-2 text-sm font-medium bg-white hover:bg-slate-50 border border-slate-300 rounded-md text-slate-700">Cancel</button>
-                    <button type="submit" class="px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 rounded-md text-white">Run Simulation</button>
-                </div>
-            </form>
+                 <div class="space-y-4">
+                     <h4 class="font-semibold text-slate-800">Team Workload</h4>
+                     <div id="drilldown-workload" class="space-y-3"></div>
+                 </div>
+            </div>
+             <div class="bg-slate-50 px-6 py-4 rounded-b-lg flex justify-end flex-shrink-0 border-t">
+                <a href="projects.html" class="px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 rounded-md text-white">Go to Full Project Page</a>
+            </div>
         </div>
     </div>
-
+    
+    <div id="anomalyActionModal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] flex flex-col">
+            <div class="p-5 border-b flex-shrink-0">
+                <div class="flex items-start space-x-3">
+                    <div id="anomaly-modal-icon" class="p-2 rounded-lg mt-1"></div>
+                    <div><h3 id="anomaly-modal-title" class="text-lg font-semibold text-slate-900"></h3><p id="anomaly-modal-description" class="text-sm text-slate-500"></p></div>
+                </div>
+            </div>
+            <div class="p-6 space-y-4 overflow-y-auto custom-scrollbar">
+                <div class="bg-blue-50 p-3 rounded-lg border border-blue-200"><h4 class="font-semibold text-blue-800 text-sm mb-1 flex items-center"><i data-lucide="brain-circuit" class="h-4 w-4 mr-2"></i>Nexus AI Analysis</h4><p id="anomaly-modal-analysis" class="text-xs text-blue-700"></p></div>
+                <div><h4 class="text-base font-semibold text-slate-800 mb-2">Recommended Actions</h4><div id="anomaly-modal-actions" class="space-y-2"></div></div>
+            </div>
+            <div class="bg-slate-50 px-6 py-4 rounded-b-lg flex justify-end flex-shrink-0 border-t">
+                <button id="close-anomaly-modal" class="px-4 py-2 text-sm font-medium bg-white hover:bg-slate-50 border border-slate-300 rounded-md text-slate-700">Close</button>
+            </div>
+        </div>
+    </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
-            let workloadChartInstance = null;
+            
+            // --- All variables ---
             let riskMatrixChartInstance = null;
             let budgetChartInstance = null;
-            const teamMembers = ['Laura', 'Samantha', 'David'];
+            let portfolioHealthChartInstance = null;
+            let drilldownBudgetChartInstance = null;
+            let simWorkloadChartInstance = null;
+            let lastUserQuery = '';
+            let isConversationActive = false;
+            let currentSort = { column: 'health', direction: 'desc' };
 
             // --- Sidebar Logic ---
             const sidebar = document.getElementById('sidebar');
@@ -290,209 +315,236 @@
                 document.querySelectorAll('.nav-text').forEach(text => text.classList.add('hidden')); 
             });
 
-            // --- Chart Data ---
-            const simulationData = {
-                current: {
-                    title: "Current State",
-                    workload: [110, 85, 40],
-                    analysis: `<p>This is the current resource allocation. Laura is significantly overloaded at 110%, posing a major risk to the Phoenix Project. David has available capacity.</p>
-                               <p class="font-semibold mt-2">Phoenix Project Forecast: <span class="text-yellow-600">5 days late.</span></p>
-                               <p class="font-semibold">Orion App Forecast: <span class="text-green-600">3 days early.</span></p>`
-                },
-                reassign: {
-                    title: "Reassign Gateway Task",
-                    workload: [75, 85, 70],
-                    analysis: `<p>Reassigning the high-effort 'Payment Gateway' task from Laura to David balances the team's workload effectively.</p>
-                               <p class="font-semibold mt-2">Phoenix Project Forecast: <span class="text-green-600">1 day early.</span></p>
-                               <p class="font-semibold">Orion App Forecast: <span class="text-green-600">3 days early.</span></p>`
-                },
-                add_designer: {
-                    title: "Add Designer to Orion",
-                    workload: [110, 65, 40, 90],
-                    analysis: `<p>Adding a new designer to the Orion App reduces Samantha's load but does not address the primary bottleneck (Laura). The new resource is immediately utilized at 90%.</p>
-                               <p class="font-semibold mt-2">Phoenix Project Forecast: <span class="text-yellow-600">5 days late.</span></p>
-                               <p class="font-semibold">Orion App Forecast: <span class="text-green-600">6 days early.</span></p>`
-                }
-            };
+            // --- Main Page Data ---
+            const healthTableData = [
+                { name: 'Phoenix Project', health: 78, budget: 15, forecast: 5, forecastText: '5 days late', forecastColor: 'text-yellow-600' },
+                { name: 'Orion App', health: 92, budget: -2, forecast: -3, forecastText: '3 days early', forecastColor: 'text-green-600' },
+                { name: 'Vega Initiative', health: 45, budget: 1, forecast: 15, forecastText: '15 days late', forecastColor: 'text-red-600' }
+            ];
             
-            // --- Chart Initialization ---
-            function renderWorkloadChart(scenario) {
-                const ctx = document.getElementById('workloadChart').getContext('2d');
-                const data = simulationData[scenario];
-                let labels = teamMembers.slice();
-                if (scenario === 'add_designer') {
-                    labels.push('New Designer');
-                } else if (scenario === 'custom' && data.labels) {
-                    labels = data.labels;
-                }
-                
-                if (workloadChartInstance) {
-                    workloadChartInstance.destroy();
-                }
+            // --- At a Glance Metrics ---
+            function updateAtAGlanceMetrics() {
+                const activeProjects = healthTableData.length;
+                const attentionProjects = healthTableData.filter(p => p.health < 85).length;
+                const totalBudgetVariance = healthTableData.reduce((sum, p) => sum + p.budget, 0);
+                const avgBudgetVariance = (totalBudgetVariance / activeProjects).toFixed(1);
+                const overloaded = [110, 85, 40].filter(w => w > 100).length; // Mocked from known workload data
 
-                workloadChartInstance = new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: 'Workload %',
-                            data: data.workload,
-                            backgroundColor: data.workload.map(w => w > 100 ? '#ef4444' : (w > 90 ? '#f59e0b' : '#22c55e')),
-                            borderRadius: 4
-                        }]
-                    },
-                    options: {
-                        indexAxis: 'y',
-                        responsive: true,
-                        plugins: { legend: { display: false } },
-                        scales: { x: { max: 120, ticks: { callback: value => value + '%' } } }
-                    }
-                });
+                document.getElementById('glance-active-projects').textContent = activeProjects;
+                document.getElementById('glance-attention-projects').textContent = attentionProjects;
+                const budgetEl = document.getElementById('glance-budget-variance');
+                budgetEl.textContent = `${avgBudgetVariance > 0 ? '+' : ''}${avgBudgetVariance}%`;
+                budgetEl.className = `text-3xl font-bold mt-1 ${avgBudgetVariance > 5 ? 'text-red-600' : 'text-slate-800'}`;
+                document.getElementById('glance-overloaded').textContent = overloaded;
             }
+
+            // --- Table Sorting & Rendering ---
+            function renderHealthTable() {
+                const tableBody = document.getElementById('health-table-body');
+                const sortedData = [...healthTableData].sort((a, b) => {
+                    const valA = a[currentSort.column];
+                    const valB = b[currentSort.column];
+                    return currentSort.direction === 'asc' ? valA - valB : valB - valA;
+                });
+                tableBody.innerHTML = sortedData.map(p => `
+                    <tr class="bg-white border-b hover:bg-slate-50">
+                        <th scope="row" class="px-6 py-4 font-semibold text-slate-900 whitespace-nowrap"><a href="projects.html" class="hover:underline text-blue-600">${p.name}</a></th>
+                        <td class="px-6 py-4"><div class="flex items-center"><div class="h-2.5 w-2.5 rounded-full ${p.health > 85 ? 'health-score-high' : p.health > 60 ? 'health-score-medium' : 'health-score-low'} mr-2"></div> ${p.health}/100</div></td>
+                        <td class="px-6 py-4 font-medium ${p.budget > 0 ? 'text-red-600' : 'text-green-600'}">${p.budget > 0 ? '+' : ''}${p.budget}%</td>
+                        <td class="px-6 py-4"><span class="font-medium">${new Date(new Date().setDate(new Date().getDate() + p.forecast)).toLocaleDateString()}</span> <span class="text-xs ${p.forecastColor}">(${p.forecastText})</span></td>
+                    </tr>`).join('');
+            }
+            document.querySelectorAll('th.sortable').forEach(th => {
+                th.addEventListener('click', () => {
+                    const column = th.dataset.sort;
+                    currentSort.column = column;
+                    currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+                    renderHealthTable();
+                });
+            });
+
+            // --- Chart Initialization ---
+            function updatePortfolioHealthChart(period = '7d') {
+                const ctx = document.getElementById('portfolioHealthChart').getContext('2d');
+                if (portfolioHealthChartInstance) portfolioHealthChartInstance.destroy();
+                const dataSets = {
+                    '7d': { labels: ['-6d', '-5d', '-4d', '-3d', '-2d', '-1d', 'Today'], data: [82, 85, 84, 86, 88, 87, 85] },
+                    '30d': { labels: ['W1', 'W2', 'W3', 'W4'], data: [80, 83, 88, 85] },
+                    '6m': { labels: ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'], data: [75, 78, 82, 81, 86, 85] },
+                    '1y': { labels: ['Q4', 'Q1', 'Q2', 'Q3'], data: [72, 78, 81, 85] }
+                };
+                const chartData = dataSets[period];
+                const gradient = ctx.createLinearGradient(0, 0, 0, 150);
+                gradient.addColorStop(0, 'rgba(79, 70, 229, 0.2)');
+                gradient.addColorStop(1, 'rgba(79, 70, 229, 0)');
+                portfolioHealthChartInstance = new Chart(ctx, { type: 'line', data: { labels: chartData.labels, datasets: [{ label: 'Portfolio Health', data: chartData.data, borderColor: '#4f46e5', backgroundColor: gradient, tension: 0.3, fill: true, pointBackgroundColor: '#ffffff', pointBorderColor: '#4f46e5', pointRadius: 4, pointHoverRadius: 6 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: false, grid: { drawBorder: false } }, x: { grid: { display: false } } } } });
+            }
+            document.getElementById('health-chart-filters').addEventListener('click', e => {
+                if(e.target.tagName === 'BUTTON') {
+                    document.querySelectorAll('#health-chart-filters .date-filter-btn').forEach(btn => btn.classList.remove('active'));
+                    e.target.classList.add('active');
+                    updatePortfolioHealthChart(e.target.dataset.period);
+                }
+            });
 
             function renderRiskMatrixChart() {
                 const ctx = document.getElementById('riskMatrixChart').getContext('2d');
                 if(riskMatrixChartInstance) riskMatrixChartInstance.destroy();
-                riskMatrixChartInstance = new Chart(ctx, {
-                    type: 'bubble',
-                    data: {
-                        datasets: [
-                            { label: 'Phoenix Project', data: [{x: 8, y: 7, r: 15}], backgroundColor: '#f59e0b' },
-                            { label: 'Orion App', data: [{x: 4, y: 9, r: 12}], backgroundColor: '#22c55e' },
-                            { label: 'Vega Initiative', data: [{x: 9, y: 3, r: 10}], backgroundColor: '#ef4444' },
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        plugins: {
-                            legend: { position: 'bottom'},
-                            tooltip: { callbacks: { label: context => context.dataset.label } }
-                        },
-                        scales: {
-                            y: { min: 0, max: 10, title: { display: true, text: 'Strategic Impact' } },
-                            x: { min: 0, max: 10, title: { display: true, text: 'AI-Assessed Risk Level' } }
-                        }
-                    }
-                });
+                riskMatrixChartInstance = new Chart(ctx, { type: 'bubble', data: { datasets: [ { label: 'Phoenix Project', data: [{x: 8, y: 7, r: 15}], backgroundColor: '#f59e0b' }, { label: 'Orion App', data: [{x: 4, y: 9, r: 12}], backgroundColor: '#22c55e' }, { label: 'Vega Initiative', data: [{x: 9, y: 3, r: 10}], backgroundColor: '#ef4444' }, ] }, options: { responsive: true, plugins: { legend: { position: 'bottom'}, tooltip: { callbacks: { label: context => context.dataset.label } } }, scales: { y: { min: 0, max: 10, title: { display: true, text: 'Strategic Impact' } }, x: { min: 0, max: 10, title: { display: true, text: 'AI-Assessed Risk' } } }, onClick: (e) => { const points = riskMatrixChartInstance.getElementsAtEventForMode(e, 'nearest', { intersect: true }, true); if (points.length) { const point = points[0]; const project = riskMatrixChartInstance.data.datasets[point.datasetIndex].label; openProjectDrilldownModal(project); } } } });
             }
 
             function renderBudgetChart() {
                 const ctx = document.getElementById('budgetChart').getContext('2d');
                 if(budgetChartInstance) budgetChartInstance.destroy();
-                budgetChartInstance = new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: ['Phoenix', 'Orion', 'Vega'],
-                        datasets: [
-                            { label: 'Budgeted', data: [50000, 80000, 20000], backgroundColor: '#d1d5db', borderRadius: 4 },
-                            { label: 'Actual', data: [57500, 78400, 20200], backgroundColor: '#60a5fa', borderRadius: 4 }
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        plugins: { legend: { position: 'bottom' } },
-                        scales: { y: { ticks: { callback: value => '$' + value / 1000 + 'k' } } }
-                    }
-                });
+                budgetChartInstance = new Chart(ctx, { type: 'bar', data: { labels: ['Phoenix Project', 'Orion App', 'Vega Initiative'], datasets: [ { label: 'Budgeted', data: [50000, 80000, 20000], backgroundColor: '#d1d5db', borderRadius: 4 }, { label: 'Actual', data: [57500, 78400, 20200], backgroundColor: '#60a5fa', borderRadius: 4 } ] }, options: { responsive: true, plugins: { legend: { position: 'bottom' } }, scales: { y: { ticks: { callback: value => '$' + value / 1000 + 'k' } } }, onClick: (e) => { const points = budgetChartInstance.getElementsAtEventForMode(e, 'nearest', { intersect: true }, true); if (points.length) { const point = points[0]; const project = budgetChartInstance.data.labels[point.index]; openProjectDrilldownModal(project); } } } });
             }
-
-            // Initial render
-            renderWorkloadChart('current');
-            renderRiskMatrixChart();
-            renderBudgetChart();
-
-            // --- Simulator & Custom Scenario Modal Logic ---
-            const scenarioSelector = document.getElementById('scenario-selector');
-            const customScenarioModal = document.getElementById('customScenarioModal');
             
-            scenarioSelector.addEventListener('change', (e) => {
-                const selectedScenario = e.target.value;
-                if (selectedScenario === 'custom') {
-                    openCustomScenarioModal();
-                } else {
-                    renderWorkloadChart(selectedScenario);
-                    document.getElementById('impact-analysis-title').textContent = `AI Impact Analysis: ${simulationData[selectedScenario].title}`;
-                    document.getElementById('impact-analysis-text').innerHTML = simulationData[selectedScenario].analysis;
+            // --- AI Simulation & Action Center Logic ---
+            const simPrompt = document.getElementById('simulation-prompt');
+            const runSimBtn = document.getElementById('run-simulation-btn');
+            const simResultsContainer = document.getElementById('simulation-results-container');
+            
+            document.getElementById('simulation-suggestions').addEventListener('click', e => {
+                if (e.target.tagName === 'BUTTON') {
+                    simPrompt.value = e.target.dataset.prompt;
                 }
             });
 
-            function openCustomScenarioModal() {
-                const slidersContainer = document.getElementById('workload-sliders');
-                slidersContainer.innerHTML = '';
-                const currentWorkloads = simulationData['current'].workload;
-
-                teamMembers.forEach((member, index) => {
-                    slidersContainer.innerHTML += `
-                        <div>
-                            <label for="${member}-slider" class="text-sm font-medium text-slate-700 flex justify-between">
-                                <span>${member} Workload</span>
-                                <span id="${member}-value">${currentWorkloads[index]}%</span>
-                            </label>
-                            <input type="range" id="${member}-slider" name="${member}" min="0" max="120" value="${currentWorkloads[index]}" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+            runSimBtn.addEventListener('click', () => {
+                const promptText = simPrompt.value;
+                if (!promptText) return;
+                runSimBtn.disabled = true;
+                runSimBtn.innerHTML = `<i data-lucide="loader-2" class="animate-spin h-4 w-4"></i><span>Analyzing...</span>`;
+                lucide.createIcons();
+                simResultsContainer.classList.remove('hidden');
+                simResultsContainer.innerHTML = `<div class="text-center p-8 text-slate-500">Running simulation...</div>`;
+                setTimeout(() => {
+                    const resultsHTML = `
+                        <div class="border-b border-slate-200 flex space-x-6">
+                            <button data-tab="summary" class="sim-tab-btn py-2 border-b-2 border-transparent text-sm text-slate-500 hover:text-slate-800 transition-colors active">Impact Summary</button>
+                            <button data-tab="workload" class="sim-tab-btn py-2 border-b-2 border-transparent text-sm text-slate-500 hover:text-slate-800 transition-colors">Workload</button>
+                        </div>
+                        <div class="mt-4">
+                            <div class="sim-panel" data-panel="summary">
+                                <div class="bg-blue-50 border border-blue-200 p-3 rounded-lg text-sm text-blue-800 mb-4"><strong>AI Summary:</strong> This is a positive impact change. Reassigning the task directly addresses the primary bottleneck (Laura's workload), significantly improving the Phoenix Project's forecast with minimal negative effects.</div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <h5 class="font-semibold mb-2">Key Metric Changes</h5>
+                                        <table class="w-full text-xs">
+                                             <thead class="bg-slate-200"><tr><th class="p-1 text-left">Metric</th><th class="p-1 text-center">Current</th><th class="p-1 text-center font-bold text-green-700">After Action</th></tr></thead>
+                                             <tbody>
+                                                 <tr class="border-b"><td class="p-1">Phoenix Project Forecast</td><td class="p-1 text-center text-red-600 font-medium">5 days late</td><td class="p-1 text-center text-green-600 font-bold">1 day early</td></tr>
+                                                 <tr class="border-b"><td class="p-1">Project Health Score</td><td class="p-1 text-center">78/100</td><td class="p-1 text-center text-green-600 font-bold">89/100</td></tr>
+                                                 <tr><td class="p-1">Completion Probability</td><td class="p-1 text-center">68%</td><td class="p-1 text-center text-green-600 font-bold">85%</td></tr>
+                                             </tbody>
+                                         </table>
+                                    </div>
+                                    <div>
+                                        <h5 class="font-semibold mb-2">Second-Order Effects</h5>
+                                        <ul class="text-xs space-y-2">
+                                            <li class="flex items-start"><i data-lucide="arrow-up-right" class="h-4 w-4 text-green-500 mr-2 mt-0.5 flex-shrink-0"></i><div><strong>Positive:</strong> Frees up Laura (senior resource) for other high-impact work on the project.</div></li>
+                                            <li class="flex items-start"><i data-lucide="alert-triangle" class="h-4 w-4 text-yellow-500 mr-2 mt-0.5 flex-shrink-0"></i><div><strong>Risk:</strong> Short-term knowledge transfer may delay David's other tasks on the Orion App by 1-2 days.</div></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="mt-4 pt-4 border-t flex justify-end"><button id="apply-scenario-btn" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg flex items-center space-x-2"><i data-lucide="check" class="h-4 w-4"></i><span>Apply this Scenario</span></button></div>
+                            </div>
+                             <div class="sim-panel hidden" data-panel="workload"><canvas id="simWorkloadChart" class="max-h-60"></canvas></div>
                         </div>`;
-                });
-                slidersContainer.querySelectorAll('input[type="range"]').forEach(slider => {
-                    slider.addEventListener('input', (e) => {
-                        document.getElementById(`${e.target.name}-value`).textContent = `${e.target.value}%`;
+                    simResultsContainer.innerHTML = resultsHTML;
+                    const simCtx = document.getElementById('simWorkloadChart').getContext('2d');
+                    if (simWorkloadChartInstance) simWorkloadChartInstance.destroy();
+                    const newWorkload = [75, 85, 70];
+                    simWorkloadChartInstance = new Chart(simCtx, { type: 'bar', data: { labels: ['Laura', 'Samantha', 'David'], datasets: [{ label: 'Workload %', data: newWorkload, backgroundColor: newWorkload.map(w => w > 100 ? '#ef4444' : (w > 90 ? '#f59e0b' : '#22c55e')), borderRadius: 4 }] }, options: { indexAxis: 'y', responsive: true, plugins: { legend: { display: false } }, scales: { x: { max: 120, ticks: { callback: value => value + '%' } } } } });
+                    lucide.createIcons();
+                    runSimBtn.disabled = false;
+                    runSimBtn.innerHTML = `<i data-lucide="play" class="h-4 w-4"></i><span>Run Simulation</span>`;
+                }, 1500);
+            });
+            
+            simResultsContainer.addEventListener('click', e => {
+                const tabButton = e.target.closest('.sim-tab-btn');
+                if (tabButton) {
+                    const tabName = tabButton.dataset.tab;
+                    simResultsContainer.querySelectorAll('.sim-tab-btn').forEach(btn => btn.classList.remove('active'));
+                    tabButton.classList.add('active');
+                    simResultsContainer.querySelectorAll('.sim-panel').forEach(panel => {
+                        if (panel.dataset.panel === tabName) panel.classList.remove('hidden'); else panel.classList.add('hidden');
                     });
+                }
+                if (e.target.closest('#apply-scenario-btn')) {
+                    const btn = e.target.closest('#apply-scenario-btn');
+                    btn.disabled = true;
+                    btn.innerHTML = `<i data-lucide="check-check" class="h-4 w-4"></i><span>Scenario Applied</span>`;
+                    lucide.createIcons();
+                }
+            });
+
+            // --- Anomaly Action Modal Logic ---
+            const anomalyActionModal = document.getElementById('anomalyActionModal');
+            const anomalyData = { velocity: { title: 'Resolve Velocity Drop', description: "The Phoenix Project team's task completion rate dropped by 30% this week.", icon: '<i data-lucide="zap" class="h-6 w-6 text-yellow-600"></i>', iconBg: 'bg-yellow-100', analysis: "This drop is correlated with Laura's 110% workload and a stalled high-priority task.", actions: [ { text: 'Simulate reassigning Laura\'s task', link: '#', icon: 'brain-circuit' } ] }, stalled: { title: 'Resolve Stalled Task', description: "A task in Phoenix Project has been 'In Progress' for 9 days.", icon: '<i data-lucide="file-clock" class="h-6 w-6 text-red-600"></i>', iconBg: 'bg-red-100', analysis: "The stalled task, 'Refactor payment gateway', is a critical-path dependency.", actions: [ { text: 'View task details & comments', link: 'projects.html', icon: 'file-text' } ] } };
+            document.querySelectorAll('.anomaly-action-btn').forEach(button => { button.addEventListener('click', (e) => { const anomalyId = e.currentTarget.dataset.anomalyId; const data = anomalyData[anomalyId]; if (!data) return; document.getElementById('anomaly-modal-title').textContent = data.title; document.getElementById('anomaly-modal-description').textContent = data.description; document.getElementById('anomaly-modal-analysis').textContent = data.analysis; const iconContainer = document.getElementById('anomaly-modal-icon'); iconContainer.innerHTML = data.icon; iconContainer.className = `p-2 rounded-lg ${data.iconBg}`; const actionsContainer = document.getElementById('anomaly-modal-actions'); actionsContainer.innerHTML = ''; data.actions.forEach(action => { actionsContainer.innerHTML += `<a href="${action.link}" class="flex items-center space-x-3 p-3 bg-white rounded-lg border hover:border-blue-500 hover:bg-blue-50 transition-colors"><i data-lucide="${action.icon}" class="h-5 w-5 text-blue-600"></i><span class="text-sm font-medium text-slate-700">${action.text}</span></a>`; }); lucide.createIcons(); anomalyActionModal.classList.remove('hidden'); }); });
+            document.getElementById('close-anomaly-modal').addEventListener('click', () => { anomalyActionModal.classList.add('hidden'); });
+
+            // --- Project Drilldown Modal Logic ---
+            const drilldownModal = document.getElementById('projectDrilldownModal');
+            const drilldownData = { 'Phoenix Project': { health: 78, forecast: '5 days late', forecastColor: 'text-yellow-600', budget: [25000, 15000, 10000], workload: [ { name: 'Laura', value: 110, color: 'red' }, { name: 'Samantha', value: 85, color: 'green' }, { name: 'David', value: 40, color: 'green' } ] }, 'Orion App': { health: 92, forecast: '3 days early', forecastColor: 'text-green-600', budget: [60000, 18400, 10000], workload: [ { name: 'David', value: 40, color: 'green' }, { name: 'Laura', value: 110, color: 'red' } ] }, 'Vega Initiative': { health: 45, forecast: '15 days late', forecastColor: 'text-red-600', budget: [15000, 2000, 3200], workload: [ { name: 'Samantha', value: 85, color: 'green' } ] } };
+             function openProjectDrilldownModal(projectName) {
+                 const data = drilldownData[projectName];
+                 if (!data) return;
+                 document.getElementById('drilldown-title').textContent = projectName;
+                 document.getElementById('drilldown-subtitle').textContent = `Health: ${data.health}/100 | Forecast: ${data.forecast}`;
+                 document.getElementById('drilldown-health').textContent = `${data.health}/100`;
+                 const forecastEl = document.getElementById('drilldown-forecast');
+                 forecastEl.textContent = data.forecast;
+                 forecastEl.className = `text-2xl font-bold ${data.forecastColor}`;
+                 const workloadContainer = document.getElementById('drilldown-workload');
+                 workloadContainer.innerHTML = data.workload.map(member => `<div><div class="flex justify-between text-sm items-center mb-1"><p>${member.name}</p><span class="font-semibold text-${member.color}-600">${member.value}%</span></div><div class="w-full bg-slate-200 rounded-full h-2.5"><div class="bg-${member.color}-500 h-2.5 rounded-full" style="width: ${Math.min(member.value, 100)}%"></div></div></div>`).join('');
+                 const budgetCtx = document.getElementById('drilldown-budget-chart').getContext('2d');
+                 if(drilldownBudgetChartInstance) drilldownBudgetChartInstance.destroy();
+                 drilldownBudgetChartInstance = new Chart(budgetCtx, { type: 'doughnut', data: { labels: ['Personnel', 'Software', 'Contingency'], datasets: [{ data: data.budget, backgroundColor: ['#3b82f6', '#818cf8', '#ef4444'], borderColor: '#ffffff', borderWidth: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } }, cutout: '60%' } });
+                 drilldownModal.classList.remove('hidden');
+             }
+             document.getElementById('close-drilldown-modal').addEventListener('click', () => {
+                 drilldownModal.classList.add('hidden');
+                 if(drilldownBudgetChartInstance) drilldownBudgetChartInstance.destroy();
+             });
+            
+            // --- AI Prompt Bar Logic ---
+            const promptBarForm = document.getElementById('prompt-form');
+            const aiResponseContainer = document.getElementById('ai-response-container');
+            const promptSuggestionsEl = document.getElementById('prompt-suggestions');
+            
+            if (promptBarForm) {
+                promptSuggestionsEl.addEventListener('click', (e) => {
+                    if (e.target.tagName === 'BUTTON') {
+                        document.getElementById('prompt-textarea').value = e.target.textContent;
+                        promptBarForm.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+                    }
                 });
-                customScenarioModal.classList.remove('hidden');
-            }
 
-            document.getElementById('cancel-custom-scenario').addEventListener('click', () => {
-                customScenarioModal.classList.add('hidden');
-                scenarioSelector.value = 'current'; // Reset dropdown
-            });
-
-            document.getElementById('custom-scenario-form').addEventListener('submit', (e) => {
-                e.preventDefault();
-                const scenarioName = document.getElementById('scenario-name').value;
-                const newWorkloads = teamMembers.map(member => parseInt(document.getElementById(`${member}-slider`).value));
-
-                simulationData.custom = {
-                    title: scenarioName,
-                    labels: teamMembers.slice(),
-                    workload: newWorkloads,
-                    analysis: `<p>In your custom scenario, the workloads have been adjusted. This new distribution reduces Laura's overload but significantly increases David's.</p>
-                               <p class="font-semibold mt-2">AI predicts this would make the Phoenix Project <span class="text-green-600">2 days early</span>.</p>`
-                };
-
-                renderWorkloadChart('custom');
-                document.getElementById('impact-analysis-title').textContent = `AI Impact Analysis: ${scenarioName}`;
-                document.getElementById('impact-analysis-text').innerHTML = simulationData.custom.analysis;
-                customScenarioModal.classList.add('hidden');
-            });
-
-            // --- AI Prompt Bar Logic (same as before) ---
-            const promptForm = document.getElementById('prompt-form');
-            const responseContainer = document.getElementById('ai-response-container');
-            const responseHeader = document.getElementById('ai-response-header');
-            const messageList = document.getElementById('message-list');
-            let lastUserQuery = '';
-            let isConversationActive = false;
-
-            if (promptForm) {
-                promptForm.addEventListener('submit', (e) => {
+                promptBarForm.addEventListener('submit', (e) => {
                     e.preventDefault();
-                    const userQuery = document.getElementById('prompt-textarea').value.trim();
+                    const promptTextarea = document.getElementById('prompt-textarea');
+                    const userQuery = promptTextarea.value.trim();
                     if (!userQuery) return;
                     lastUserQuery = userQuery;
                     if (!isConversationActive) { isConversationActive = true; renderExpandedHeader(); }
+                    const messageList = document.getElementById('message-list');
                     messageList.insertAdjacentHTML('beforeend', `<div class="flex items-start gap-3 justify-end"><div class="bg-slate-200 p-3 rounded-lg max-w-xl"><p class="text-sm text-slate-800">${userQuery}</p></div><img class="w-8 h-8 rounded-full" src="https://i.pravatar.cc/40?u=nexus-user" alt="User avatar"></div>`);
                     const thinkingId = `thinking-${Date.now()}`;
                     messageList.insertAdjacentHTML('beforeend', `<div id="${thinkingId}" class="flex items-start gap-3"><div class="bg-blue-100 p-2 rounded-full h-8 w-8 flex items-center justify-center animate-pulse flex-shrink-0"><i data-lucide="bot" class="h-5 w-5 text-blue-600"></i></div><div class="bg-slate-100 p-3 rounded-lg"><p class="text-sm text-slate-500">Nexus is thinking...</p></div></div>`);
                     lucide.createIcons();
-                    responseContainer.classList.remove('minimized');
-                    responseContainer.classList.add('expanded');
+                    aiResponseContainer.classList.remove('minimized');
+                    aiResponseContainer.classList.add('expanded');
                     setTimeout(() => { messageList.scrollTop = messageList.scrollHeight; }, 10);
-                    document.getElementById('prompt-textarea').value = '';
-                    document.getElementById('prompt-textarea').style.height = 'auto';
+                    promptTextarea.value = '';
 
                     setTimeout(() => {
                         const aiResult = getAIResponse(userQuery);
                         const thinkingElement = document.getElementById(thinkingId);
                         if (thinkingElement) {
-                            thinkingElement.outerHTML = `<div class="flex items-start gap-3"><div class="bg-blue-100 p-2 rounded-full h-8 w-8 flex items-center justify-center flex-shrink-0"><i data-lucide="bot" class="h-5 w-5 text-blue-600"></i></div><div class="text-sm text-slate-700 space-y-2 prose prose-sm max-w-none bg-slate-100 p-3 rounded-lg">${aiResult.message}</div></div>`;
+                            thinkingElement.outerHTML = `<div class="flex items-start gap-3"><div class="bg-blue-100 p-2 rounded-full h-8 w-8 flex items-center justify-center flex-shrink-0"><i data-lucide="bot" class="h-5 w-5 text-blue-600"></i></div><div class="text-sm text-slate-700 space-y-3 prose prose-sm max-w-none bg-slate-100 p-3 rounded-lg">${aiResult.html}</div></div>`;
                             lucide.createIcons();
                             messageList.scrollTop = messageList.scrollHeight;
                         }
@@ -500,54 +552,38 @@
                 });
             }
 
-            const renderExpandedHeader = () => {
-                responseHeader.innerHTML = `<div class="flex justify-between items-start"><h3 class="text-lg font-semibold text-slate-900">Nexus AI Response</h3><div class="flex items-center"><button id="minimize-ai-response" class="p-1 rounded-full hover:bg-slate-100 mr-2"><i data-lucide="chevrons-down" class="h-5 w-5 text-slate-500"></i></button><button id="close-ai-response" class="p-1 rounded-full hover:bg-slate-100"><i data-lucide="x" class="h-5 w-5 text-slate-500"></i></button></div></div>`;
-                lucide.createIcons();
-            }
-            const renderMinimizedHeader = () => {
-                responseHeader.innerHTML = `<div class="flex items-center justify-between h-full"><p class="text-sm text-slate-600 truncate"><span class="font-semibold text-slate-800">AI Response:</span> ${lastUserQuery}</p><button id="expand-ai-response" class="p-1 rounded-full hover:bg-slate-100"><i data-lucide="chevrons-up" class="h-5 w-5 text-slate-500"></i></button></div>`;
-                lucide.createIcons();
-            }
-
-            if(responseContainer) {
-                responseContainer.addEventListener('click', (e) => {
-                    const button = e.target.closest('button');
-                    if (!button) return;
-                    if (button.id === 'close-ai-response') {
-                        responseContainer.classList.remove('expanded', 'minimized');
-                        messageList.innerHTML = '';
-                        responseHeader.innerHTML = '';
-                        isConversationActive = false;
-                    } else if (button.id === 'minimize-ai-response') {
-                        responseContainer.classList.remove('expanded');
-                        responseContainer.classList.add('minimized');
-                        renderMinimizedHeader();
-                    } else if (button.id === 'expand-ai-response') {
-                        responseContainer.classList.remove('minimized');
-                        responseContainer.classList.add('expanded');
-                        renderExpandedHeader();
-                        setTimeout(() => { messageList.scrollTop = messageList.scrollHeight; }, 10);
-                    }
-                });
-            }
-
+            const renderExpandedHeader = () => { document.getElementById('ai-response-header').innerHTML = `<div class="flex justify-between items-start"><h3 class="text-lg font-semibold text-slate-900">Nexus AI Response</h3><div class="flex items-center"><button id="minimize-ai-response" class="p-1 rounded-full hover:bg-slate-100 mr-2"><i data-lucide="chevrons-down" class="h-5 w-5 text-slate-500"></i></button><button id="close-ai-response" class="p-1 rounded-full hover:bg-slate-100"><i data-lucide="x" class="h-5 w-5 text-slate-500"></i></button></div></div>`; lucide.createIcons(); }
+            const renderMinimizedHeader = () => { document.getElementById('ai-response-header').innerHTML = `<div class="flex items-center justify-between h-full"><p class="text-sm text-slate-600 truncate"><span class="font-semibold text-slate-800">AI Response:</span> ${lastUserQuery}</p><button id="expand-ai-response" class="p-1 rounded-full hover:bg-slate-100"><i data-lucide="chevrons-up" class="h-5 w-5 text-slate-500"></i></button></div>`; lucide.createIcons(); }
+            
+            aiResponseContainer.addEventListener('click', (e) => {
+                const button = e.target.closest('button');
+                if (!button) return;
+                if (button.id === 'close-ai-response') { aiResponseContainer.classList.remove('expanded', 'minimized'); document.getElementById('message-list').innerHTML = ''; document.getElementById('ai-response-header').innerHTML = ''; isConversationActive = false; }
+                else if (button.id === 'minimize-ai-response') { aiResponseContainer.classList.remove('expanded'); aiResponseContainer.classList.add('minimized'); renderMinimizedHeader(); }
+                else if (button.id === 'expand-ai-response') { aiResponseContainer.classList.remove('minimized'); aiResponseContainer.classList.add('expanded'); renderExpandedHeader(); setTimeout(() => { document.getElementById('message-list').scrollTop = document.getElementById('message-list').scrollHeight; }, 10); }
+            });
+            
             function getAIResponse(message) {
-                const lowerMessage = message.toLowerCase();
+                 const lowerMessage = message.toLowerCase();
                 if (lowerMessage.includes('biggest risk')) {
-                    return { message: `<p>Based on the Risk Matrix, the <strong>Phoenix Project</strong> and the <strong>Vega Initiative</strong> represent the highest risk. Phoenix is high-risk due to its complexity and current delays, while Vega is high-risk due to market uncertainty. However, Phoenix has a much higher strategic impact, making it the top priority to de-risk.</p>` };
+                    return { html: `<p>Based on current data, the portfolio's highest-impact risk is the <strong>resource overload on the Phoenix Project</strong>. Laura's 110% workload is stalling a critical-path task, which has a 75% probability of delaying the entire project if not addressed within the next 3 days.</p>` };
+                }
+                if (lowerMessage.includes('delayed')) {
+                    return { html: `<p>The <strong>Vega Initiative</strong> is most likely to be delayed. Its health score is the lowest (45/100) and the current AI forecast predicts it will be <strong>15 days late</strong>.</p>` };
                 }
                 if (lowerMessage.includes('budget')) {
-                    return { message: `<p>The portfolio is currently trending <strong>$5,700 over budget</strong>. The main driver is the <strong>Phoenix Project</strong>, which is $7,500 over. The <strong>Orion App</strong> is running $1,600 under budget, partially offsetting the overage.</p>` };
+                     return { html: `<p>Here's a summary of the current budget status:</p><ul class="list-disc list-inside mt-2 text-sm"><li><strong>Phoenix Project:</strong> <span class="font-semibold text-red-600">15% Over Budget</span></li><li><strong>Orion App:</strong> <span class="font-semibold text-green-600">2% Under Budget</span></li><li><strong>Vega Initiative:</strong> <span class="font-semibold text-yellow-600">1% Over Budget</span></li></ul>` };
                 }
-                if (lowerMessage.includes('simulate')) {
-                     return { message: `<p>Of course. You can use the "Resource Allocation Simulator" to explore different scenarios. Select a pre-defined scenario from the dropdown or choose "Create Custom Scenario" to open a modal where you can adjust workloads yourself and see the AI's prediction.</p>` };
-                }
-                else {
-                    return { message: `<p>I can provide details on project forecasts, explain portfolio risks, or run resource simulations. What would you like to analyze?</p>` };
-                }
+                return { html: `<p>I can provide details on project forecasts, explain portfolio risks, or run resource simulations. What would you like to analyze?</p>` };
             }
+
+            // --- Initial Load ---
+            updateAtAGlanceMetrics();
+            renderHealthTable();
+            updatePortfolioHealthChart('7d'); 
+            renderRiskMatrixChart();
+            renderBudgetChart();
         });
     </script>
 </body>
 </html>
-
